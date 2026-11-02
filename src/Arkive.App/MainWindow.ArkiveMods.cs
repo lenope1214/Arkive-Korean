@@ -1,3 +1,8 @@
+using Arkive.Core.GameData;
+using Arkive.Core.Mods;
+using Arkive.Core.Outfits;
+using Arkive.Core.Tweaks;
+using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -5,11 +10,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using Arkive.Core.GameData;
-using Arkive.Core.Mods;
-using Arkive.Core.Tweaks;
-using Arkive.Core.Outfits;
-using Microsoft.Win32;
 
 namespace Arkive.App;
 
@@ -116,7 +116,7 @@ public partial class MainWindow : Window
                 _arkiveModLibrary, library, snapshot, ActiveRevisionsByPhysicalName(),
                 outsideChangedPackages: outside.Select(change => change.PhysicalPackageName).ToArray(),
                 installedGameData: installedTables, installedLooks: installedLooks);
-            Lap("status"); 
+            Lap("status");
             var previous = selectModId ?? (ModLibraryGrid.SelectedItem as ModLibraryRow)?.Entry.ModId;
             // Mods chosen together stay chosen when the list is rebuilt after acting on them.
             var previousGroup = SelectedModRows().Select(row => row.Entry.ModId).ToHashSet(StringComparer.OrdinalIgnoreCase);

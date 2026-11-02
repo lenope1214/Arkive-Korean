@@ -1,6 +1,6 @@
+using Arkive.Core.Viewer;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Arkive.Core.Viewer;
 
 namespace Arkive.Core.Outfits;
 

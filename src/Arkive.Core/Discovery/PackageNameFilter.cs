@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using Arkive.Core.Assets;
+using System.Collections.Concurrent;
 
 namespace Arkive.Core.Discovery;
 
@@ -170,13 +170,13 @@ internal sealed class PackageNameFilter
         }
 
         foreach (var term in terms)
-        foreach (var trigram in term)
-        {
-            if (!Test(bits, trigram))
+            foreach (var trigram in term)
             {
-                return false;
+                if (!Test(bits, trigram))
+                {
+                    return false;
+                }
             }
-        }
 
         return true;
     }

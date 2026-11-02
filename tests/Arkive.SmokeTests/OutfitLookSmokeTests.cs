@@ -256,10 +256,19 @@ internal static class OutfitLookSmokeTests
     private static OutfitSwapLookPiece SwapPiece() => new("PC_T_Upper_SK", ["PC_T_Upper_MI", "PC_T_Upper1_MI", "PC_B_Base_Upper_MI"],
         new OutfitSwapMesh
         {
-            Positions = [], Normals = [], Tangents = [], Uv0 = [], Uv1 = [], Colours = [], Joints = [], Weights = [],
+            Positions = [],
+            Normals = [],
+            Tangents = [],
+            Uv0 = [],
+            Uv1 = [],
+            Colours = [],
+            Joints = [],
+            Weights = [],
             Sections = [new(0, []), new(2, []), new(3, []), new(4, [])],
             Materials = ["PC_D_Upper_MI", "PC_T_Upper1_MI", "PC_B_Base_Upper_MI", "PC_D_Upper1_MI", "PC_C_Base_Upper_MI"],
-            BoneNames = [], BonePositions = [], BoneParents = [],
+            BoneNames = [],
+            BonePositions = [],
+            BoneParents = [],
             MaterialReferences = new Dictionary<int, SkeletalMeshMaterialReference>
             {
                 [0] = new(Reference("PC_D", "PC_D_Upper_MI"), "PC_T_Upper_MI"),
@@ -300,7 +309,8 @@ internal static class OutfitLookSmokeTests
         var id = Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(name))).ToLowerInvariant();
         var now = DateTimeOffset.UtcNow;
         var manifest = new ArkiveModFileManifest(ArkiveModFileFormat.FormatId, ArkiveModFileFormat.LooksFormatVersion, id, name, "1.0.0",
-            null, null, null, [], ArkiveModBundleService.WesternGlobalProfile, now, now, "smoke", []) { Looks = new ArkiveModLooks(edits) };
+            null, null, null, [], ArkiveModBundleService.WesternGlobalProfile, now, now, "smoke", [])
+        { Looks = new ArkiveModLooks(edits) };
         return new ArkiveModLibraryEntry(id, name + ".arkive", "", 0, now, true, priority, ArkiveModOrigin.Created, manifest, []);
     }
 

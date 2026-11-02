@@ -1,9 +1,9 @@
+using Arkive.App;
+using Arkive.Core.Mods;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Arkive.App;
-using Arkive.Core.Mods;
 using static Program;
 
 internal static class MultiSelectionChecks
@@ -30,7 +30,8 @@ internal static class MultiSelectionChecks
             .GetField("_modAuthoringWorkspace", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window)!;
         var draft = await workspace.SaveAsync(original with
         {
-            EditIds = ["included-one", "included-two"], ReferenceEditIds = ["reference"],
+            EditIds = ["included-one", "included-two"],
+            ReferenceEditIds = ["reference"],
             SavedBindings = new Dictionary<string, string> { ["saved-asset"] = "included-one" },
         });
         draftField.SetValue(window, draft);

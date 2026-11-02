@@ -1,10 +1,10 @@
+using Arkive.Core.External;
+using Arkive.Core.Updates;
+using Arkive.Core.Viewer;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Windows;
-using Arkive.Core.External;
-using Arkive.Core.Updates;
-using Arkive.Core.Viewer;
 
 namespace Arkive.App;
 

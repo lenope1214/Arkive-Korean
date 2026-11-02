@@ -50,32 +50,32 @@ public sealed class UniformExpressionReader(Stream stream, IReadOnlyList<string>
             switch (kind[prefix.Length..])
             {
                 case "constant":
-                {
-                    var value = ReadColor();
-                    ReadByte();
-                    return new UniformConstant(value);
-                }
+                    {
+                        var value = ReadColor();
+                        ReadByte();
+                        return new UniformConstant(value);
+                    }
                 case "vectorparameter": return new UniformVectorParameter(ReadName(), ReadColor());
                 case "scalarparameter": return new UniformScalarParameter(ReadName(), ReadSingle());
                 case "time": return new UniformTime(false);
                 case "realtime": return new UniformTime(true);
                 case "appendvector":
-                {
-                    var a = ReadExpression();
-                    var b = ReadExpression();
-                    return new UniformAppend(a, b, ReadInt32());
-                }
+                    {
+                        var a = ReadExpression();
+                        var b = ReadExpression();
+                        return new UniformAppend(a, b, ReadInt32());
+                    }
                 case "foldedmath":
-                {
-                    var a = ReadExpression();
-                    var b = ReadExpression();
-                    return new UniformMath(ReadByte(), a, b);
-                }
+                    {
+                        var a = ReadExpression();
+                        var b = ReadExpression();
+                        return new UniformMath(ReadByte(), a, b);
+                    }
                 case "sine":
-                {
-                    var x = ReadExpression();
-                    return new UniformUnary(ReadInt32() != 0 ? "cos" : "sin", x);
-                }
+                    {
+                        var x = ReadExpression();
+                        return new UniformUnary(ReadInt32() != 0 ? "cos" : "sin", x);
+                    }
                 case "clamp": return new UniformClamp(ReadExpression(), ReadExpression(), ReadExpression());
                 case "max": return new UniformMath(10, ReadExpression(), ReadExpression());
                 case "min": return new UniformMath(11, ReadExpression(), ReadExpression());
@@ -89,10 +89,10 @@ public sealed class UniformExpressionReader(Stream stream, IReadOnlyList<string>
                 case "texture": return new UniformTexture(null, ReadInt32());
                 case "textureparameter":
                 case "flipbooktextureparameter":
-                {
-                    var name = ReadName();
-                    return new UniformTexture(name, ReadInt32());
-                }
+                    {
+                        var name = ReadName();
+                        return new UniformTexture(name, ReadInt32());
+                    }
                 default:
                     throw new UniformExpressionFormatException($"Unsupported uniform expression '{kind}'.");
             }
@@ -144,69 +144,69 @@ public static class UniformExpressionEvaluator
             case UniformConstant constant: return (float[])constant.Value.Clone();
             case UniformVectorParameter parameter: return (float[])(vector(parameter.Name) ?? parameter.Default).Clone();
             case UniformScalarParameter parameter:
-            {
-                var value = scalar(parameter.Name) ?? parameter.Default;
-                return [value, value, value, value];
-            }
+                {
+                    var value = scalar(parameter.Name) ?? parameter.Default;
+                    return [value, value, value, value];
+                }
             case UniformTime: return [time, time, time, time];
             case UniformAppend append:
-            {
-                var a = Evaluate(append.A, vector, scalar, time);
-                var b = Evaluate(append.B, vector, scalar, time);
-                var result = new float[4];
-                var n = Math.Clamp(append.ComponentsA, 0, 4);
-                for (var i = 0; i < n; i++) result[i] = a[i];
-                for (var i = n; i < 4; i++) result[i] = b[i - n];
-                return result;
-            }
-            case UniformMath math:
-            {
-                var a = Evaluate(math.A, vector, scalar, time);
-                var b = Evaluate(math.B, vector, scalar, time);
-                var result = new float[4];
-                for (var i = 0; i < 4; i++)
-                    result[i] = math.Operation switch
-                    {
-                        0 => a[i] + b[i],
-                        1 => a[i] - b[i],
-                        2 => a[i] * b[i],
-                        3 => b[i] == 0 ? 0 : a[i] / b[i],
-                        4 => a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3],
-                        5 => a[i] * b[i],
-                        10 => Math.Max(a[i], b[i]),
-                        11 => Math.Min(a[i], b[i]),
-                        _ => a[i],
-                    };
-                return result;
-            }
-            case UniformClamp clamp:
-            {
-                var x = Evaluate(clamp.X, vector, scalar, time);
-                var low = Evaluate(clamp.Minimum, vector, scalar, time);
-                var high = Evaluate(clamp.Maximum, vector, scalar, time);
-                return Enumerable.Range(0, 4).Select(i => Math.Min(Math.Max(x[i], low[i]), high[i])).ToArray();
-            }
-            case UniformUnary unary:
-            {
-                var x = Evaluate(unary.X, vector, scalar, time);
-                Func<float, float> f = unary.Function switch
                 {
-                    "sin" => MathF.Sin,
-                    "cos" => MathF.Cos,
-                    "abs" => MathF.Abs,
-                    "floor" => MathF.Floor,
-                    "ceil" => MathF.Ceiling,
-                    "frac" or "periodic" => v => v - MathF.Floor(v),
-                    "sqrt" => v => MathF.Sqrt(Math.Max(0, v)),
-                    _ => v => v,
-                };
-                if (unary.Function == "length")
-                {
-                    var length = MathF.Sqrt(x.Sum(v => v * v));
-                    return [length, length, length, length];
+                    var a = Evaluate(append.A, vector, scalar, time);
+                    var b = Evaluate(append.B, vector, scalar, time);
+                    var result = new float[4];
+                    var n = Math.Clamp(append.ComponentsA, 0, 4);
+                    for (var i = 0; i < n; i++) result[i] = a[i];
+                    for (var i = n; i < 4; i++) result[i] = b[i - n];
+                    return result;
                 }
-                return x.Select(f).ToArray();
-            }
+            case UniformMath math:
+                {
+                    var a = Evaluate(math.A, vector, scalar, time);
+                    var b = Evaluate(math.B, vector, scalar, time);
+                    var result = new float[4];
+                    for (var i = 0; i < 4; i++)
+                        result[i] = math.Operation switch
+                        {
+                            0 => a[i] + b[i],
+                            1 => a[i] - b[i],
+                            2 => a[i] * b[i],
+                            3 => b[i] == 0 ? 0 : a[i] / b[i],
+                            4 => a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3],
+                            5 => a[i] * b[i],
+                            10 => Math.Max(a[i], b[i]),
+                            11 => Math.Min(a[i], b[i]),
+                            _ => a[i],
+                        };
+                    return result;
+                }
+            case UniformClamp clamp:
+                {
+                    var x = Evaluate(clamp.X, vector, scalar, time);
+                    var low = Evaluate(clamp.Minimum, vector, scalar, time);
+                    var high = Evaluate(clamp.Maximum, vector, scalar, time);
+                    return Enumerable.Range(0, 4).Select(i => Math.Min(Math.Max(x[i], low[i]), high[i])).ToArray();
+                }
+            case UniformUnary unary:
+                {
+                    var x = Evaluate(unary.X, vector, scalar, time);
+                    Func<float, float> f = unary.Function switch
+                    {
+                        "sin" => MathF.Sin,
+                        "cos" => MathF.Cos,
+                        "abs" => MathF.Abs,
+                        "floor" => MathF.Floor,
+                        "ceil" => MathF.Ceiling,
+                        "frac" or "periodic" => v => v - MathF.Floor(v),
+                        "sqrt" => v => MathF.Sqrt(Math.Max(0, v)),
+                        _ => v => v,
+                    };
+                    if (unary.Function == "length")
+                    {
+                        var length = MathF.Sqrt(x.Sum(v => v * v));
+                        return [length, length, length, length];
+                    }
+                    return x.Select(f).ToArray();
+                }
             default:
                 return [0, 0, 0, 0];
         }

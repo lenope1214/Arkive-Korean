@@ -1,11 +1,11 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using Arkive.Core.Assets;
 using Arkive.Core.Baselines;
 using Arkive.Core.Exports;
 using Arkive.Core.Inspection;
 using Arkive.Core.Textures;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Arkive.Core.Mods;
 
@@ -387,14 +387,14 @@ public static class FaceTextureNumberOverlay
     {
         var rows = Digits[digit];
         for (var row = 0; row < rows.Length; row++)
-        for (var column = 0; column < rows[row].Length; column++)
-        {
-            if (rows[row][column] == '1')
+            for (var column = 0; column < rows[row].Length; column++)
             {
-                FillRect(image, left + column * scale, top + row * scale,
-                    scale, scale, 255, 238, 0);
+                if (rows[row][column] == '1')
+                {
+                    FillRect(image, left + column * scale, top + row * scale,
+                        scale, scale, 255, 238, 0);
+                }
             }
-        }
     }
 
     private static void DrawBorder(
@@ -416,13 +416,13 @@ public static class FaceTextureNumberOverlay
         var endX = Math.Clamp(x + width, 0, image.Width);
         var endY = Math.Clamp(y + height, 0, image.Height);
         for (var row = startY; row < endY; row++)
-        for (var column = startX; column < endX; column++)
-        {
-            var offset = (row * image.Width + column) * 4;
-            image.Pixels[offset] = red;
-            image.Pixels[offset + 1] = green;
-            image.Pixels[offset + 2] = blue;
-            // Preserve the editable image's alpha. Import also preserves game alpha.
-        }
+            for (var column = startX; column < endX; column++)
+            {
+                var offset = (row * image.Width + column) * 4;
+                image.Pixels[offset] = red;
+                image.Pixels[offset + 1] = green;
+                image.Pixels[offset + 2] = blue;
+                // Preserve the editable image's alpha. Import also preserves game alpha.
+            }
     }
 }

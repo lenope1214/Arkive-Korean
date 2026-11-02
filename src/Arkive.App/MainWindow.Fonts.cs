@@ -1,12 +1,11 @@
+using Arkive.Core.Fonts;
+using Arkive.Core.LoginScreens;
+using Arkive.Core.Mods;
 using System.ComponentModel;
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
-using Arkive.Core.Fonts;
-using Arkive.Core.LoginScreens;
-using Arkive.Core.Mods;
 
 namespace Arkive.App;
 

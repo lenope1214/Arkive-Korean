@@ -1,7 +1,7 @@
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
-using Arkive.Core.Interface;
 using Arkive.Core.Inspection;
+using Arkive.Core.Interface;
 using Arkive.Core.Materials;
 using Arkive.Core.Meshes;
 using Arkive.Core.Packages;
@@ -592,8 +592,12 @@ public sealed class ArkiveModMaterializationService
                     var table = tables[(patch.ObjectPath.ToUpperInvariant(), patch.ValueOffset)];
                     return patch with
                     {
-                        ObjectPath = table.Export.ObjectPath, ClassName = table.Export.ClassName, ExportIndex = table.Export.ExportIndex,
-                        SerialOffset = table.Export.SerialOffset, SerialSize = table.Export.SerialSize, SourceExportSha256 = table.ExportSha256,
+                        ObjectPath = table.Export.ObjectPath,
+                        ClassName = table.Export.ClassName,
+                        ExportIndex = table.Export.ExportIndex,
+                        SerialOffset = table.Export.SerialOffset,
+                        SerialSize = table.Export.SerialSize,
+                        SourceExportSha256 = table.ExportSha256,
                     };
                 }).ToArray();
             }

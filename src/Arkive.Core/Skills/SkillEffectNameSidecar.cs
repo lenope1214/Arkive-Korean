@@ -1,6 +1,6 @@
+using Arkive.Core.Discovery;
 using System.IO.Compression;
 using System.Text.Json;
-using Arkive.Core.Discovery;
 
 namespace Arkive.Core.Skills;
 

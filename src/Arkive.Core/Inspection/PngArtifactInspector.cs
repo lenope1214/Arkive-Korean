@@ -1,5 +1,5 @@
-using System.Security.Cryptography;
 using Arkive.Core.Textures;
+using System.Security.Cryptography;
 
 namespace Arkive.Core.Inspection;
 

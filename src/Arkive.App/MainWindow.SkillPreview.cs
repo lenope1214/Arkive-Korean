@@ -1,4 +1,3 @@
-using System.IO;
 using Arkive.Core.Assets;
 using Arkive.Core.Mods;
 

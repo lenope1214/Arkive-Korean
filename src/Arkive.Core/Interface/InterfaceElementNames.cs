@@ -28,10 +28,24 @@ public static partial class InterfaceElementNames
 
     private static readonly Dictionary<string, string> Words = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["btn"] = "button", ["bg"] = "background", ["img"] = "image", ["ico"] = "icon", ["wnd"] = "window",
-        ["txt"] = "text", ["tf"] = "text", ["hp"] = "HP", ["mp"] = "MP", ["exp"] = "EXP", ["ui"] = "UI",
-        ["hud"] = "HUD", ["pvp"] = "PvP", ["npc"] = "NPC", ["quickslot"] = "quick slot", ["gage"] = "gauge",
-        ["minimap"] = "minimap", ["tooltip"] = "tooltip",
+        ["btn"] = "button",
+        ["bg"] = "background",
+        ["img"] = "image",
+        ["ico"] = "icon",
+        ["wnd"] = "window",
+        ["txt"] = "text",
+        ["tf"] = "text",
+        ["hp"] = "HP",
+        ["mp"] = "MP",
+        ["exp"] = "EXP",
+        ["ui"] = "UI",
+        ["hud"] = "HUD",
+        ["pvp"] = "PvP",
+        ["npc"] = "NPC",
+        ["quickslot"] = "quick slot",
+        ["gage"] = "gauge",
+        ["minimap"] = "minimap",
+        ["tooltip"] = "tooltip",
     };
 
     // Words players search with that the game's identifiers spell differently.

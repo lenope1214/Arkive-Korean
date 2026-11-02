@@ -1,3 +1,8 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
+using Arkive.Core.External;
+using Arkive.Core.Meshes;
+using Arkive.Core.Packages;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -5,11 +10,6 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.External;
-using Arkive.Core.Meshes;
-using Arkive.Core.Packages;
 
 namespace Arkive.Core.Inspection;
 

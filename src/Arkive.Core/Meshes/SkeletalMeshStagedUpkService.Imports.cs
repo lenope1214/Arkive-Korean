@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using Arkive.Core.Packages;
 using Arkive.Core.Validation;
+using System.Diagnostics;
 
 namespace Arkive.Core.Meshes;
 

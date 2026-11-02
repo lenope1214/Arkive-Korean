@@ -329,7 +329,7 @@ internal static class TweakSmokeTests
             """;
         using var hiddenPage = System.Text.Json.JsonDocument.Parse(hidden);
         Assert(Arkive.Core.Tweaks.PlayerLogsService.Read("Zurmos", "CE", hiddenPage.RootElement) is
-               { Status: Arkive.Core.Tweaks.PlayerLogsStatus.Hidden, CharacterId: 270889558, RosterId: 27179 },
+        { Status: Arkive.Core.Tweaks.PlayerLogsStatus.Hidden, CharacterId: 270889558, RosterId: 27179 },
             "a character with private logs was not told apart from a missing one");
 
         // The tab spells request id, raid, name (4 hex digits per character) and a checksum; Arkive reads it back and

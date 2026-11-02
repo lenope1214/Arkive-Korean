@@ -1,9 +1,9 @@
+using Arkive.Core.Materials;
+using Arkive.Core.Meshes;
+using Arkive.Core.StaticMeshes;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Arkive.Core.Meshes;
-using Arkive.Core.Materials;
-using Arkive.Core.StaticMeshes;
 
 namespace Arkive.Core.Mods;
 

@@ -1,6 +1,6 @@
+using Arkive.Core.Proportions;
 using System.Numerics;
 using System.Text.Json.Serialization;
-using Arkive.Core.Proportions;
 
 namespace Arkive.Core.Physics;
 

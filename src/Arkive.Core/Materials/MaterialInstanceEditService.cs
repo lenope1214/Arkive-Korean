@@ -1,8 +1,8 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
 
 namespace Arkive.Core.Materials;
 

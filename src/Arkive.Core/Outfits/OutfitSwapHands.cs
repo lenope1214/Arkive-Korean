@@ -123,10 +123,22 @@ public static class OutfitSwapHands
         Join(sections, materials, native, joint, hands);
         var result = new OutfitSwapMesh
         {
-            Positions = positions.ToArray(), Normals = normals.ToArray(), Tangents = tangents.ToArray(), Uv0 = uv0.ToArray(), Uv1 = uv1.ToArray(),
-            Colours = colours.ToArray(), Joints = joints.ToArray(), Weights = weights.ToArray(), Sections = sections, Materials = materials,
-            BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents,
-            MaterialReferences = mesh.MaterialReferences, OwnPictureSkin = mesh.OwnPictureSkin, NativeSkin = native,
+            Positions = positions.ToArray(),
+            Normals = normals.ToArray(),
+            Tangents = tangents.ToArray(),
+            Uv0 = uv0.ToArray(),
+            Uv1 = uv1.ToArray(),
+            Colours = colours.ToArray(),
+            Joints = joints.ToArray(),
+            Weights = weights.ToArray(),
+            Sections = sections,
+            Materials = materials,
+            BoneNames = mesh.BoneNames,
+            BonePositions = mesh.BonePositions,
+            BoneParents = mesh.BoneParents,
+            MaterialReferences = mesh.MaterialReferences,
+            OwnPictureSkin = mesh.OwnPictureSkin,
+            NativeSkin = native,
         };
         return (result, positions.ToArray());
     }

@@ -1,6 +1,3 @@
-using System.Buffers.Binary;
-using System.IO;
-using System.Text.Json;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Materials;
@@ -8,6 +5,9 @@ using Arkive.Core.Packages;
 using Arkive.Core.Particles;
 using Arkive.Core.Viewer;
 using Arkive.Core.Viewer.Shaders;
+using System.Buffers.Binary;
+using System.IO;
+using System.Text.Json;
 
 namespace Arkive.App;
 

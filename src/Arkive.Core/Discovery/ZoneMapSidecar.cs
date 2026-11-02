@@ -1,13 +1,13 @@
-using System.Collections.Concurrent;
-using System.IO.Compression;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Databases;
 using Arkive.Core.Skills;
 using Microsoft.Data.Sqlite;
+using System.Collections.Concurrent;
+using System.IO.Compression;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Arkive.Core.Discovery;
 
@@ -315,7 +315,7 @@ public static partial class ZoneMapSidecar
             var database = Path.Combine(temporary, entry.Name);
             LostArkDatabaseArchive.Extract(archive, entry, database, cancellationToken);
             using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder
-                       { DataSource = database, Mode = SqliteOpenMode.ReadOnly }.ToString()))
+            { DataSource = database, Mode = SqliteOpenMode.ReadOnly }.ToString()))
             {
                 connection.Open();
                 using var command = connection.CreateCommand();

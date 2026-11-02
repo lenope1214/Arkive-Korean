@@ -1,3 +1,9 @@
+using Arkive.App;
+using Arkive.Core.Assets;
+using Arkive.Core.Discovery;
+using Arkive.Core.Mods;
+using Arkive.Core.Proportions;
+using Arkive.Core.Validation;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
@@ -6,12 +12,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Arkive.App;
-using Arkive.Core.Assets;
-using Arkive.Core.Discovery;
-using Arkive.Core.Mods;
-using Arkive.Core.Proportions;
-using Arkive.Core.Validation;
 
 internal static class Program
 {
@@ -408,8 +408,13 @@ internal static class Program
         var host = new Window
         {
             Content = new StackPanel { Children = { editable, fixedChoice } },
-            ShowActivated = false, ShowInTaskbar = false, WindowStartupLocation = WindowStartupLocation.Manual,
-            Left = -20000, Top = -20000, Width = 300, Height = 200,
+            ShowActivated = false,
+            ShowInTaskbar = false,
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = -20000,
+            Top = -20000,
+            Width = 300,
+            Height = 200,
         };
         host.Show();
         try

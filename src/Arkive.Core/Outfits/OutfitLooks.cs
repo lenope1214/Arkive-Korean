@@ -1,7 +1,7 @@
+using Arkive.Core.Skills;
 using System.Buffers.Binary;
 using System.Text;
 using System.Text.Json.Serialization;
-using Arkive.Core.Skills;
 
 namespace Arkive.Core.Outfits;
 

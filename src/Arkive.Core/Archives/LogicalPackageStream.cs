@@ -1,7 +1,7 @@
-using System.Buffers.Binary;
-using System.Security.Cryptography;
 using Arkive.Core.Compression;
 using Arkive.Core.Packages;
+using System.Buffers.Binary;
+using System.Security.Cryptography;
 
 namespace Arkive.Core.Archives;
 

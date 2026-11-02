@@ -1,13 +1,13 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
+using Arkive.Core.Inspection;
+using Arkive.Core.Packages;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.Inspection;
-using Arkive.Core.Packages;
 
 namespace Arkive.Core.Meshes;
 
@@ -716,17 +716,17 @@ public sealed class SkeletalMeshTopologyCompilerService
             for (var ring = 0; ring <= MaximumRing; ring++)
             {
                 for (var dx = -ring; dx <= ring; dx++)
-                for (var dy = -ring; dy <= ring; dy++)
-                for (var dz = -ring; dz <= ring; dz++)
-                {
-                    if (Math.Max(Math.Abs(dx), Math.Max(Math.Abs(dy), Math.Abs(dz))) != ring ||
-                        !_cells.TryGetValue((x + dx, y + dy, z + dz), out var members)) continue;
-                    foreach (var index in members)
-                    {
-                        var distance = Vector3.DistanceSquared(position, _positions[index]);
-                        if (distance < bestDistance) (best, bestDistance) = (index, distance);
-                    }
-                }
+                    for (var dy = -ring; dy <= ring; dy++)
+                        for (var dz = -ring; dz <= ring; dz++)
+                        {
+                            if (Math.Max(Math.Abs(dx), Math.Max(Math.Abs(dy), Math.Abs(dz))) != ring ||
+                                !_cells.TryGetValue((x + dx, y + dy, z + dz), out var members)) continue;
+                            foreach (var index in members)
+                            {
+                                var distance = Vector3.DistanceSquared(position, _positions[index]);
+                                if (distance < bestDistance) (best, bestDistance) = (index, distance);
+                            }
+                        }
                 if (bestDistance <= ring * _cellSize * (ring * _cellSize)) break;
             }
             // Far from every game vertex (new geometry outside the original's shape): check them all.

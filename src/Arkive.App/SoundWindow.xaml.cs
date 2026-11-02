@@ -1,11 +1,11 @@
+using Arkive.Core.Audio;
+using Microsoft.Win32;
+using NAudio.Wave;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using Arkive.Core.Audio;
-using Microsoft.Win32;
-using NAudio.Wave;
 
 namespace Arkive.App;
 

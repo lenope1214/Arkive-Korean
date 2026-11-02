@@ -1,6 +1,6 @@
+using Arkive.Core.External;
 using System.Diagnostics;
 using System.Security.Cryptography;
-using Arkive.Core.External;
 
 namespace Arkive.Core.Textures;
 

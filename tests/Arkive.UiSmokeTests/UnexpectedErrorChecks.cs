@@ -1,8 +1,8 @@
+using Arkive.App;
+using Arkive.Core.Validation;
 using System.IO;
 using System.Reflection;
 using System.Windows;
-using Arkive.App;
-using Arkive.Core.Validation;
 
 /// <summary>
 /// An error escaping an event handler shows a message and Arkive keeps running, with Report a problem offered.

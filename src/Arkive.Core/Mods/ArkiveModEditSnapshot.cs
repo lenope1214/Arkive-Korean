@@ -1,6 +1,3 @@
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text.Json;
 using Arkive.Core.Interface;
 using Arkive.Core.Materials;
 using Arkive.Core.Meshes;
@@ -8,6 +5,9 @@ using Arkive.Core.Particles;
 using Arkive.Core.Physics;
 using Arkive.Core.StaticMeshes;
 using Arkive.Core.Textures;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Arkive.Core.Mods;
 

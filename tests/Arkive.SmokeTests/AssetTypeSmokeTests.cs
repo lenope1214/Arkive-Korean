@@ -1,6 +1,3 @@
-using Arkive.Core.External;
-using Arkive.Core.Mods;
-
 namespace Arkive.SmokeTests;
 
 internal static class AssetTypeSmokeTests

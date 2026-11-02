@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Inspection;
@@ -10,6 +7,9 @@ using Arkive.Core.Packages;
 using Arkive.Core.StaticMeshes;
 using Arkive.Core.Textures;
 using Arkive.Core.Validation;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Arkive.Core.Mods;
 
@@ -215,7 +215,8 @@ public sealed class ClientUpdateCompatibilityService
                 (DateTimeOffset.UtcNow - started).TotalSeconds);
             return Report(ClientPackageCompatibilityState.InstalledPayload, currentHash, [],
                     "An Arkive package payload is installed. Restore it before checking or rebasing after a client update.")
-                with { FormatProbe = installedProbe, InstalledRevisionId = installedRevision.RevisionId };
+                with
+            { FormatProbe = installedProbe, InstalledRevisionId = installedRevision.RevisionId };
         }
 
         try
@@ -228,14 +229,16 @@ public sealed class ClientUpdateCompatibilityService
                         $"The current package is not safe for Arkive reconstruction: " +
                         formatProbe.Checks.FirstOrDefault(check =>
                             check.Severity == ClientCompatibilityCheckSeverity.Blocking)?.Message)
-                    with { FormatProbe = formatProbe };
+                    with
+                { FormatProbe = formatProbe };
             var catalogue = _catalogReader.Read(summary);
             formatProbe = formatProbe with { CataloguedAssetCount = catalogue.Assets.Count };
             if (!string.IsNullOrWhiteSpace(expectedSource) &&
                 currentHash.Equals(expectedSource, StringComparison.OrdinalIgnoreCase))
                 return Report(ClientPackageCompatibilityState.ExactSource, currentHash, [],
                         "The package exactly matches the clean client used by the latest build and passed the package-format probe.")
-                    with { FormatProbe = formatProbe };
+                    with
+                { FormatProbe = formatProbe };
             var assets = new List<ClientAssetCompatibility>();
             foreach (var texture in textures.Where(item =>
                          item.Manifest.IncludedInPackageBuild is not false))

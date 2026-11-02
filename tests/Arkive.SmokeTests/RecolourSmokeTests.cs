@@ -60,8 +60,12 @@ internal static class RecolourSmokeTests
         var image = new RgbaImage(3, 1, [40, 40, 40, 255, 110, 110, 110, 255, 200, 200, 200, 128]);
         new TextureRecolour(1, 1, 1)
         {
-            Style = TextureRecolourStyle.TwoTone, HighlightRed = 1, HighlightGreen = 0.8f, HighlightBlue = 0.4f,
-            HighlightAmount = 0.25f, Lift = 0.5f,
+            Style = TextureRecolourStyle.TwoTone,
+            HighlightRed = 1,
+            HighlightGreen = 0.8f,
+            HighlightBlue = 0.4f,
+            HighlightAmount = 0.25f,
+            Lift = 0.5f,
         }.Apply(image);
         var p = image.Pixels;
         Assert(p[0] == p[1] && p[1] == p[2] && p[0] is >= 120 and <= 135 &&

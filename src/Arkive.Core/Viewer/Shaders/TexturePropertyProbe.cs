@@ -1,5 +1,5 @@
-using System.Buffers.Binary;
 using Arkive.Core.Assets;
+using System.Buffers.Binary;
 
 namespace Arkive.Core.Viewer.Shaders;
 

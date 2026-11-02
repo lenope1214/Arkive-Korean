@@ -1,6 +1,6 @@
+using Arkive.Core.Assets;
 using System.Buffers.Binary;
 using System.Globalization;
-using Arkive.Core.Assets;
 
 namespace Arkive.Core.Inspection;
 

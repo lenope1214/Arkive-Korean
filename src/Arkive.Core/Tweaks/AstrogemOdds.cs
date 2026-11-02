@@ -345,13 +345,13 @@ public static class AstrogemOdds
                 }
                 Span<double> w = stackalloc double[4];
                 for (var a = 0; a < count; a++)
-                for (var b = a + 1; b < count; b++)
-                for (var c = b + 1; c < count; c++)
-                for (var d = c + 1; d < count; d++)
-                {
-                    w[0] = weights[a]; w[1] = weights[b]; w[2] = weights[c]; w[3] = weights[d];
-                    sets.Add((a, b, c, d, Ordered(w, total)));
-                }
+                    for (var b = a + 1; b < count; b++)
+                        for (var c = b + 1; c < count; c++)
+                            for (var d = c + 1; d < count; d++)
+                            {
+                                w[0] = weights[a]; w[1] = weights[b]; w[2] = weights[c]; w[3] = weights[d];
+                                sets.Add((a, b, c, d, Ordered(w, total)));
+                            }
             }
 
             /// <summary>The chance that four draws without replacement give exactly these four, in any order.</summary>
@@ -359,19 +359,19 @@ public static class AstrogemOdds
             {
                 var sum = 0.0;
                 for (var i = 0; i < 4; i++)
-                for (var j = 0; j < 4; j++)
-                {
-                    if (j == i) continue;
-                    for (var k = 0; k < 4; k++)
+                    for (var j = 0; j < 4; j++)
                     {
-                        if (k == i || k == j) continue;
-                        var l = 6 - i - j - k;
-                        var t1 = total - w[i];
-                        var t2 = t1 - w[j];
-                        var t3 = t2 - w[k];
-                        sum += w[i] / total * (w[j] / t1) * (w[k] / t2) * (w[l] / t3);
+                        if (j == i) continue;
+                        for (var k = 0; k < 4; k++)
+                        {
+                            if (k == i || k == j) continue;
+                            var l = 6 - i - j - k;
+                            var t1 = total - w[i];
+                            var t2 = t1 - w[j];
+                            var t3 = t2 - w[k];
+                            sum += w[i] / total * (w[j] / t1) * (w[k] / t2) * (w[l] / t3);
+                        }
                     }
-                }
                 return sum;
             }
 

@@ -1,9 +1,9 @@
-using System.Buffers.Binary;
-using System.Text;
-using System.Text.Json;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Packages;
+using System.Buffers.Binary;
+using System.Text;
+using System.Text.Json;
 
 namespace Arkive.Core.Viewer.Shaders;
 

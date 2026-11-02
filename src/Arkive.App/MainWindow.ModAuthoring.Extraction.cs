@@ -1,8 +1,8 @@
+using Arkive.Core.Mods;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
-using Arkive.Core.Mods;
 
 namespace Arkive.App;
 

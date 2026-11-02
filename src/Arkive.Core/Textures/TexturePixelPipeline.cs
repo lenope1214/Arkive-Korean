@@ -455,9 +455,9 @@ public static class TextureBlockRebuilder
         var height = source.Height * scale;
         var pixels = new byte[checked(width * height * 4)];
         for (var y = 0; y < height; y++)
-        for (var x = 0; x < width; x++)
-            source.Pixels.AsSpan(((y / scale) * source.Width + x / scale) * 4, 4)
-                .CopyTo(pixels.AsSpan((y * width + x) * 4, 4));
+            for (var x = 0; x < width; x++)
+                source.Pixels.AsSpan(((y / scale) * source.Width + x / scale) * 4, 4)
+                    .CopyTo(pixels.AsSpan((y * width + x) * 4, 4));
         return new RgbaImage(width, height, pixels);
     }
 
@@ -474,25 +474,25 @@ public static class TextureBlockRebuilder
         var output = new byte[blocksWide * blocksHigh * bytesPerBlock];
         Span<byte> pixels = stackalloc byte[64];
         for (var blockY = 0; blockY < blocksHigh; blockY++)
-        for (var blockX = 0; blockX < blocksWide; blockX++)
-        {
-            CopyPixelBlock(image, blockX, blockY, pixels);
-            var block = output.AsSpan((blockY * blocksWide + blockX) * bytesPerBlock, bytesPerBlock);
-            switch (format)
+            for (var blockX = 0; blockX < blocksWide; blockX++)
             {
-                case BlockTextureFormat.Bc1:
-                    BlockCompression.EncodeBc1(pixels, block, allowTransparency: true);
-                    break;
-                case BlockTextureFormat.Bc3:
-                    BlockCompression.EncodeBc4Channel(pixels, 3, block[..8]);
-                    BlockCompression.EncodeBc1(pixels, block[8..], allowTransparency: false);
-                    break;
-                case BlockTextureFormat.Bc5:
-                    BlockCompression.EncodeBc4Channel(pixels, 0, block[..8]);
-                    BlockCompression.EncodeBc4Channel(pixels, 1, block[8..]);
-                    break;
+                CopyPixelBlock(image, blockX, blockY, pixels);
+                var block = output.AsSpan((blockY * blocksWide + blockX) * bytesPerBlock, bytesPerBlock);
+                switch (format)
+                {
+                    case BlockTextureFormat.Bc1:
+                        BlockCompression.EncodeBc1(pixels, block, allowTransparency: true);
+                        break;
+                    case BlockTextureFormat.Bc3:
+                        BlockCompression.EncodeBc4Channel(pixels, 3, block[..8]);
+                        BlockCompression.EncodeBc1(pixels, block[8..], allowTransparency: false);
+                        break;
+                    case BlockTextureFormat.Bc5:
+                        BlockCompression.EncodeBc4Channel(pixels, 0, block[..8]);
+                        BlockCompression.EncodeBc4Channel(pixels, 1, block[8..]);
+                        break;
+                }
             }
-        }
         return output;
     }
 

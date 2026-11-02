@@ -1,5 +1,4 @@
 using Arkive.Core.Particles;
-using Arkive.Core.Textures;
 
 namespace Arkive.SmokeTests;
 

@@ -1,10 +1,10 @@
+using Arkive.App;
+using Microsoft.Win32;
 using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using Arkive.App;
-using Microsoft.Win32;
 using static Program;
 
 internal static class FileAssociationChecks

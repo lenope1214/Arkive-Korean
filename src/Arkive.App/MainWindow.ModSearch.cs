@@ -1,8 +1,8 @@
+using Arkive.Core.Mods;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Arkive.Core.Mods;
 
 namespace Arkive.App;
 

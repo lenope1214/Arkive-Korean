@@ -1,5 +1,5 @@
-using System.Text.Json.Serialization;
 using Arkive.Core.Assets;
+using System.Text.Json.Serialization;
 
 namespace Arkive.Core.Materials;
 

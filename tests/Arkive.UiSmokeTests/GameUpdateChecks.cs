@@ -1,7 +1,7 @@
+using Arkive.App;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using Arkive.App;
 
 /// <summary>The game-update actions sit on the Mod Library page, and every advanced Mods page leads back to it.</summary>
 internal static class GameUpdateChecks

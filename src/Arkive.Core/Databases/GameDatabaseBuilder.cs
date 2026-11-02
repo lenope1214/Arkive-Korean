@@ -1,6 +1,5 @@
-using System.Text.Json;
-using Arkive.Core.Discovery;
 using Microsoft.Data.Sqlite;
+using System.Text.Json;
 
 namespace Arkive.Core.Databases;
 

@@ -1,10 +1,10 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
+using Arkive.Core.Inspection;
+using Arkive.Core.Textures;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text.Json;
-using Arkive.Core.Assets;
-using Arkive.Core.Archives;
-using Arkive.Core.Inspection;
-using Arkive.Core.Textures;
 
 namespace Arkive.Core.Discovery;
 

@@ -1,11 +1,5 @@
-using System.Numerics;
-using System.Text;
-using System.Text.Json;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.Meshes;
 using Arkive.Core.Outfits;
-using Arkive.Core.Packages;
+using System.Numerics;
 
 namespace Arkive.SmokeTests;
 
@@ -82,19 +76,25 @@ internal static class MaterialReferenceSmokeTests
         var reference = new SkeletalMeshMaterialReference(new PackageObjectReference([
             new("pc_donor_137", "package", "core"), new("mat", "package", "core"),
             new("pc_donor_137_upper_mi", "materialinstanceconstant", "engine")]), "MaterialInstanceConstant'mat.pc_test_a_mi'");
-        var added = reference with { Replaces = null, Material = new PackageObjectReference([
+        var added = reference with
+        {
+            Replaces = null,
+            Material = new PackageObjectReference([
             new("pc_donor_137", "package", "core"), new("mat", "package", "core"),
-            new("pc_donor_137_lower_mi", "materialinstanceconstant", "engine")]) };
+            new("pc_donor_137_lower_mi", "materialinstanceconstant", "engine")])
+        };
         var json = new System.Text.Json.Nodes.JsonArray(
             new System.Text.Json.Nodes.JsonObject { ["name"] = "MaterialInstanceConstant'mat.pc_test_a_mi'" },
             new System.Text.Json.Nodes.JsonObject { ["name"] = "MaterialInstanceConstant'mat.pc_test_base_upper_mi'" },
             new System.Text.Json.Nodes.JsonObject
             {
-                ["name"] = "upper", ["extras"] = new System.Text.Json.Nodes.JsonObject { [SkeletalMeshMaterialReferences.ExtrasKey] = SkeletalMeshMaterialReferences.ToJson(reference) },
+                ["name"] = "upper",
+                ["extras"] = new System.Text.Json.Nodes.JsonObject { [SkeletalMeshMaterialReferences.ExtrasKey] = SkeletalMeshMaterialReferences.ToJson(reference) },
             },
             new System.Text.Json.Nodes.JsonObject
             {
-                ["name"] = "lower", ["extras"] = new System.Text.Json.Nodes.JsonObject { [SkeletalMeshMaterialReferences.ExtrasKey] = SkeletalMeshMaterialReferences.ToJson(added) },
+                ["name"] = "lower",
+                ["extras"] = new System.Text.Json.Nodes.JsonObject { [SkeletalMeshMaterialReferences.ExtrasKey] = SkeletalMeshMaterialReferences.ToJson(added) },
             });
         using var document = JsonDocument.Parse(json.ToJsonString());
         var names = new[] { "MaterialInstanceConstant'mat.pc_test_a_mi'", "MaterialInstanceConstant'mat.pc_test_base_upper_mi'", "upper", "lower" };
@@ -116,10 +116,16 @@ internal static class MaterialReferenceSmokeTests
             Positions = Enumerable.Range(0, vertices).Select(i => new Vector3(i * 0.1f, 1, i % 2 * 0.1f)).ToArray(),
             Normals = Enumerable.Repeat(Vector3.UnitZ, vertices).ToArray(),
             Tangents = Enumerable.Repeat(new Vector4(1, 0, 0, 1), vertices).ToArray(),
-            Uv0 = Enumerable.Range(0, vertices).Select(i => new Vector2(i * 0.1f, 0.3f)).ToArray(), Uv1 = new Vector2[vertices],
+            Uv0 = Enumerable.Range(0, vertices).Select(i => new Vector2(i * 0.1f, 0.3f)).ToArray(),
+            Uv1 = new Vector2[vertices],
             Colours = Enumerable.Repeat((byte)255, vertices * 4).ToArray(),
-            Joints = new int[vertices * 4], Weights = Enumerable.Range(0, vertices).SelectMany(_ => new[] { 1f, 0, 0, 0 }).ToArray(),
-            Sections = sections, Materials = materials, BoneNames = bones, BonePositions = [new(0, 1, 0)], BoneParents = [-1],
+            Joints = new int[vertices * 4],
+            Weights = Enumerable.Range(0, vertices).SelectMany(_ => new[] { 1f, 0, 0, 0 }).ToArray(),
+            Sections = sections,
+            Materials = materials,
+            BoneNames = bones,
+            BonePositions = [new(0, 1, 0)],
+            BoneParents = [-1],
         };
         PackageObjectReference Donor(string name) => new([new("pc_xx_av_1", "package", "core"), new("mat", "package", "core"),
             new(name, "materialinstanceconstant", "engine")]);
@@ -171,7 +177,8 @@ internal static class MaterialReferenceSmokeTests
         {
             ["asset"] = new System.Text.Json.Nodes.JsonObject { ["version"] = "2.0" },
             ["buffers"] = new System.Text.Json.Nodes.JsonArray(new System.Text.Json.Nodes.JsonObject { ["byteLength"] = 0 }),
-            ["bufferViews"] = new System.Text.Json.Nodes.JsonArray(), ["accessors"] = new System.Text.Json.Nodes.JsonArray(),
+            ["bufferViews"] = new System.Text.Json.Nodes.JsonArray(),
+            ["accessors"] = new System.Text.Json.Nodes.JsonArray(),
             ["materials"] = new System.Text.Json.Nodes.JsonArray(materials.Select(name => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["name"] = name }).ToArray()),
             ["meshes"] = new System.Text.Json.Nodes.JsonArray(new System.Text.Json.Nodes.JsonObject { ["primitives"] = new System.Text.Json.Nodes.JsonArray() }),
         };

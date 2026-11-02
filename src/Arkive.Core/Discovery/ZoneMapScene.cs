@@ -1,14 +1,14 @@
-using System.Buffers.Binary;
-using System.Collections.Concurrent;
-using System.Numerics;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Inspection;
 using Arkive.Core.Materials;
 using Arkive.Core.StaticMeshes;
 using Arkive.Core.Textures;
+using System.Buffers.Binary;
+using System.Collections.Concurrent;
+using System.Numerics;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Arkive.Core.Discovery;
 
@@ -1489,7 +1489,8 @@ public sealed partial class ZoneMapSceneBuilder(
             }
             var layer = Layer(first.Mesh, Slots(first).OfType<string>().ToArray());
             batches.Add(new ZoneSceneBatch(meshIndex[first.Mesh], slots, new ZoneSceneRange(offset, count),
-                first.Cutscene && layer == "solid" ? "cutscene" : layer) { Lightmap = lightmap, LightmapPlaces = places });
+                first.Cutscene && layer == "solid" ? "cutscene" : layer)
+            { Lightmap = lightmap, LightmapPlaces = places });
         }
         foreach (var tile in _tiles)
         {

@@ -1,21 +1,18 @@
-using System.Diagnostics;
-using System.IO;
-using System.Text.Json;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Threading;
+using Arkive.Core.Assets;
+using Arkive.Core.External;
 using Arkive.Core.Interface;
 using Arkive.Core.Materials;
-using Arkive.Core.Discovery;
-using Arkive.Core.External;
-using Arkive.Core.Assets;
 using Arkive.Core.Meshes;
 using Arkive.Core.Mods;
 using Arkive.Core.StaticMeshes;
 using Arkive.Core.Textures;
 using Arkive.Core.Viewer;
 using Microsoft.Win32;
+using System.Diagnostics;
+using System.IO;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Input;
 
 namespace Arkive.App;
 

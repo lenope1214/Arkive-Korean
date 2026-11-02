@@ -249,12 +249,12 @@ internal static class MeshSmokeTests
         Assert(report.NativeLayout!.Lods[0].VertexBuffer is { ElementCount: 3, ElementSize: 32 },
             "SkeletalMesh GPU vertex buffer was not inventoried");
         Assert(report.DeformationDependencies is
-            {
-                ClothState: SkeletalMeshDependencyState.None,
-                MorphState: SkeletalMeshDependencyState.None,
-                TopologyPreservingSupported: true,
-                TopologyChangingSupported: true,
-            }, "SkeletalMesh dependency audit did not prove the dependency-free synthetic mesh");
+        {
+            ClothState: SkeletalMeshDependencyState.None,
+            MorphState: SkeletalMeshDependencyState.None,
+            TopologyPreservingSupported: true,
+            TopologyChangingSupported: true,
+        }, "SkeletalMesh dependency audit did not prove the dependency-free synthetic mesh");
         Assert(report.Issues.Any(issue => issue.Code == "SKM300"),
             "missing semantic oracle was not recorded explicitly");
 
@@ -552,8 +552,11 @@ internal static class MeshSmokeTests
         Assert(SkeletalMeshDeformationDependencyService.TryParseMorphTarget(
                    syntheticMorphPayload, [new UnrealNameEntry(0, "None", 0)],
                    out var decodedMorphLods, out var morphRefusal) &&
-               decodedMorphLods is [{ DeltaCount: 1, BaseMeshVertexCount: 3,
-                   MaximumSourceVertexIndex: 2, SourceIndicesInRange: true }],
+               decodedMorphLods is [
+                   {
+                       DeltaCount: 1, BaseMeshVertexCount: 3,
+                       MaximumSourceVertexIndex: 2, SourceIndicesInRange: true
+                   }],
             "UE3 MorphTarget delta parser rejected a bounded valid payload: " + morphRefusal);
         var editedWorkspace = new SkeletalMeshEditWorkspaceStore(
             Path.Combine(fixtureDirectory, "skeletal-mesh-edits"));
@@ -596,9 +599,12 @@ internal static class MeshSmokeTests
                topologyCompilation.Manifest.PrefixPreservedExceptBounds &&
                topologyCompilation.Manifest.TrailingBytesPreserved &&
                topologyCompilation.Manifest.Lods is
-               [{ CandidateVertexCount: 4, CompiledVertexCount: 4, CandidateTriangleCount: 2,
-                   CompiledTriangleCount: 2, SectionCount: 1, ChunkCount: 1,
-                   TriangleMaterialTopologyMatches: true, JointsDecodeExactly: true }] &&
+               [
+                   {
+                       CandidateVertexCount: 4, CompiledVertexCount: 4, CandidateTriangleCount: 2,
+                       CompiledTriangleCount: 2, SectionCount: 1, ChunkCount: 1,
+                       TriangleMaterialTopologyMatches: true, JointsDecodeExactly: true
+                   }] &&
                topologyCompilation.Manifest.CompiledSerialSize > range.SerialSize &&
                topologyCompilation.Manifest.SerialSizeDelta > 0 &&
                File.Exists(topologyCompilation.CompiledExportPath) &&

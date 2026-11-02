@@ -1,8 +1,8 @@
+using Arkive.Core.Meshes;
+using Arkive.Core.Proportions;
 using System.Buffers.Binary;
 using System.Numerics;
 using System.Text.Json.Nodes;
-using Arkive.Core.Meshes;
-using Arkive.Core.Proportions;
 
 namespace Arkive.Core.Outfits;
 
@@ -63,9 +63,22 @@ public sealed class OutfitSwapMesh
     /// <summary>The same mesh with other normals and tangents.</summary>
     public OutfitSwapMesh WithFrames(Vector3[] normals, Vector4[] tangents) => new()
     {
-        Positions = Positions, Normals = normals, Tangents = tangents, Uv0 = Uv0, Uv1 = Uv1, Colours = Colours, Joints = Joints,
-        Weights = Weights, Sections = Sections, Materials = Materials, BoneNames = BoneNames, BonePositions = BonePositions,
-        BoneParents = BoneParents, MaterialReferences = MaterialReferences, OwnPictureSkin = OwnPictureSkin, NativeSkin = NativeSkin,
+        Positions = Positions,
+        Normals = normals,
+        Tangents = tangents,
+        Uv0 = Uv0,
+        Uv1 = Uv1,
+        Colours = Colours,
+        Joints = Joints,
+        Weights = Weights,
+        Sections = Sections,
+        Materials = Materials,
+        BoneNames = BoneNames,
+        BonePositions = BonePositions,
+        BoneParents = BoneParents,
+        MaterialReferences = MaterialReferences,
+        OwnPictureSkin = OwnPictureSkin,
+        NativeSkin = NativeSkin,
     };
 
     public bool HasBodySkeleton => Array.IndexOf(BoneNames, "bip001-pelvis") >= 0;
@@ -249,7 +262,10 @@ public sealed class OutfitSwapMesh
             views.Add(view);
             var accessor = new JsonObject
             {
-                ["bufferView"] = views.Count - 1, ["componentType"] = componentType, ["count"] = count, ["type"] = type,
+                ["bufferView"] = views.Count - 1,
+                ["componentType"] = componentType,
+                ["count"] = count,
+                ["type"] = type,
             };
             if (normalized) accessor["normalized"] = true;
             if (min is not null) accessor["min"] = min;

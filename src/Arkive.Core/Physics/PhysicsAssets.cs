@@ -1,9 +1,9 @@
-using System.Buffers.Binary;
-using System.Numerics;
-using System.Security.Cryptography;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Particles;
+using System.Buffers.Binary;
+using System.Numerics;
+using System.Security.Cryptography;
 
 namespace Arkive.Core.Physics;
 

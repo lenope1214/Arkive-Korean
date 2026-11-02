@@ -35,8 +35,12 @@ internal static class UpdateCredentialStore
             Marshal.Copy(bytes, 0, pointer, bytes.Length);
             var credential = new Credential
             {
-                Type = 1, TargetName = Target, BlobSize = (uint)bytes.Length,
-                Blob = pointer, Persist = 2, UserName = "GitHub",
+                Type = 1,
+                TargetName = Target,
+                BlobSize = (uint)bytes.Length,
+                Blob = pointer,
+                Persist = 2,
+                UserName = "GitHub",
             };
             if (!CredWrite(ref credential, 0)) throw new Win32Exception(Marshal.GetLastWin32Error());
         }

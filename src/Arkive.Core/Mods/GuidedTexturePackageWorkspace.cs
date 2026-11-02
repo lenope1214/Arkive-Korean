@@ -278,15 +278,15 @@ public sealed class GuidedTexturePackageWorkspace
     {
         var freed = 0L;
         foreach (var entry in await LoadAsync(cancellationToken).ConfigureAwait(false))
-        foreach (var revision in entry.Manifest.Revisions)
-        {
-            try
+            foreach (var revision in entry.Manifest.Revisions)
             {
-                freed += await PackageRevisionTrimmer.TrimAsync(RevisionDirectory(entry.Manifest, revision), revision, cancellationToken)
-                    .ConfigureAwait(false);
+                try
+                {
+                    freed += await PackageRevisionTrimmer.TrimAsync(RevisionDirectory(entry.Manifest, revision), revision, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
-        }
         return freed;
     }
 

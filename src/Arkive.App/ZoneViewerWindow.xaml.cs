@@ -1,3 +1,10 @@
+using Arkive.Core.Assets;
+using Arkive.Core.Discovery;
+using Arkive.Core.Materials;
+using Arkive.Core.Mods;
+using Arkive.Core.Textures;
+using Microsoft.Web.WebView2.Core;
+using Microsoft.Win32;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -7,13 +14,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using Arkive.Core.Assets;
-using Arkive.Core.Discovery;
-using Arkive.Core.Materials;
-using Arkive.Core.Mods;
-using Arkive.Core.Textures;
-using Microsoft.Web.WebView2.Core;
-using Microsoft.Win32;
 
 namespace Arkive.App;
 
@@ -84,7 +84,10 @@ public partial class ZoneViewerWindow : Window
         {
             var button = new Button
             {
-                ToolTip = swatch.Name, Width = 28, Height = 22, Margin = new Thickness(0, 0, 5, 5),
+                ToolTip = swatch.Name,
+                Width = 28,
+                Height = 22,
+                Margin = new Thickness(0, 0, 5, 5),
                 Background = new SolidColorBrush(Color.FromScRgb(1, swatch.Red, swatch.Green, swatch.Blue)),
             };
             button.Click += (_, _) =>
@@ -758,8 +761,14 @@ public partial class ZoneViewerWindow : Window
             keys = SelectedRows.Where(row => row.CanRecolour).Select(Key).ToArray(),
             tint = tint is null ? null : new
             {
-                selection = tint.Selection.ToString(), rangeHue = tint.RangeHue, rangeWidth = tint.RangeWidth,
-                red = tint.Red, green = tint.Green, blue = tint.Blue, strength = tint.Strength, brightness = tint.Brightness,
+                selection = tint.Selection.ToString(),
+                rangeHue = tint.RangeHue,
+                rangeWidth = tint.RangeWidth,
+                red = tint.Red,
+                green = tint.Green,
+                blue = tint.Blue,
+                strength = tint.Strength,
+                brightness = tint.Brightness,
             },
         });
     }
@@ -824,7 +833,9 @@ public partial class ZoneViewerWindow : Window
         group.Children.Add(new GeometryDrawing(dark, null, new RectangleGeometry(new Rect(8, 8, 8, 8))));
         return new DrawingBrush(group)
         {
-            TileMode = TileMode.Tile, Viewport = new Rect(0, 0, 16, 16), ViewportUnits = BrushMappingMode.Absolute,
+            TileMode = TileMode.Tile,
+            Viewport = new Rect(0, 0, 16, 16),
+            ViewportUnits = BrushMappingMode.Absolute,
         };
     }
 

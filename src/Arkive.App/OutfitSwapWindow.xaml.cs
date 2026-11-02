@@ -1,11 +1,11 @@
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Text.Json;
-using System.Windows;
 using Arkive.Core.Outfits;
 using Arkive.Core.Proportions;
 using Arkive.Core.Viewer;
 using Microsoft.Web.WebView2.Core;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Windows;
 
 namespace Arkive.App;
 
@@ -174,7 +174,8 @@ public partial class OutfitSwapWindow : Window
             Status("Finding the outfit's materials…");
             var body = OutfitSwapBodies.Detect(_targets[0].Mesh, _targets[0].ObjectName) is { } profile ? OutfitSwapBodies.For(profile) : null;
             var materials = await OutfitSwapMaterialSources.ReadAsync(_library, donors.Select(item => item.Piece).ToArray(), body, token)
-                with { KeepOwn = OwnMaterials, InnerAvatarPieces = InnerAvatars };
+                with
+            { KeepOwn = OwnMaterials, InnerAvatarPieces = InnerAvatars };
             // The preview draws added slots with these scenes' materials: the outfit's own and the body's skin.
             var materialScenes = donors.Select(item => item.Result).ToList();
             foreach (var name in body?.BaseBody ?? [])

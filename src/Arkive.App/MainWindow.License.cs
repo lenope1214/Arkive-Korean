@@ -1,8 +1,8 @@
+using Arkive.Core.External;
+using Arkive.Core.Updates;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using Arkive.Core.External;
-using Arkive.Core.Updates;
 
 namespace Arkive.App;
 

@@ -1,12 +1,12 @@
+using Arkive.App;
+using Arkive.Core.Materials;
+using Arkive.Core.Mods;
 using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Arkive.App;
-using Arkive.Core.Materials;
-using Arkive.Core.Mods;
 
 
 
@@ -36,7 +36,7 @@ internal static class ModLibraryRowChecks
                   ?? throw new InvalidOperationException("The priority box is missing from the mod row.");
         box.Text = "7";
         box.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(box)!, 0, Key.Enter)
-            { RoutedEvent = UIElement.PreviewKeyDownEvent });
+        { RoutedEvent = UIElement.PreviewKeyDownEvent });
         await Program.UntilAsync(() => Priority(grid) == 7 && apply.IsEnabled,
             () => $"Typing a priority did not update the list and its buttons: priority={Priority(grid)}, apply={apply.IsEnabled}.");
         var overlay = (FrameworkElement)window.FindName("BusyOverlay");

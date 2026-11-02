@@ -110,8 +110,12 @@ public partial class MainWindow
         Activate();
         await RecolourAuthoringAssetsAsync(edits, new TextureRecolour(1, 0.97f, 0.9f)
         {
-            Style = TextureRecolourStyle.TwoTone, HighlightRed = 1, HighlightGreen = 0.78f, HighlightBlue = 0.36f,
-            HighlightAmount = 0.2f, Lift = 0.55f,
+            Style = TextureRecolourStyle.TwoTone,
+            HighlightRed = 1,
+            HighlightGreen = 0.78f,
+            HighlightBlue = 0.36f,
+            HighlightAmount = 0.2f,
+            Lift = 0.55f,
         }, $"{name} and its effects");
         var text = $"Added {edits.Count:N0} of {name}'s assets to {_authoringDraft?.Metadata.Name}: " +
                    $"{edits.Count(edit => edit.Kind == UnifiedPackageAssetKind.Texture2D):N0} pictures, " +

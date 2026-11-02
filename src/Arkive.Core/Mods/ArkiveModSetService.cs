@@ -542,7 +542,8 @@ public sealed class ArkiveModSetService
                     member.DeploymentRequest, cancellationToken).ConfigureAwait(false);
                 if (result.ChangedTarget) changed.Add(member);
                 receipt = UpdateMemberReceipt(receipt, member.Member.MemberId,
-                    result.Inspection.State, result.ChangedTarget) with { UpdatedAt = DateTimeOffset.UtcNow };
+                    result.Inspection.State, result.ChangedTarget) with
+                { UpdatedAt = DateTimeOffset.UtcNow };
                 await SaveReceiptAsync(receiptPath, receipt, cancellationToken).ConfigureAwait(false);
             }
             var final = await InspectAsync(request, cancellationToken).ConfigureAwait(false);

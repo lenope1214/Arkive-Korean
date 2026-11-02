@@ -1,7 +1,7 @@
 using Arkive.Core.Assets;
 using Arkive.Core.Inspection;
-using Arkive.Core.Meshes;
 using Arkive.Core.Materials;
+using Arkive.Core.Meshes;
 using Arkive.Core.Textures;
 
 namespace Arkive.Core.Mods;

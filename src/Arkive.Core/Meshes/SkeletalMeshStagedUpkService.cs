@@ -1,10 +1,3 @@
-using System.Buffers.Binary;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Compression;
@@ -12,6 +5,13 @@ using Arkive.Core.Inspection;
 using Arkive.Core.Packages;
 using Arkive.Core.StaticMeshes;
 using Arkive.Core.Validation;
+using System.Buffers.Binary;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Arkive.Core.Meshes;
 

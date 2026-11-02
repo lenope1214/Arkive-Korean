@@ -1,11 +1,7 @@
-using System.IO;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Windows;
 using Arkive.Core.Assets;
-using Arkive.Core.Discovery;
 using Arkive.Core.Mods;
 using Arkive.Core.Particles;
+using System.IO;
 
 namespace Arkive.App;
 

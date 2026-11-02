@@ -1,28 +1,28 @@
-using System.Text.Json;
-using System.IO.Compression;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Baselines;
-using Arkive.Core.Interface;
-using Arkive.Core.GameData;
-using Arkive.Core.Languages;
-using Arkive.Core.Discovery;
 using Arkive.Core.Databases;
-using Arkive.Core.External;
+using Arkive.Core.Discovery;
 using Arkive.Core.Exports;
+using Arkive.Core.External;
+using Arkive.Core.GameData;
 using Arkive.Core.Inspection;
+using Arkive.Core.Interface;
+using Arkive.Core.Languages;
+using Arkive.Core.Materials;
+using Arkive.Core.Meshes;
 using Arkive.Core.Mods;
 using Arkive.Core.Outfits;
-using Arkive.Core.Meshes;
-using Arkive.Core.Materials;
 using Arkive.Core.Packages;
 using Arkive.Core.Physics;
 using Arkive.Core.Proportions;
 using Arkive.Core.Scanning;
+using Arkive.Core.StaticMeshes;
 using Arkive.Core.Textures;
 using Arkive.Core.Validation;
 using Arkive.Core.Viewer;
-using Arkive.Core.StaticMeshes;
+using System.IO.Compression;
+using System.Text.Json;
 
 return Run(args);
 
@@ -1158,7 +1158,8 @@ static int OutfitSwap(string packagesRoot, string? indexCache, string? wear, str
     // A replaced piece without skin of its own gets the body's skin material.
     var targetBody = targets.Select(item => OutfitSwapBodies.Detect(item.Piece.Mesh, item.Piece.ObjectName)).FirstOrDefault(profile => profile is not null);
     var skin = OutfitSwapMaterialSources.ReadAsync(library, donors.Select(item => item.Piece).ToArray(),
-        targetBody is null ? null : OutfitSwapBodies.For(targetBody), token).GetAwaiter().GetResult() with { KeepOwn = false };
+        targetBody is null ? null : OutfitSwapBodies.For(targetBody), token).GetAwaiter().GetResult() with
+    { KeepOwn = false };
     var fit = service.FitAsync(donors.Select(item => item.Piece).ToArray(), targets.Select(item => item.Piece).ToArray(),
         "cli", progress, token, skin).GetAwaiter().GetResult();
     IReadOnlyDictionary<int, string>[] Bakes(string? root, int count) => Enumerable.Range(0, count).Select(index =>
@@ -1214,7 +1215,11 @@ static int OutfitSwap(string packagesRoot, string? indexCache, string? wear, str
         File.WriteAllText(editsPath, JsonSerializer.Serialize(edits, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
         results.Add(new
         {
-            piece = piece.ObjectName, hidden = piece.Hidden, glb = glbPath, edits = editsPath, vertices = piece.Mesh.VertexCount,
+            piece = piece.ObjectName,
+            hidden = piece.Hidden,
+            glb = glbPath,
+            edits = editsPath,
+            vertices = piece.Mesh.VertexCount,
             triangles = piece.Mesh.Sections.Sum(section => section.Triangles.Length) / 3,
         });
     }
@@ -1222,8 +1227,14 @@ static int OutfitSwap(string packagesRoot, string? indexCache, string? wear, str
     if (json)
         WriteJson(new
         {
-            from = report.From.Id, to = report.To.Id, report.LearnedCostumes, report.ClippingBeforePercent, report.ClippingPercent,
-            report.StretchedPercent, report.Notes, canvases = fit.Plan.Canvases.Select(canvas => new { canvas.Key, tiles = canvas.Tiles.Count }),
+            from = report.From.Id,
+            to = report.To.Id,
+            report.LearnedCostumes,
+            report.ClippingBeforePercent,
+            report.ClippingPercent,
+            report.StretchedPercent,
+            report.Notes,
+            canvases = fit.Plan.Canvases.Select(canvas => new { canvas.Key, tiles = canvas.Tiles.Count }),
             pieces = results,
         });
     else
@@ -1337,12 +1348,22 @@ static int OutfitSwapMod(string packagesRoot, string? indexCache, string? wear, 
     if (json)
         WriteJson(new
         {
-            mod = saved.ModId, file, from = report.From.Id, to = report.To.Id, report.ClippingPercent, report.Notes, looks, lookNotes,
+            mod = saved.ModId,
+            file,
+            from = report.From.Id,
+            to = report.To.Id,
+            report.ClippingPercent,
+            report.Notes,
+            looks,
+            lookNotes,
             pieces = fit.Plan.Pieces.Select(piece => new
             {
-                piece = piece.ObjectName, piece.Hidden, materials = piece.Mesh.MaterialReferences.Values.Select(reference => new
+                piece = piece.ObjectName,
+                piece.Hidden,
+                materials = piece.Mesh.MaterialReferences.Values.Select(reference => new
                 {
-                    material = reference.Material.Path, reference.Replaces,
+                    material = reference.Material.Path,
+                    reference.Replaces,
                 }),
             }),
         });
@@ -2628,12 +2649,24 @@ static int ArkiveList(string projectRoot, bool json)
     {
         WriteJson(statuses.Select(status => new
         {
-            status.Mod.ModId, status.Mod.Manifest.Name, status.Mod.Manifest.Version, status.Mod.Enabled,
-            status.Mod.Priority, status.Mod.FileName, status.State, status.ConflictSummary, status.ModifiedLocally,
+            status.Mod.ModId,
+            status.Mod.Manifest.Name,
+            status.Mod.Manifest.Version,
+            status.Mod.Enabled,
+            status.Mod.Priority,
+            status.Mod.FileName,
+            status.State,
+            status.ConflictSummary,
+            status.ModifiedLocally,
             Assets = status.Assets.Select(asset => new
             {
-                asset.Asset.Kind, asset.Asset.Target.PackageAlias, asset.Asset.Target.ObjectName,
-                Outcome = asset.Outcome.ToString(), Setup = asset.Setup.ToString(), asset.InGame, asset.ModifiedLocally,
+                asset.Asset.Kind,
+                asset.Asset.Target.PackageAlias,
+                asset.Asset.Target.ObjectName,
+                Outcome = asset.Outcome.ToString(),
+                Setup = asset.Setup.ToString(),
+                asset.InGame,
+                asset.ModifiedLocally,
             }),
         }));
         return 0;
@@ -2707,8 +2740,12 @@ static int ArkiveConflicts(string projectRoot, bool json)
     {
         WriteJson(shared.Select(target => new
         {
-            target.PackageAlias, target.PhysicalPackageName, target.ClassName, target.ObjectName,
-            Winner = target.Winner?.ModName, Tied = target.Tied.Select(item => item.ModName),
+            target.PackageAlias,
+            target.PhysicalPackageName,
+            target.ClassName,
+            target.ObjectName,
+            Winner = target.Winner?.ModName,
+            Tied = target.Tied.Select(item => item.ModName),
             Contenders = target.Contenders.Select(item => new { item.ModName, item.Priority, item.Enabled }),
         }));
         return resolution.BlockingTies.Count > 0 ? 1 : 0;
@@ -2963,11 +3000,21 @@ static void PrintModPlan(ArkiveModApplyPlan plan, IReadOnlyList<string> limitati
 
 static object PlanJson(ArkiveModApplyPlan plan) => new
 {
-    plan.CanApply, plan.HasChanges, plan.Summary, plan.BlockingProblems, plan.Warnings, plan.Fingerprint,
+    plan.CanApply,
+    plan.HasChanges,
+    plan.Summary,
+    plan.BlockingProblems,
+    plan.Warnings,
+    plan.Fingerprint,
     Packages = plan.Packages.Select(package => new
     {
-        package.PackageAlias, package.PhysicalPackageName, Action = package.Action.ToString(), package.RestoreFirst,
-        package.Reason, package.Contributors, Setups = package.Setups.Select(setup => new { setup.ModName, setup.Asset.DisplayName, setup.Reason }),
+        package.PackageAlias,
+        package.PhysicalPackageName,
+        Action = package.Action.ToString(),
+        package.RestoreFirst,
+        package.Reason,
+        package.Contributors,
+        Setups = package.Setups.Select(setup => new { setup.ModName, setup.Asset.DisplayName, setup.Reason }),
     }),
 };
 
@@ -3346,8 +3393,12 @@ static int AstrogemOdds(string data2, string? targetId, string? outDirectory, bo
             }
             var grades = table.Grades.Select(grade => new
             {
-                grade.Grade.Attempts, grade.Grade.Rerolls, grade.Grade.Resets, grade.Grade.Cost,
-                Chance = grade.FreshChance, Gold = grade.FreshGold * grade.Grade.Cost,
+                grade.Grade.Attempts,
+                grade.Grade.Rerolls,
+                grade.Grade.Resets,
+                grade.Grade.Cost,
+                Chance = grade.FreshChance,
+                Gold = grade.FreshGold * grade.Grade.Cost,
             }).ToArray();
             results.Add(new { target.Id, target.Label, Seconds = seconds, Grades = grades, File = path });
             if (!json)
@@ -3460,7 +3511,9 @@ static int TweaksMod(string packagesRoot, string? projectRoot, string? tweaks, s
     {
         Console.WriteLine(JsonSerializer.Serialize(new
         {
-            mod = result.Mod is null ? null : library.GetModFilePath(result.Mod), result.Movies, result.MissingHooks,
+            mod = result.Mod is null ? null : library.GetModFilePath(result.Mod),
+            result.Movies,
+            result.MissingHooks,
         }));
         return 0;
     }

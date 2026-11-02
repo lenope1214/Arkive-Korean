@@ -1,5 +1,5 @@
-using System.Buffers.Binary;
 using Arkive.Core.Audio;
+using System.Buffers.Binary;
 
 namespace Arkive.Core.LoginScreens;
 

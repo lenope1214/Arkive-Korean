@@ -1,13 +1,12 @@
-using System.IO;
-using System.Windows;
-using System.Windows.Controls;
 using Arkive.Core.Assets;
 using Arkive.Core.Materials;
 using Arkive.Core.Meshes;
 using Arkive.Core.Mods;
 using Arkive.Core.StaticMeshes;
-using Arkive.Core.Textures;
 using Arkive.Core.Viewer;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Arkive.App;
 

@@ -1,11 +1,10 @@
-using System.Security.Cryptography;
-using System.Text.Json;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
 using Arkive.Core.Interface;
 using Arkive.Core.Mods;
-using Arkive.Core.Textures;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Arkive.Core.Tweaks;
 

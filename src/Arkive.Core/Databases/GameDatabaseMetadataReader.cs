@@ -1,7 +1,7 @@
-using System.Net;
-using System.Text.RegularExpressions;
 using Arkive.Core.Discovery;
 using Microsoft.Data.Sqlite;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Arkive.Core.Databases;
 
@@ -227,7 +227,7 @@ internal static class GameDatabaseMetadataReader
     private static SqliteConnection Open(string path)
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
-            { DataSource = path, Mode = SqliteOpenMode.ReadOnly, Cache = SqliteCacheMode.Private, Pooling = false }.ToString());
+        { DataSource = path, Mode = SqliteOpenMode.ReadOnly, Cache = SqliteCacheMode.Private, Pooling = false }.ToString());
         try
         {
             connection.Open();

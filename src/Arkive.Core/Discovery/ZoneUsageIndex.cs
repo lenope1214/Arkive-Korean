@@ -1,8 +1,8 @@
+using Arkive.Core.Archives;
 using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
-using Arkive.Core.Archives;
 
 namespace Arkive.Core.Discovery;
 

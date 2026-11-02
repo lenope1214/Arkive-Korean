@@ -1,7 +1,7 @@
-using System.IO;
-using System.Net.Http;
 using Arkive.Core.Tweaks;
 using Arkive.Core.Updates;
+using System.IO;
+using System.Net.Http;
 
 namespace Arkive.App;
 

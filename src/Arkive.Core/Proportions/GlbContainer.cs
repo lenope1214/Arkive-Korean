@@ -72,12 +72,18 @@ internal sealed class GlbContainer
         var componentType = (int)accessor["componentType"]!;
         var components = (string)accessor["type"]! switch
         {
-            "SCALAR" => 1, "VEC2" => 2, "VEC3" => 3, "VEC4" => 4, "MAT4" => 16,
+            "SCALAR" => 1,
+            "VEC2" => 2,
+            "VEC3" => 3,
+            "VEC4" => 4,
+            "MAT4" => 16,
             var other => throw new InvalidDataException($"Unsupported accessor type {other}."),
         };
         var componentSize = componentType switch
         {
-            5120 or 5121 => 1, 5122 or 5123 => 2, 5125 or 5126 => 4,
+            5120 or 5121 => 1,
+            5122 or 5123 => 2,
+            5125 or 5126 => 4,
             _ => throw new InvalidDataException($"Unsupported component type {componentType}."),
         };
         var offset = ((int?)view["byteOffset"] ?? 0) + ((int?)accessor["byteOffset"] ?? 0);

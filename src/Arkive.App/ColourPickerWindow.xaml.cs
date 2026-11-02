@@ -29,7 +29,10 @@ public partial class ColourPickerWindow : Window
         {
             var button = new Button
             {
-                ToolTip = swatch.Name, Width = 30, Height = 24, Margin = new Thickness(0, 0, 6, 6),
+                ToolTip = swatch.Name,
+                Width = 30,
+                Height = 24,
+                Margin = new Thickness(0, 0, 6, 6),
                 Background = new SolidColorBrush(Color.FromScRgb(1, swatch.Red, swatch.Green, swatch.Blue)),
             };
             button.Click += (_, _) => Set(swatch.Red, swatch.Green, swatch.Blue);

@@ -1,10 +1,9 @@
+using Arkive.App;
 using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Arkive.App;
-using Arkive.Core.Mods;
 using static Program;
 
 /// <summary>The Mods list search box filters as you type, and a .arkive file dropped on the window is imported after the usual question.</summary>

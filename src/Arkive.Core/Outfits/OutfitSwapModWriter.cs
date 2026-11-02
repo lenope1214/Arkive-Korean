@@ -54,9 +54,19 @@ public sealed class OutfitSwapModWriter(ArkiveModEditWorkspaces edits, IChunkPro
             positions = OutfitSwapClearance.PushOut(mesh.Positions, positions, skinBefore, skinAfter, cloth, reach: 0.02f, rounds: 24);
         return new OutfitSwapMesh
         {
-            Positions = positions, Normals = reshaped.Normals, Tangents = reshaped.Tangents, Uv0 = mesh.Uv0, Uv1 = mesh.Uv1,
-            Colours = mesh.Colours, Joints = mesh.Joints, Weights = mesh.Weights, Sections = mesh.Sections, Materials = mesh.Materials,
-            BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents,
+            Positions = positions,
+            Normals = reshaped.Normals,
+            Tangents = reshaped.Tangents,
+            Uv0 = mesh.Uv0,
+            Uv1 = mesh.Uv1,
+            Colours = mesh.Colours,
+            Joints = mesh.Joints,
+            Weights = mesh.Weights,
+            Sections = mesh.Sections,
+            Materials = mesh.Materials,
+            BoneNames = mesh.BoneNames,
+            BonePositions = mesh.BonePositions,
+            BoneParents = mesh.BoneParents,
             MaterialReferences = mesh.MaterialReferences,
         };
     }

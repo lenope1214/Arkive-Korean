@@ -1,6 +1,6 @@
+using Arkive.Core.Proportions;
 using System.Numerics;
 using System.Text.RegularExpressions;
-using Arkive.Core.Proportions;
 
 namespace Arkive.Core.Outfits;
 

@@ -1,11 +1,11 @@
-using System.IO;
-using System.Reflection;
-using System.Text.Json;
-using System.Windows.Controls;
 using Arkive.App;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
 using Arkive.Core.Proportions;
+using System.IO;
+using System.Reflection;
+using System.Text.Json;
+using System.Windows.Controls;
 
 /// <summary>Outfit Swap's class box shows a class's own skins and its body's outfits, and only those.</summary>
 internal static class OutfitSwapClassChecks

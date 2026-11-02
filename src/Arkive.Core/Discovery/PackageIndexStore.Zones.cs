@@ -1,8 +1,8 @@
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Materials;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
 
 namespace Arkive.Core.Discovery;
 

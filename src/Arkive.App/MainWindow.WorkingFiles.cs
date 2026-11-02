@@ -1,6 +1,6 @@
+using Arkive.Core.Mods;
 using System.IO;
 using System.Windows;
-using Arkive.Core.Mods;
 
 namespace Arkive.App;
 

@@ -168,24 +168,24 @@ public sealed class WwiseBank
         switch (type)
         {
             case 2: // Sound
-            {
-                var source = ReadSource(body, 0, bodyOffset, out var next);
-                Sounds[id] = source;
-                Parents[id] = ReadParent(body, next);
-                break;
-            }
+                {
+                    var source = ReadSource(body, 0, bodyOffset, out var next);
+                    Sounds[id] = source;
+                    Parents[id] = ReadParent(body, next);
+                    break;
+                }
             case 3: // Action
                 actions[id] = (BinaryPrimitives.ReadUInt16LittleEndian(body), BinaryPrimitives.ReadUInt32LittleEndian(body[2..]));
                 break;
             case 4: // Event
-            {
-                var actionCount = body[0];
-                var ids = new uint[actionCount];
-                for (var index = 0; index < actionCount; index++)
-                    ids[index] = BinaryPrimitives.ReadUInt32LittleEndian(body[(1 + index * 4)..]);
-                events[id] = ids;
-                break;
-            }
+                {
+                    var actionCount = body[0];
+                    var ids = new uint[actionCount];
+                    for (var index = 0; index < actionCount; index++)
+                        ids[index] = BinaryPrimitives.ReadUInt32LittleEndian(body[(1 + index * 4)..]);
+                    events[id] = ids;
+                    break;
+                }
             case 5 or 6 or 7 or 9: // Random/sequence, switch, actor-mixer, layer containers
                 Parents[id] = ReadParent(body, 0);
                 break;

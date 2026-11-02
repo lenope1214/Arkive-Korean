@@ -269,7 +269,7 @@ public static partial class BodyProportionEngine
             // limit any turn to 45 degrees.
             var dot = Vector3.Dot(from, to);
             if (dot < 0) continue;
-            var turn = Quaternion.Slerp(Quaternion.Identity, Turn(from, to), Math.Min(1f, (MathF.PI / 4) / MathF.Acos(Math.Min(1f, dot)) ));
+            var turn = Quaternion.Slerp(Quaternion.Identity, Turn(from, to), Math.Min(1f, (MathF.PI / 4) / MathF.Acos(Math.Min(1f, dot))));
             var normal = new Vector3(container.ReadFloat(normals, vertex, 0), container.ReadFloat(normals, vertex, 1),
                 container.ReadFloat(normals, vertex, 2));
             if (normal.LengthSquared() > 1e-12f)
@@ -403,13 +403,13 @@ public static partial class BodyProportionEngine
                 for (var ring = 0; ring <= maximumRings && (nearest.Count < Neighbours || ring <= 1); ring++)
                 {
                     for (var dx = -ring; dx <= ring; dx++)
-                    for (var dy = -ring; dy <= ring; dy++)
-                    for (var dz = -ring; dz <= ring; dz++)
-                    {
-                        if (Math.Max(Math.Abs(dx), Math.Max(Math.Abs(dy), Math.Abs(dz))) != ring) continue;
-                        if (!grid.TryGetValue((x + dx, y + dy, z + dz), out var list)) continue;
-                        foreach (var candidate in list) nearest.Add((candidate, Vector3.Distance(position, vertices[candidate].Position)));
-                    }
+                        for (var dy = -ring; dy <= ring; dy++)
+                            for (var dz = -ring; dz <= ring; dz++)
+                            {
+                                if (Math.Max(Math.Abs(dx), Math.Max(Math.Abs(dy), Math.Abs(dz))) != ring) continue;
+                                if (!grid.TryGetValue((x + dx, y + dy, z + dz), out var list)) continue;
+                                foreach (var candidate in list) nearest.Add((candidate, Vector3.Distance(position, vertices[candidate].Position)));
+                            }
                 }
                 if (nearest.Count == 0) { _sources[index] = []; continue; }
                 nearest.Sort((a, b) => a.Distance.CompareTo(b.Distance));
@@ -630,15 +630,15 @@ public static partial class BodyProportionEngine
                 case Shape.Lift: return Vector3.UnitY * (radius * weight);
                 case Shape.Spacing: return new Vector3(0, 0, sign * radius * weight);
                 case Shape.Sag:
-                {
-                    // Hanging: the further a point stands out from the body, the further it drops, so the tip and lower
-                    // curve sink while the base stays attached; the upper slope flattens a little.
-                    var standOut = Math.Clamp((position.X - pivot.X) * outwards / (depth * radius), 0f, 1.25f);
-                    var drop = 0.55f * radius * standOut * standOut;
-                    var above = Smooth((position.Y - centre.Y) / radius, 0, 1);
-                    var flatten = 0.25f * radius * standOut * above;
-                    return new Vector3(-outwards * flatten, -drop, 0) * weight;
-                }
+                    {
+                        // Hanging: the further a point stands out from the body, the further it drops, so the tip and lower
+                        // curve sink while the base stays attached; the upper slope flattens a little.
+                        var standOut = Math.Clamp((position.X - pivot.X) * outwards / (depth * radius), 0f, 1.25f);
+                        var drop = 0.55f * radius * standOut * standOut;
+                        var above = Smooth((position.Y - centre.Y) / radius, 0, 1);
+                        var flatten = 0.25f * radius * standOut * above;
+                        return new Vector3(-outwards * flatten, -drop, 0) * weight;
+                    }
                 default: return Vector3.Zero;
             }
         }

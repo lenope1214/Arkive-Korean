@@ -1,6 +1,6 @@
+using Arkive.Core.Viewer;
 using System.IO;
 using System.Text.Json;
-using Arkive.Core.Viewer;
 
 namespace Arkive.App;
 

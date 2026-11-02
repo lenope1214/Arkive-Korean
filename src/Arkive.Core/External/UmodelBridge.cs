@@ -1,8 +1,8 @@
+using Arkive.Core.Assets;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Arkive.Core.Assets;
 
 namespace Arkive.Core.External;
 

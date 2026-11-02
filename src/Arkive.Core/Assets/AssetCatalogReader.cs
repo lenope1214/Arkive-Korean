@@ -1,6 +1,6 @@
-using System.Text;
 using Arkive.Core.Archives;
 using Arkive.Core.Packages;
+using System.Text;
 
 namespace Arkive.Core.Assets;
 

@@ -1,12 +1,12 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
+using Arkive.Core.Packages;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.Packages;
 
 namespace Arkive.Core.StaticMeshes;
 

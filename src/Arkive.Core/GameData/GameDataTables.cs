@@ -1,5 +1,5 @@
-using System.Text.Json;
 using Microsoft.Data.Sqlite;
+using System.Text.Json;
 
 namespace Arkive.Core.GameData;
 
@@ -25,8 +25,10 @@ public static class GameDataTables
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
-            DataSource = path, Mode = readOnly ? SqliteOpenMode.ReadOnly : SqliteOpenMode.ReadWrite,
-            Cache = SqliteCacheMode.Private, Pooling = false,
+            DataSource = path,
+            Mode = readOnly ? SqliteOpenMode.ReadOnly : SqliteOpenMode.ReadWrite,
+            Cache = SqliteCacheMode.Private,
+            Pooling = false,
         }.ToString());
         connection.Open();
         return connection;
@@ -121,7 +123,7 @@ public static class GameDataTables
             for (var index = 0; index < reader.FieldCount; index++)
             {
                 var value = reader.GetValue(index);
-                cells[reader.GetName(index)] = value is byte[] ? GameDataValues.Null : GameDataValues.From(value);
+                cells[reader.GetName(index)] = value is byte[]? GameDataValues.Null : GameDataValues.From(value);
             }
             rows.Add(new GameDataRow(cells));
         }

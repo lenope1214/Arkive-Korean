@@ -1,10 +1,10 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
+using Arkive.Core.Packages;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Globalization;
 using System.Security.Cryptography;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.Packages;
 
 namespace Arkive.Core.Materials;
 
@@ -141,7 +141,8 @@ public sealed class MaterialInstanceReconnaissanceService
             request.Kind, request.ClassName, request.ObjectName, request.SerialOffset,
             request.SerialSize, Sha256(bytes), parse?.StartOffset, parse?.EndOffset,
             parentReference, parentObject, parse?.Properties ?? [], scalars, vectors,
-            textures, readiness, issues) { CollectedTextures = collected };
+            textures, readiness, issues)
+        { CollectedTextures = collected };
     }
 
     private static PropertyParseResult? FindPropertyStream(

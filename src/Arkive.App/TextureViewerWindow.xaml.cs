@@ -1,11 +1,11 @@
+using Arkive.Core.Interface;
+using Arkive.Core.Textures;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using Arkive.Core.Interface;
-using Arkive.Core.Textures;
 
 namespace Arkive.App;
 
@@ -56,7 +56,10 @@ public partial class TextureViewerWindow : Window
         {
             var button = new Button
             {
-                ToolTip = swatch.Name, Width = 28, Height = 22, Margin = new Thickness(0, 0, 5, 5),
+                ToolTip = swatch.Name,
+                Width = 28,
+                Height = 22,
+                Margin = new Thickness(0, 0, 5, 5),
                 Background = new SolidColorBrush(Color.FromScRgb(1, swatch.Red, swatch.Green, swatch.Blue)),
             };
             button.Click += (_, _) =>
@@ -72,7 +75,12 @@ public partial class TextureViewerWindow : Window
         {
             var button = new Button
             {
-                ToolTip = swatch.Name, Width = 24, Height = 20, Margin = new Thickness(0, 0, 4, 4), MinWidth = 0, Padding = new Thickness(0),
+                ToolTip = swatch.Name,
+                Width = 24,
+                Height = 20,
+                Margin = new Thickness(0, 0, 4, 4),
+                MinWidth = 0,
+                Padding = new Thickness(0),
                 Background = new SolidColorBrush(Color.FromScRgb(1, swatch.Red, swatch.Green, swatch.Blue)),
             };
             button.Click += (_, _) => SetHighlight(swatch.Red, swatch.Green, swatch.Blue);
@@ -136,7 +144,8 @@ public partial class TextureViewerWindow : Window
     private void HighlightButton_Click(object sender, RoutedEventArgs e)
     {
         var picker = new ColourPickerWindow("Highlight colour", "The part's lightest, raised details take this colour.",
-            _highlight.Red, _highlight.Green, _highlight.Blue) { Owner = this };
+            _highlight.Red, _highlight.Green, _highlight.Blue)
+        { Owner = this };
         if (picker.ShowDialog() == true) SetHighlight(picker.Red, picker.Green, picker.Blue);
     }
 
@@ -245,7 +254,9 @@ public partial class TextureViewerWindow : Window
         group.Children.Add(new GeometryDrawing(dark, null, new RectangleGeometry(new Rect(8, 8, 8, 8))));
         return new DrawingBrush(group)
         {
-            TileMode = TileMode.Tile, Viewport = new Rect(0, 0, 16, 16), ViewportUnits = BrushMappingMode.Absolute,
+            TileMode = TileMode.Tile,
+            Viewport = new Rect(0, 0, 16, 16),
+            ViewportUnits = BrushMappingMode.Absolute,
         };
     }
 

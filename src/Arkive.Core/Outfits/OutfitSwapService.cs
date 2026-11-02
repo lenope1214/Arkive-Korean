@@ -1,5 +1,5 @@
-using System.Numerics;
 using Arkive.Core.Proportions;
+using System.Numerics;
 
 namespace Arkive.Core.Outfits;
 
@@ -377,9 +377,19 @@ public sealed class OutfitSwapService(IOutfitSwapLibrary library, string cacheDi
                 positions = Add(positions, field.Correct(positions, OutfitSwapFitting.Features(mesh, Enumerable.Range(0, mesh.VertexCount).ToArray())));
             moved.Add(new OutfitSwapMesh
             {
-                Positions = positions, Normals = mesh.Normals, Tangents = mesh.Tangents, Uv0 = mesh.Uv0, Uv1 = mesh.Uv1, Colours = mesh.Colours,
-                Joints = mesh.Joints, Weights = mesh.Weights, Sections = mesh.Sections, Materials = mesh.Materials,
-                BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents,
+                Positions = positions,
+                Normals = mesh.Normals,
+                Tangents = mesh.Tangents,
+                Uv0 = mesh.Uv0,
+                Uv1 = mesh.Uv1,
+                Colours = mesh.Colours,
+                Joints = mesh.Joints,
+                Weights = mesh.Weights,
+                Sections = mesh.Sections,
+                Materials = mesh.Materials,
+                BoneNames = mesh.BoneNames,
+                BonePositions = mesh.BonePositions,
+                BoneParents = mesh.BoneParents,
             });
         }
         return moved.Count > 0 ? new OutfitSwapBody(moved, native: false) : null;
@@ -522,9 +532,20 @@ public sealed class OutfitSwapService(IOutfitSwapLibrary library, string cacheDi
         }
         return new OutfitSwapMesh
         {
-            Positions = mesh.Positions, Normals = mesh.Normals, Tangents = mesh.Tangents, Uv0 = mesh.Uv0, Uv1 = mesh.Uv1, Colours = mesh.Colours,
-            Joints = joints, Weights = weights, Sections = mesh.Sections, Materials = mesh.Materials, BoneNames = mesh.BoneNames,
-            BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents, OwnPictureSkin = mesh.OwnPictureSkin,
+            Positions = mesh.Positions,
+            Normals = mesh.Normals,
+            Tangents = mesh.Tangents,
+            Uv0 = mesh.Uv0,
+            Uv1 = mesh.Uv1,
+            Colours = mesh.Colours,
+            Joints = joints,
+            Weights = weights,
+            Sections = mesh.Sections,
+            Materials = mesh.Materials,
+            BoneNames = mesh.BoneNames,
+            BonePositions = mesh.BonePositions,
+            BoneParents = mesh.BoneParents,
+            OwnPictureSkin = mesh.OwnPictureSkin,
         };
     }
 
@@ -566,9 +587,20 @@ public sealed class OutfitSwapService(IOutfitSwapLibrary library, string cacheDi
             Materials = pieceMaterials,
             Mesh = new OutfitSwapMesh
             {
-                Positions = mesh.Positions, Normals = mesh.Normals, Tangents = mesh.Tangents, Uv0 = mesh.Uv0, Uv1 = mesh.Uv1,
-                Colours = mesh.Colours, Joints = mesh.Joints, Weights = mesh.Weights, Sections = sections, Materials = materials,
-                BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents, OwnPictureSkin = own,
+                Positions = mesh.Positions,
+                Normals = mesh.Normals,
+                Tangents = mesh.Tangents,
+                Uv0 = mesh.Uv0,
+                Uv1 = mesh.Uv1,
+                Colours = mesh.Colours,
+                Joints = mesh.Joints,
+                Weights = mesh.Weights,
+                Sections = sections,
+                Materials = materials,
+                BoneNames = mesh.BoneNames,
+                BonePositions = mesh.BonePositions,
+                BoneParents = mesh.BoneParents,
+                OwnPictureSkin = own,
                 NativeSkin = mesh.NativeSkin,
             },
         };

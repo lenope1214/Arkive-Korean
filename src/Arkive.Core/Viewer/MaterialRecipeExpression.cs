@@ -238,26 +238,26 @@ public sealed class RecipeGlslCompiler(IRecipeBindings bindings)
             case RecipeNumber number:
                 return (FormatFloat(number.Value), 1);
             case RecipeNegate negate:
-            {
-                var (code, width) = Emit(negate.Operand);
-                return ($"(-{code})", width);
-            }
+                {
+                    var (code, width) = Emit(negate.Operand);
+                    return ($"(-{code})", width);
+                }
             case RecipeSwizzle swizzle:
-            {
-                var (code, width) = Emit(swizzle.Target);
-                var highest = swizzle.Components.Max(c => "xyzw".IndexOf(c)) + 1;
-                if (width == 1)
-                    return swizzle.Components.Length == 1 ? (code, 1) : ($"vec{swizzle.Components.Length}({code})", swizzle.Components.Length);
-                if (highest > width) throw new RecipeSyntaxException($"Swizzle .{swizzle.Components} reads beyond a {width}-component value.");
-                return ($"({code}).{swizzle.Components}", swizzle.Components.Length);
-            }
+                {
+                    var (code, width) = Emit(swizzle.Target);
+                    var highest = swizzle.Components.Max(c => "xyzw".IndexOf(c)) + 1;
+                    if (width == 1)
+                        return swizzle.Components.Length == 1 ? (code, 1) : ($"vec{swizzle.Components.Length}({code})", swizzle.Components.Length);
+                    if (highest > width) throw new RecipeSyntaxException($"Swizzle .{swizzle.Components} reads beyond a {width}-component value.");
+                    return ($"({code}).{swizzle.Components}", swizzle.Components.Length);
+                }
             case RecipeBinary binary:
-            {
-                var (left, leftWidth) = Emit(binary.Left);
-                var (right, rightWidth) = Emit(binary.Right);
-                var width = Combine(leftWidth, rightWidth, binary.Operator.ToString());
-                return ($"({left} {binary.Operator} {right})", width);
-            }
+                {
+                    var (left, leftWidth) = Emit(binary.Left);
+                    var (right, rightWidth) = Emit(binary.Right);
+                    var width = Combine(leftWidth, rightWidth, binary.Operator.ToString());
+                    return ($"({left} {binary.Operator} {right})", width);
+                }
             case RecipeCall call:
                 return EmitCall(call);
             case RecipeString text:
@@ -272,106 +272,106 @@ public sealed class RecipeGlslCompiler(IRecipeBindings bindings)
         switch (call.Name)
         {
             case "tex":
-            {
-                var parameter = ResolveTexture(StringArgument(call, 0));
-                if (parameter is null) return (DefaultTexture(call), 4);
-                if (!_samplers.ContainsKey(parameter))
-                    _samplers[parameter] = $"ark_t{_samplers.Count}";
-                return ($"texture2D({_samplers[parameter]}, vUv)", 4);
-            }
+                {
+                    var parameter = ResolveTexture(StringArgument(call, 0));
+                    if (parameter is null) return (DefaultTexture(call), 4);
+                    if (!_samplers.ContainsKey(parameter))
+                        _samplers[parameter] = $"ark_t{_samplers.Count}";
+                    return ($"texture2D({_samplers[parameter]}, vUv)", 4);
+                }
             case "has":
                 return (ResolveTexture(StringArgument(call, 0)) is null ? "0.0" : "1.0", 1);
             case "vec":
-            {
-                var name = StringArgument(call, 0);
-                var value = bindings.Vector(name) ?? DefaultVector(call);
-                return (AddUniform("vec4", name, value), 4);
-            }
+                {
+                    var name = StringArgument(call, 0);
+                    var value = bindings.Vector(name) ?? DefaultVector(call);
+                    return (AddUniform("vec4", name, value), 4);
+                }
             case "scalar":
-            {
-                var name = StringArgument(call, 0);
-                var value = bindings.Scalar(name) ?? (args.Count > 1 ? ConstantValue(args[1]) : 0f);
-                return (AddUniform("float", name, [value]), 1);
-            }
+                {
+                    var name = StringArgument(call, 0);
+                    var value = bindings.Scalar(name) ?? (args.Count > 1 ? ConstantValue(args[1]) : 0f);
+                    return (AddUniform("float", name, [value]), 1);
+                }
             case "switch":
-            {
-                var name = StringArgument(call, 0);
-                var value = bindings.Switch(name) ?? (args.Count > 1 && ConstantValue(args[1]) != 0);
-                return (value ? "1.0" : "0.0", 1);
-            }
+                {
+                    var name = StringArgument(call, 0);
+                    var value = bindings.Switch(name) ?? (args.Count > 1 && ConstantValue(args[1]) != 0);
+                    return (value ? "1.0" : "0.0", 1);
+                }
             case "vec2" or "vec3" or "vec4":
-            {
-                var target = call.Name[3] - '0';
-                var parts = args.Select(Emit).ToArray();
-                if (parts.Length == 1) return (Convert(parts[0].Code, parts[0].Width, target), target);
-                if (parts.Sum(part => part.Width) != target)
-                    throw new RecipeSyntaxException($"{call.Name}(...) needs exactly {target} components.");
-                return ($"{call.Name}({string.Join(", ", parts.Select(part => part.Code))})", target);
-            }
+                {
+                    var target = call.Name[3] - '0';
+                    var parts = args.Select(Emit).ToArray();
+                    if (parts.Length == 1) return (Convert(parts[0].Code, parts[0].Width, target), target);
+                    if (parts.Sum(part => part.Width) != target)
+                        throw new RecipeSyntaxException($"{call.Name}(...) needs exactly {target} components.");
+                    return ($"{call.Name}({string.Join(", ", parts.Select(part => part.Code))})", target);
+                }
             case "lerp" or "mix":
-            {
-                Arity(call, 3);
-                var a = Emit(args[0]);
-                var b = Emit(args[1]);
-                var t = Emit(args[2]);
-                var width = Combine(a.Width, b.Width, call.Name);
-                if (t.Width != 1 && t.Width != width) throw new RecipeSyntaxException("lerp's factor must be a scalar or match its inputs.");
-                return ($"mix({Convert(a.Code, a.Width, width)}, {Convert(b.Code, b.Width, width)}, {t.Code})", width);
-            }
+                {
+                    Arity(call, 3);
+                    var a = Emit(args[0]);
+                    var b = Emit(args[1]);
+                    var t = Emit(args[2]);
+                    var width = Combine(a.Width, b.Width, call.Name);
+                    if (t.Width != 1 && t.Width != width) throw new RecipeSyntaxException("lerp's factor must be a scalar or match its inputs.");
+                    return ($"mix({Convert(a.Code, a.Width, width)}, {Convert(b.Code, b.Width, width)}, {t.Code})", width);
+                }
             case "saturate":
-            {
-                Arity(call, 1);
-                var x = Emit(args[0]);
-                return ($"clamp({x.Code}, 0.0, 1.0)", x.Width);
-            }
+                {
+                    Arity(call, 1);
+                    var x = Emit(args[0]);
+                    return ($"clamp({x.Code}, 0.0, 1.0)", x.Width);
+                }
             case "clamp":
-            {
-                Arity(call, 3);
-                var x = Emit(args[0]);
-                return ($"clamp({x.Code}, {Compile(args[1], 1)}, {Compile(args[2], 1)})", x.Width);
-            }
+                {
+                    Arity(call, 3);
+                    var x = Emit(args[0]);
+                    return ($"clamp({x.Code}, {Compile(args[1], 1)}, {Compile(args[2], 1)})", x.Width);
+                }
             case "min" or "max" or "pow" or "step":
-            {
-                Arity(call, 2);
-                var a = Emit(args[0]);
-                var b = Emit(args[1]);
-                var width = Combine(a.Width, b.Width, call.Name);
-                return ($"{call.Name}({Convert(a.Code, a.Width, width)}, {Convert(b.Code, b.Width, width)})", width);
-            }
+                {
+                    Arity(call, 2);
+                    var a = Emit(args[0]);
+                    var b = Emit(args[1]);
+                    var width = Combine(a.Width, b.Width, call.Name);
+                    return ($"{call.Name}({Convert(a.Code, a.Width, width)}, {Convert(b.Code, b.Width, width)})", width);
+                }
             case "abs" or "sqrt" or "fract" or "floor":
-            {
-                Arity(call, 1);
-                var x = Emit(args[0]);
-                return ($"{call.Name}({x.Code})", x.Width);
-            }
+                {
+                    Arity(call, 1);
+                    var x = Emit(args[0]);
+                    return ($"{call.Name}({x.Code})", x.Width);
+                }
             case "uv":
-            {
-                Arity(call, 1);
-                var set = (int)ConstantValue(args[0]);
-                if (set is not 0 and not 1) throw new RecipeSyntaxException("uv() supports UV sets 0 and 1.");
-                if (set == 1) UsesSecondUv = true;
-                return (set == 0 ? "vUv" : "ark_vUv1", 2);
-            }
+                {
+                    Arity(call, 1);
+                    var set = (int)ConstantValue(args[0]);
+                    if (set is not 0 and not 1) throw new RecipeSyntaxException("uv() supports UV sets 0 and 1.");
+                    if (set == 1) UsesSecondUv = true;
+                    return (set == 0 ? "vUv" : "ark_vUv1", 2);
+                }
             case "dot":
-            {
-                Arity(call, 2);
-                var a = Emit(args[0]);
-                var b = Emit(args[1]);
-                var width = Combine(a.Width, b.Width, "dot");
-                return ($"dot({Convert(a.Code, a.Width, width)}, {Convert(b.Code, b.Width, width)})", 1);
-            }
+                {
+                    Arity(call, 2);
+                    var a = Emit(args[0]);
+                    var b = Emit(args[1]);
+                    var width = Combine(a.Width, b.Width, "dot");
+                    return ($"dot({Convert(a.Code, a.Width, width)}, {Convert(b.Code, b.Width, width)})", 1);
+                }
             case "lum":
-            {
-                Arity(call, 1);
-                return ($"dot({Compile(args[0], 3)}, vec3(0.2126, 0.7152, 0.0722))", 1);
-            }
+                {
+                    Arity(call, 1);
+                    return ($"dot({Compile(args[0], 3)}, vec3(0.2126, 0.7152, 0.0722))", 1);
+                }
             case "srgb":
-            {
-                Arity(call, 1);
-                var x = Emit(args[0]);
-                if (x.Width == 2) throw new RecipeSyntaxException("srgb() needs 1, 3 or 4 components.");
-                return ($"ark_srgb({x.Code})", x.Width);
-            }
+                {
+                    Arity(call, 1);
+                    var x = Emit(args[0]);
+                    if (x.Width == 2) throw new RecipeSyntaxException("srgb() needs 1, 3 or 4 components.");
+                    return ($"ark_srgb({x.Code})", x.Width);
+                }
         }
         throw new RecipeSyntaxException($"Unknown recipe function {call.Name}().");
     }
@@ -480,22 +480,22 @@ public sealed class RecipeEvaluator(IRecipeBindings bindings, Func<string, float
             case RecipeNumber number: return [number.Value];
             case RecipeNegate negate: return Map(Eval(negate.Operand), x => -x);
             case RecipeSwizzle swizzle:
-            {
-                var value = Eval(swizzle.Target);
-                return swizzle.Components.Select(c => value.Length == 1 ? value[0] : value["xyzw".IndexOf(c)]).ToArray();
-            }
-            case RecipeBinary binary:
-            {
-                var left = Eval(binary.Left);
-                var right = Eval(binary.Right);
-                return Zip(left, right, binary.Operator switch
                 {
-                    '+' => (a, b) => a + b,
-                    '-' => (a, b) => a - b,
-                    '*' => (a, b) => a * b,
-                    _ => (a, b) => b == 0 ? 0 : a / b,
-                });
-            }
+                    var value = Eval(swizzle.Target);
+                    return swizzle.Components.Select(c => value.Length == 1 ? value[0] : value["xyzw".IndexOf(c)]).ToArray();
+                }
+            case RecipeBinary binary:
+                {
+                    var left = Eval(binary.Left);
+                    var right = Eval(binary.Right);
+                    return Zip(left, right, binary.Operator switch
+                    {
+                        '+' => (a, b) => a + b,
+                        '-' => (a, b) => a - b,
+                        '*' => (a, b) => a * b,
+                        _ => (a, b) => b == 0 ? 0 : a / b,
+                    });
+                }
             case RecipeCall call: return EvalCall(call);
         }
         throw new RecipeSyntaxException($"Unsupported recipe node {node.GetType().Name}.");
@@ -507,29 +507,29 @@ public sealed class RecipeEvaluator(IRecipeBindings bindings, Func<string, float
         switch (call.Name)
         {
             case "tex":
-            {
-                var parameter = RecipeGlslCompiler.StringArgument(call, 0)
-                    .Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                    .FirstOrDefault(bindings.HasTexture);
-                if (parameter is null)
-                    return Enumerable.Repeat(args.Count > 1 ? RecipeGlslCompiler.ConstantValue(args[1]) : 1f, 4).ToArray();
-                return sample(parameter, _u, _v);
-            }
+                {
+                    var parameter = RecipeGlslCompiler.StringArgument(call, 0)
+                        .Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                        .FirstOrDefault(bindings.HasTexture);
+                    if (parameter is null)
+                        return Enumerable.Repeat(args.Count > 1 ? RecipeGlslCompiler.ConstantValue(args[1]) : 1f, 4).ToArray();
+                    return sample(parameter, _u, _v);
+                }
             case "has":
                 return [RecipeGlslCompiler.StringArgument(call, 0).Split('|').Any(name => bindings.HasTexture(name.Trim())) ? 1 : 0];
             case "vec":
-            {
-                var value = bindings.Vector(RecipeGlslCompiler.StringArgument(call, 0));
-                if (value is not null) return value;
-                var defaults = args.Skip(1).Select(RecipeGlslCompiler.ConstantValue).ToArray();
-                return defaults.Length switch
                 {
-                    0 => [0, 0, 0, 1],
-                    1 => [defaults[0], defaults[0], defaults[0], 1],
-                    3 => [defaults[0], defaults[1], defaults[2], 1],
-                    _ => defaults,
-                };
-            }
+                    var value = bindings.Vector(RecipeGlslCompiler.StringArgument(call, 0));
+                    if (value is not null) return value;
+                    var defaults = args.Skip(1).Select(RecipeGlslCompiler.ConstantValue).ToArray();
+                    return defaults.Length switch
+                    {
+                        0 => [0, 0, 0, 1],
+                        1 => [defaults[0], defaults[0], defaults[0], 1],
+                        3 => [defaults[0], defaults[1], defaults[2], 1],
+                        _ => defaults,
+                    };
+                }
             case "scalar":
                 return [bindings.Scalar(RecipeGlslCompiler.StringArgument(call, 0)) ??
                         (args.Count > 1 ? RecipeGlslCompiler.ConstantValue(args[1]) : 0)];
@@ -537,32 +537,32 @@ public sealed class RecipeEvaluator(IRecipeBindings bindings, Func<string, float
                 return [(bindings.Switch(RecipeGlslCompiler.StringArgument(call, 0)) ??
                          (args.Count > 1 && RecipeGlslCompiler.ConstantValue(args[1]) != 0)) ? 1 : 0];
             case "vec2" or "vec3" or "vec4":
-            {
-                var target = call.Name[3] - '0';
-                var parts = args.Select(Eval).ToArray();
-                return parts.Length == 1 ? Resize(parts[0], target) : parts.SelectMany(part => part).ToArray();
-            }
-            case "lerp" or "mix":
-            {
-                var a = Eval(args[0]);
-                var b = Eval(args[1]);
-                var t = Eval(args[2]);
-                var width = Math.Max(a.Length, b.Length);
-                return Enumerable.Range(0, width).Select(i =>
                 {
-                    var x = a[a.Length == 1 ? 0 : i];
-                    var y = b[b.Length == 1 ? 0 : i];
-                    var f = t[t.Length == 1 ? 0 : i];
-                    return x + (y - x) * f;
-                }).ToArray();
-            }
+                    var target = call.Name[3] - '0';
+                    var parts = args.Select(Eval).ToArray();
+                    return parts.Length == 1 ? Resize(parts[0], target) : parts.SelectMany(part => part).ToArray();
+                }
+            case "lerp" or "mix":
+                {
+                    var a = Eval(args[0]);
+                    var b = Eval(args[1]);
+                    var t = Eval(args[2]);
+                    var width = Math.Max(a.Length, b.Length);
+                    return Enumerable.Range(0, width).Select(i =>
+                    {
+                        var x = a[a.Length == 1 ? 0 : i];
+                        var y = b[b.Length == 1 ? 0 : i];
+                        var f = t[t.Length == 1 ? 0 : i];
+                        return x + (y - x) * f;
+                    }).ToArray();
+                }
             case "saturate": return Map(Eval(args[0]), x => Math.Clamp(x, 0, 1));
             case "clamp":
-            {
-                var low = Eval(args[1])[0];
-                var high = Eval(args[2])[0];
-                return Map(Eval(args[0]), x => Math.Clamp(x, low, high));
-            }
+                {
+                    var low = Eval(args[1])[0];
+                    var high = Eval(args[2])[0];
+                    return Map(Eval(args[0]), x => Math.Clamp(x, low, high));
+                }
             case "min": return Zip(Eval(args[0]), Eval(args[1]), Math.Min);
             case "max": return Zip(Eval(args[0]), Eval(args[1]), Math.Max);
             case "pow": return Zip(Eval(args[0]), Eval(args[1]), (a, b) => MathF.Pow(Math.Max(a, 0), b));
@@ -573,20 +573,20 @@ public sealed class RecipeEvaluator(IRecipeBindings bindings, Func<string, float
             case "floor": return Map(Eval(args[0]), MathF.Floor);
             case "uv": return RecipeGlslCompiler.ConstantValue(args[0]) == 1 ? [_u1, _v1] : [_u, _v];
             case "dot":
-            {
-                var product = Zip(Eval(args[0]), Eval(args[1]), (a, b) => a * b);
-                return [product.Sum()];
-            }
+                {
+                    var product = Zip(Eval(args[0]), Eval(args[1]), (a, b) => a * b);
+                    return [product.Sum()];
+                }
             case "lum":
-            {
-                var c = Resize(Eval(args[0]), 3);
-                return [c[0] * 0.2126f + c[1] * 0.7152f + c[2] * 0.0722f];
-            }
+                {
+                    var c = Resize(Eval(args[0]), 3);
+                    return [c[0] * 0.2126f + c[1] * 0.7152f + c[2] * 0.0722f];
+                }
             case "srgb":
-            {
-                var c = Eval(args[0]);
-                return c.Select((x, i) => c.Length == 4 && i == 3 ? x : SrgbToLinear(x)).ToArray();
-            }
+                {
+                    var c = Eval(args[0]);
+                    return c.Select((x, i) => c.Length == 4 && i == 3 ? x : SrgbToLinear(x)).ToArray();
+                }
         }
         throw new RecipeSyntaxException($"Unknown recipe function {call.Name}().");
     }

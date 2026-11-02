@@ -1,6 +1,6 @@
-using System.Buffers.Binary;
 using Arkive.Core.Compression;
 using Arkive.Core.Packages;
+using System.Buffers.Binary;
 
 namespace Arkive.Core.Textures;
 

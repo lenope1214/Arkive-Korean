@@ -1,27 +1,12 @@
+using Arkive.Core.Assets;
+using Arkive.Core.Discovery;
+using Arkive.Core.External;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.Baselines;
-using Arkive.Core.Discovery;
-using Arkive.Core.External;
-using Arkive.Core.Exports;
-using Arkive.Core.Inspection;
-using Arkive.Core.Meshes;
-using Arkive.Core.Materials;
-using Arkive.Core.Mods;
-using Arkive.Core.Packages;
-using Arkive.Core.StaticMeshes;
-using Arkive.Core.Textures;
-using Arkive.Core.Validation;
-using Microsoft.Win32;
 
 namespace Arkive.App;
 
@@ -255,13 +240,13 @@ public partial class MainWindow : Window
         WorkshopAddHelpText.Text = selected.Length > 1
             ? $"{selected.Length:N0} assets selected. Add selected assets creates a working copy of each. Complete kits require only skeletal meshes. Select one asset to preview it."
             : result?.Kind switch
-        {
-            AssetKind.SkeletalMesh => "Asset only: editable GLB. Full kit: GLB + linked textures/materials, excluded until you tick Include.",
-            AssetKind.StaticMesh => "Asset only creates an editable static-mesh GLB. Complete kits currently apply to skeletal meshes.",
-            AssetKind.Texture => "Asset only creates an editable PNG/DDS working copy, bound to this mod. It does not install anything.",
-            AssetKind.Material => "Asset only opens an editable material parameter project. It does not install anything.",
-            _ => "Asset only creates one working copy. Full kit also prepares the mesh's linked textures and materials.",
-        };
+            {
+                AssetKind.SkeletalMesh => "Asset only: editable GLB. Full kit: GLB + linked textures/materials, excluded until you tick Include.",
+                AssetKind.StaticMesh => "Asset only creates an editable static-mesh GLB. Complete kits currently apply to skeletal meshes.",
+                AssetKind.Texture => "Asset only creates an editable PNG/DDS working copy, bound to this mod. It does not install anything.",
+                AssetKind.Material => "Asset only opens an editable material parameter project. It does not install anything.",
+                _ => "Asset only creates one working copy. Full kit also prepares the mesh's linked textures and materials.",
+            };
         UpdateAuthoringActions();
     }
 

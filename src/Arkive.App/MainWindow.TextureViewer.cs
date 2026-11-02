@@ -1,9 +1,9 @@
-using System.IO;
-using System.Windows;
 using Arkive.Core.Assets;
 using Arkive.Core.Interface;
 using Arkive.Core.Mods;
 using Arkive.Core.Textures;
+using System.IO;
+using System.Windows;
 
 namespace Arkive.App;
 

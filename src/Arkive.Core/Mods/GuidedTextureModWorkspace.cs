@@ -1,6 +1,6 @@
+using Arkive.Core.Textures;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Arkive.Core.Textures;
 
 namespace Arkive.Core.Mods;
 

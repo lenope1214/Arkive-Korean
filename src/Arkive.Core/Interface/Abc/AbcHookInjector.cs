@@ -171,8 +171,12 @@ public static class AbcHookInjector
             abc.Methods.Add(method);
             abc.Bodies.Add(new AbcMethodBody
             {
-                Method = abc.Methods.Count - 1, MaxStack = 2, LocalCount = locals,
-                InitScopeDepth = scope, MaxScopeDepth = scope + 1, Code = code.ToArray(),
+                Method = abc.Methods.Count - 1,
+                MaxStack = 2,
+                LocalCount = locals,
+                InitScopeDepth = scope,
+                MaxScopeDepth = scope + 1,
+                Code = code.ToArray(),
             });
             traits.Add(new AbcTrait { Name = exposed, KindByte = kind, Index = abc.Methods.Count - 1 });
         }

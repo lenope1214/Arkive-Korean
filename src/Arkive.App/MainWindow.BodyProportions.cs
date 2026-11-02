@@ -1,14 +1,13 @@
+using Arkive.Core.Assets;
+using Arkive.Core.Discovery;
+using Arkive.Core.Mods;
+using Arkive.Core.Physics;
+using Arkive.Core.Proportions;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Arkive.Core.Assets;
-using Arkive.Core.Discovery;
-using Arkive.Core.Inspection;
-using Arkive.Core.Mods;
-using Arkive.Core.Physics;
-using Arkive.Core.Proportions;
 
 namespace Arkive.App;
 

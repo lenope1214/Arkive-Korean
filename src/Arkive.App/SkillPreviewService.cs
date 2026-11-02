@@ -1,4 +1,3 @@
-using System.IO;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
@@ -7,6 +6,7 @@ using Arkive.Core.Particles;
 using Arkive.Core.Proportions;
 using Arkive.Core.Skills;
 using Arkive.Core.Viewer;
+using System.IO;
 
 namespace Arkive.App;
 
@@ -47,9 +47,15 @@ public sealed class SkillPreviewService(
     // The class each player body is most often seen as; the viewer lets the user pick another.
     private static readonly IReadOnlyDictionary<string, string> DefaultClass = new Dictionary<string, string>
     {
-        ["guardianknight"] = "DRAGONKNIGHT", ["female-assassin"] = "BLADE", ["female-warrior"] = "BERSERKER_FEMALE",
-        ["male-warrior"] = "BERSERKER", ["female-mage"] = "ELEMENTALMASTER", ["female-martial-artist"] = "BATTLEMASTER",
-        ["male-gunner"] = "DEVILHUNTER", ["female-specialist"] = "YINYANGSHI", ["male-specialist"] = "SPECIALIST_MALE",
+        ["guardianknight"] = "DRAGONKNIGHT",
+        ["female-assassin"] = "BLADE",
+        ["female-warrior"] = "BERSERKER_FEMALE",
+        ["male-warrior"] = "BERSERKER",
+        ["female-mage"] = "ELEMENTALMASTER",
+        ["female-martial-artist"] = "BATTLEMASTER",
+        ["male-gunner"] = "DEVILHUNTER",
+        ["female-specialist"] = "YINYANGSHI",
+        ["male-specialist"] = "SPECIALIST_MALE",
     };
 
     private Task<SkillCatalog?> CatalogAsync() => _catalog ??= Task.Run(() =>
@@ -310,12 +316,23 @@ public sealed class SkillPreviewService(
                                                           systems.ContainsKey(notify.Asset))
                     .Select(notify => new
                     {
-                        start = notify.Start, duration = notify.Duration, system = notify.Asset, socket = notify.Socket, group = notify.Group, attach = notify.Attach,
-                        offset = notify.Offset, rotation = notify.Rotation, scale = notify.Scale,
+                        start = notify.Start,
+                        duration = notify.Duration,
+                        system = notify.Asset,
+                        socket = notify.Socket,
+                        group = notify.Group,
+                        attach = notify.Attach,
+                        offset = notify.Offset,
+                        rotation = notify.Rotation,
+                        scale = notify.Scale,
                         parameters = notify.Parameters.Select(parameter => new
                         {
-                            name = parameter.Name, isVector = parameter.IsVector, value = parameter.Value,
-                            x = parameter.X, y = parameter.Y, z = parameter.Z,
+                            name = parameter.Name,
+                            isVector = parameter.IsVector,
+                            value = parameter.Value,
+                            x = parameter.X,
+                            y = parameter.Y,
+                            z = parameter.Z,
                         }),
                     }),
             }),

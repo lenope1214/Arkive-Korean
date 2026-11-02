@@ -1,26 +1,16 @@
-using System.Diagnostics;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Baselines;
 using Arkive.Core.Discovery;
-using Arkive.Core.External;
 using Arkive.Core.Exports;
+using Arkive.Core.External;
 using Arkive.Core.Inspection;
 using Arkive.Core.Meshes;
-using Arkive.Core.Materials;
-using Arkive.Core.Mods;
 using Arkive.Core.Packages;
-using Arkive.Core.StaticMeshes;
 using Arkive.Core.Textures;
 using Arkive.Core.Validation;
-using Microsoft.Win32;
+using System.IO;
+using System.Windows;
 
 namespace Arkive.App;
 

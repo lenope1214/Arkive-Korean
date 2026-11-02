@@ -1,12 +1,12 @@
+using Arkive.Core.Assets;
+using Arkive.Core.GameData;
+using Arkive.Core.Outfits;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Arkive.Core.Assets;
-using Arkive.Core.GameData;
-using Arkive.Core.Outfits;
 
 namespace Arkive.Core.Mods;
 

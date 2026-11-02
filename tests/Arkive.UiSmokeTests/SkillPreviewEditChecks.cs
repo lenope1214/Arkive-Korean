@@ -1,6 +1,6 @@
-using System.Reflection;
 using Arkive.App;
 using Arkive.Core.Particles;
+using System.Reflection;
 
 /// <summary>The skill preview draws effects with the mod's edited textures, on sprites and shader samplers alike.</summary>
 internal static class SkillPreviewEditChecks

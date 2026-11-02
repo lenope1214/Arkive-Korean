@@ -1,8 +1,8 @@
+using Arkive.Core.Discovery;
+using Arkive.Core.Mods;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using Arkive.Core.Discovery;
-using Arkive.Core.Mods;
 
 namespace Arkive.App;
 

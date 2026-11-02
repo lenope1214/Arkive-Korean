@@ -1,6 +1,6 @@
+using Arkive.Core.External;
 using System.IO;
 using System.Text;
-using Arkive.Core.External;
 
 namespace Arkive.App;
 

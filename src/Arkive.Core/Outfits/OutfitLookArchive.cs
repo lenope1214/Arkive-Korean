@@ -1,7 +1,7 @@
-using System.Security.Cryptography;
-using System.Text.Json;
 using Arkive.Core.Mods;
 using Arkive.Core.Skills;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Arkive.Core.Outfits;
 

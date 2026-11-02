@@ -42,12 +42,12 @@ SmokeTestEnvironment.Initialize();
 try
 {
     foreach (var group in groups)
-    foreach (var test in group)
-    {
-        if (filter is not null && !test.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)) continue;
-        selected++;
-        SmokeTestRunner.Run(test, failures);
-    }
+        foreach (var test in group)
+        {
+            if (filter is not null && !test.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)) continue;
+            selected++;
+            SmokeTestRunner.Run(test, failures);
+        }
 }
 finally
 {

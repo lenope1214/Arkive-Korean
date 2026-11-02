@@ -1,3 +1,9 @@
+using Arkive.App;
+using Arkive.Core.Assets;
+using Arkive.Core.Discovery;
+using Arkive.Core.Languages;
+using Arkive.Core.Mods;
+using Arkive.Core.Textures;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
@@ -6,12 +12,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using Arkive.App;
-using Arkive.Core.Assets;
-using Arkive.Core.Discovery;
-using Arkive.Core.Languages;
-using Arkive.Core.Mods;
-using Arkive.Core.Textures;
 using static Program;
 
 internal static class PublicScreenshotCapture

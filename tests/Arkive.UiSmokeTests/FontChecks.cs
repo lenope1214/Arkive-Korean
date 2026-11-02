@@ -1,12 +1,12 @@
+using Arkive.App;
+using Arkive.Core.Fonts;
+using Arkive.Core.Skills;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using Arkive.App;
-using Arkive.Core.Fonts;
-using Arkive.Core.Skills;
 using static Program;
 
 /// <summary>The Fonts tab shows the game's own fonts, applies a chosen one to font.lpk, and puts the game's back.</summary>
@@ -41,7 +41,11 @@ internal static class FontChecks
 
         var window = new MainWindow(library)
         {
-            Width = 1440, Height = 900, Left = -5000, Top = -5000, ShowActivated = false,
+            Width = 1440,
+            Height = 900,
+            Left = -5000,
+            Top = -5000,
+            ShowActivated = false,
             WindowStartupLocation = WindowStartupLocation.Manual,
         };
         window.Show();

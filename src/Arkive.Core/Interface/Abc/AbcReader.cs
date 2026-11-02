@@ -167,7 +167,11 @@ internal sealed class AbcReader(byte[] data)
     {
         var body = new AbcMethodBody
         {
-            Method = U30(), MaxStack = U30(), LocalCount = U30(), InitScopeDepth = U30(), MaxScopeDepth = U30(),
+            Method = U30(),
+            MaxStack = U30(),
+            LocalCount = U30(),
+            InitScopeDepth = U30(),
+            MaxScopeDepth = U30(),
         };
         var length = U30();
         body.Code = data.AsSpan(_position, length).ToArray();

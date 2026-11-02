@@ -1,6 +1,6 @@
-using System.Windows;
 using Arkive.Core.GameData;
 using Arkive.Core.Mods;
+using System.Windows;
 
 namespace Arkive.App;
 
@@ -26,7 +26,8 @@ public partial class MainWindow
             return;
         }
         var window = new GameDataWindow(tables.Archive, mod?.Manifest.Name ?? string.Empty, newMod: mod is null,
-            mayBeEmpty: mod is { Manifest.Assets.Count: > 0 }, mod?.Manifest.GameData?.Edits ?? []) { Owner = this };
+            mayBeEmpty: mod is { Manifest.Assets.Count: > 0 }, mod?.Manifest.GameData?.Edits ?? [])
+        { Owner = this };
         if (window.ShowDialog() != true) return;
         await RunModLibraryOperationAsync("Game tables", async () =>
         {

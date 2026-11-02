@@ -1,8 +1,8 @@
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Arkive.Core.GameData;
 using Arkive.Core.Mods;
 using Microsoft.Data.Sqlite;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Arkive.Core.Languages;
 
@@ -255,8 +255,10 @@ public sealed class GameLanguageService
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
-            DataSource = path, Mode = readOnly ? SqliteOpenMode.ReadOnly : SqliteOpenMode.ReadWriteCreate,
-            Cache = SqliteCacheMode.Private, Pooling = false,
+            DataSource = path,
+            Mode = readOnly ? SqliteOpenMode.ReadOnly : SqliteOpenMode.ReadWriteCreate,
+            Cache = SqliteCacheMode.Private,
+            Pooling = false,
         }.ToString());
         connection.Open();
         return connection;

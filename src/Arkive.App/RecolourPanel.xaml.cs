@@ -1,7 +1,7 @@
+using Arkive.Core.Textures;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Arkive.Core.Textures;
 
 namespace Arkive.App;
 
@@ -70,7 +70,12 @@ public partial class RecolourPanel : UserControl
     {
         var button = new Button
         {
-            ToolTip = swatch.Name, Width = 26, Height = 22, Margin = new Thickness(0, 0, 5, 4), MinWidth = 0, Padding = new Thickness(0),
+            ToolTip = swatch.Name,
+            Width = 26,
+            Height = 22,
+            Margin = new Thickness(0, 0, 5, 4),
+            MinWidth = 0,
+            Padding = new Thickness(0),
             Background = new SolidColorBrush(Color.FromScRgb(1, swatch.Red, swatch.Green, swatch.Blue)),
         };
         button.Click += (_, _) => pick();
@@ -95,7 +100,8 @@ public partial class RecolourPanel : UserControl
             RecolourStyle == TextureRecolourStyle.TwoTone
                 ? "Pictures are repainted in this colour with their shading; materials' surfaces take it."
                 : "Each changed colour keeps its brightness and takes this colour's hue.",
-            _colour.Red, _colour.Green, _colour.Blue) { Owner = Window.GetWindow(this) };
+            _colour.Red, _colour.Green, _colour.Blue)
+        { Owner = Window.GetWindow(this) };
         if (picker.ShowDialog() == true) SetColour(picker.Red, picker.Green, picker.Blue);
     }
 
@@ -103,7 +109,8 @@ public partial class RecolourPanel : UserControl
     {
         var picker = new ColourPickerWindow("Highlight colour",
             "Pictures' lightest details, materials' glows and effects take this colour.",
-            _highlight.Red, _highlight.Green, _highlight.Blue) { Owner = Window.GetWindow(this) };
+            _highlight.Red, _highlight.Green, _highlight.Blue)
+        { Owner = Window.GetWindow(this) };
         if (picker.ShowDialog() == true) SetHighlight(picker.Red, picker.Green, picker.Blue);
     }
 

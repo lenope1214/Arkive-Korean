@@ -1,8 +1,8 @@
+using Arkive.Core.Inspection;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Arkive.Core.Inspection;
 
 namespace Arkive.Core.Meshes;
 

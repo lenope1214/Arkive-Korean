@@ -1569,7 +1569,7 @@ internal static class TextureSmokeTests
                exactAudit.EveryAffectedPackageFormatCompatible &&
                !exactAudit.RequiresRestoreBeforeUpdateCheck &&
                exactAudit.Packages.Single().FormatProbe is
-                   { CanRead: true, CanReconstruct: true } exactProbe &&
+               { CanRead: true, CanReconstruct: true } exactProbe &&
                exactProbe.DecodedChunkCount == exactProbe.CompressedChunkCount,
             "client-wide audit did not deeply validate an exact restored package");
         var auditStore = new ClientUpdateAuditWorkspaceStore(
@@ -2153,9 +2153,9 @@ internal static class TextureSmokeTests
             // A doubled canvas becomes a larger texture: one new top mip, the original mip kept below it.
             var doubled = new RgbaImage(edit.Width * 2, edit.Height * 2, new byte[edit.Pixels.Length * 4]);
             for (var y = 0; y < doubled.Height; y++)
-            for (var x = 0; x < doubled.Width; x++)
-                edit.Pixels.AsSpan(((y / 2) * edit.Width + x / 2) * 4, 4)
-                    .CopyTo(doubled.Pixels.AsSpan((y * doubled.Width + x) * 4, 4));
+                for (var x = 0; x < doubled.Width; x++)
+                    edit.Pixels.AsSpan(((y / 2) * edit.Width + x / 2) * 4, 4)
+                        .CopyTo(doubled.Pixels.AsSpan((y * doubled.Width + x) * 4, 4));
             var doubledPath = Path.Combine(fixtureDirectory, $"replacement-{suffix}-edit-2x.png");
             PngRgbaCodec.WriteAsync(doubledPath, doubled).GetAwaiter().GetResult();
             var upscaledCandidate = new TextureImportCandidateService()

@@ -1,8 +1,8 @@
-using System.IO;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
 using Arkive.Core.Proportions;
 using Arkive.Core.Viewer;
+using System.IO;
 
 namespace Arkive.App;
 
@@ -106,11 +106,11 @@ public partial class MainWindow
                 double r = 0, g = 0, b = 0;
                 var count = 0;
                 for (var y = height * 2 / 3; y < height; y++)
-                for (var x = 0; x < width; x++, count++)
-                {
-                    var at = (y * width + x) * 4;
-                    b += data[at]; g += data[at + 1]; r += data[at + 2];
-                }
+                    for (var x = 0; x < width; x++, count++)
+                    {
+                        var at = (y * width + x) * 4;
+                        b += data[at]; g += data[at + 1]; r += data[at + 2];
+                    }
                 known[sky.Name] = [(float)(r / count / 255), (float)(g / count / 255), (float)(b / count / 255)];
                 changed = true;
             }

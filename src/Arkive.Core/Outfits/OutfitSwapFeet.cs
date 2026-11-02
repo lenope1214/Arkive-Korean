@@ -85,8 +85,10 @@ public static class OutfitSwapFeet
             var (pivot, turn) = _sides[side < 0 ? 0 : 1];
             return box with
             {
-                Origin = pivot + Vector3.Transform(box.Origin - pivot, turn), Forward = Vector3.Transform(box.Forward, turn),
-                Up = Vector3.Transform(box.Up, turn), Across = Vector3.Transform(box.Across, turn),
+                Origin = pivot + Vector3.Transform(box.Origin - pivot, turn),
+                Forward = Vector3.Transform(box.Forward, turn),
+                Up = Vector3.Transform(box.Up, turn),
+                Across = Vector3.Transform(box.Across, turn),
             };
         }
 
@@ -141,9 +143,20 @@ public static class OutfitSwapFeet
             Triangles(section.Triangles, (a, b, c) => !(Covered(a) && Covered(b) && Covered(c))))).ToArray();
         return (new OutfitSwapMesh
         {
-            Positions = result, Normals = mesh.Normals, Tangents = mesh.Tangents, Uv0 = mesh.Uv0, Uv1 = mesh.Uv1, Colours = mesh.Colours,
-            Joints = mesh.Joints, Weights = mesh.Weights, Sections = sections, Materials = mesh.Materials,
-            BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents, OwnPictureSkin = mesh.OwnPictureSkin,
+            Positions = result,
+            Normals = mesh.Normals,
+            Tangents = mesh.Tangents,
+            Uv0 = mesh.Uv0,
+            Uv1 = mesh.Uv1,
+            Colours = mesh.Colours,
+            Joints = mesh.Joints,
+            Weights = mesh.Weights,
+            Sections = sections,
+            Materials = mesh.Materials,
+            BoneNames = mesh.BoneNames,
+            BonePositions = mesh.BonePositions,
+            BoneParents = mesh.BoneParents,
+            OwnPictureSkin = mesh.OwnPictureSkin,
             MaterialReferences = mesh.MaterialReferences,
         }, result);
     }
@@ -360,9 +373,20 @@ public static class OutfitSwapFeet
         }
         var result = new OutfitSwapMesh
         {
-            Positions = positions.ToArray(), Normals = normals.ToArray(), Tangents = tangents.ToArray(), Uv0 = uv0.ToArray(), Uv1 = uv1.ToArray(),
-            Colours = colours.ToArray(), Joints = joints.ToArray(), Weights = weights.ToArray(), Sections = sections, Materials = materials,
-            BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents, OwnPictureSkin = mesh.OwnPictureSkin,
+            Positions = positions.ToArray(),
+            Normals = normals.ToArray(),
+            Tangents = tangents.ToArray(),
+            Uv0 = uv0.ToArray(),
+            Uv1 = uv1.ToArray(),
+            Colours = colours.ToArray(),
+            Joints = joints.ToArray(),
+            Weights = weights.ToArray(),
+            Sections = sections,
+            Materials = materials,
+            BoneNames = mesh.BoneNames,
+            BonePositions = mesh.BonePositions,
+            BoneParents = mesh.BoneParents,
+            OwnPictureSkin = mesh.OwnPictureSkin,
             MaterialReferences = mesh.MaterialReferences,
         };
         // The outfit's skin was laid on the new body standing as it does unturned; turned with the feet, it marks where

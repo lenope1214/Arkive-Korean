@@ -438,7 +438,8 @@ internal static class ArkiveModSmokeTests
         }).GetAwaiter().GetResult();
         var again = draft with
         {
-            ModId = mod.ModId, EditIds = [bound],
+            ModId = mod.ModId,
+            EditIds = [bound],
             SavedBindings = mod.Bindings.ToDictionary(binding => binding.AssetId, binding => binding.EditId),
         };
         var saved = author.SaveDraftAsync(again).GetAwaiter().GetResult();
@@ -588,9 +589,9 @@ internal static class ArkiveModSmokeTests
         var composition = Composer().BuildAsync(new UnifiedPackageCompositionRequest(
                 installedProject, [], [], environment.Packages.CreateRevisionDirectory(installedProject),
                 environment.Backups, "Installed material mod")
-            {
-                MaterialEdits = [environment.Edits.MaterialEdits.LoadEntryAsync(installedEdit.DocumentPath).GetAwaiter().GetResult()],
-            }).GetAwaiter().GetResult();
+        {
+            MaterialEdits = [environment.Edits.MaterialEdits.LoadEntryAsync(installedEdit.DocumentPath).GetAwaiter().GetResult()],
+        }).GetAwaiter().GetResult();
         environment.Packages.CommitRevisionAsync(installedProject.ManifestPath, composition.Revision)
             .GetAwaiter().GetResult();
         environment.Deployment.InstallAsync(new ArkiveModDeploymentRequest(

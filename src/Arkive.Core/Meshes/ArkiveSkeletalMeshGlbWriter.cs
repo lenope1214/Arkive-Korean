@@ -1,8 +1,7 @@
+using Arkive.Core.Inspection;
 using System.Buffers.Binary;
 using System.Numerics;
-using System.Text;
 using System.Text.Json;
-using Arkive.Core.Inspection;
 
 namespace Arkive.Core.Meshes;
 

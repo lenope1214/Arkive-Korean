@@ -1,14 +1,13 @@
-using System.Diagnostics;
-using System.IO;
-using System.Security.Cryptography;
-using System.Windows;
-using System.Windows.Controls;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
 using Arkive.Core.Inspection;
 using Arkive.Core.Materials;
 using Arkive.Core.Mods;
 using Arkive.Core.Textures;
+using System.Diagnostics;
+using System.IO;
+using System.Security.Cryptography;
+using System.Windows;
 
 namespace Arkive.App;
 

@@ -80,7 +80,8 @@ public static class ParticleShaderPlanner
                 continue;
             }
             shaders[id] = new ParticleShader(id, plan.Declarations, plan.Function, NeutralSceneDepth(plan), plan.Samplers, plan.Inputs,
-                plan.InstructionCount) { TimeRates = plan.TimeRates, FirstParameterRegister = plan.FirstParameterRegister };
+                plan.InstructionCount)
+            { TimeRates = plan.TimeRates, FirstParameterRegister = plan.FirstParameterRegister };
         }
         if (shaders.Count == 0)
         {

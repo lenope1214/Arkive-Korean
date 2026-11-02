@@ -1,6 +1,6 @@
+using Arkive.Core.Textures;
 using System.Diagnostics;
 using System.Security.Cryptography;
-using Arkive.Core.Textures;
 
 namespace Arkive.Core.Mods;
 

@@ -1,7 +1,7 @@
+using Arkive.Core.Meshes;
+using Arkive.Core.Packages;
 using System.Numerics;
 using System.Text.RegularExpressions;
-using Arkive.Core.Packages;
-using Arkive.Core.Meshes;
 
 namespace Arkive.Core.Outfits;
 
@@ -178,10 +178,19 @@ public static partial class OutfitSwapPlanner
             if (!hidden[t] && assign[t].Count > 0 && addedSkin.TryGetValue(t, out var added))
                 mesh = new OutfitSwapMesh
                 {
-                    Positions = mesh.Positions, Normals = mesh.Normals, Tangents = mesh.Tangents, Uv0 = mesh.Uv0, Uv1 = mesh.Uv1,
-                    Colours = mesh.Colours, Joints = mesh.Joints, Weights = mesh.Weights, Sections = mesh.Sections,
+                    Positions = mesh.Positions,
+                    Normals = mesh.Normals,
+                    Tangents = mesh.Tangents,
+                    Uv0 = mesh.Uv0,
+                    Uv1 = mesh.Uv1,
+                    Colours = mesh.Colours,
+                    Joints = mesh.Joints,
+                    Weights = mesh.Weights,
+                    Sections = mesh.Sections,
                     Materials = [.. mesh.Materials, .. added.Select(item => item.Slot.Material.Name)],
-                    BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents,
+                    BoneNames = mesh.BoneNames,
+                    BonePositions = mesh.BonePositions,
+                    BoneParents = mesh.BoneParents,
                     MaterialReferences = added.ToDictionary(item => item.Slot.Material.Slot, item => new SkeletalMeshMaterialReference(item.Material, null)),
                 };
             results.Add(new OutfitSwapPieceResult(targets[t].ObjectName, mesh, hidden[t] || assign[t].Count == 0));
@@ -275,9 +284,19 @@ public static partial class OutfitSwapPlanner
                 notes.Add($"{targets[t].ObjectName} gains {references.Count - replaced} material slot(s) for the outfit's own materials.");
             results.Add(new OutfitSwapPieceResult(targets[t].ObjectName, new OutfitSwapMesh
             {
-                Positions = mesh.Positions, Normals = mesh.Normals, Tangents = mesh.Tangents, Uv0 = mesh.Uv0, Uv1 = mesh.Uv1,
-                Colours = mesh.Colours, Joints = mesh.Joints, Weights = mesh.Weights, Sections = mesh.Sections, Materials = materials,
-                BoneNames = mesh.BoneNames, BonePositions = mesh.BonePositions, BoneParents = mesh.BoneParents,
+                Positions = mesh.Positions,
+                Normals = mesh.Normals,
+                Tangents = mesh.Tangents,
+                Uv0 = mesh.Uv0,
+                Uv1 = mesh.Uv1,
+                Colours = mesh.Colours,
+                Joints = mesh.Joints,
+                Weights = mesh.Weights,
+                Sections = mesh.Sections,
+                Materials = materials,
+                BoneNames = mesh.BoneNames,
+                BonePositions = mesh.BonePositions,
+                BoneParents = mesh.BoneParents,
                 MaterialReferences = references,
             }, false));
         }
@@ -451,10 +470,19 @@ public static partial class OutfitSwapPlanner
         }
         return new OutfitSwapMesh
         {
-            Positions = positions.ToArray(), Normals = normals.ToArray(), Tangents = tangents.ToArray(),
-            Uv0 = uv0.ToArray(), Uv1 = uv1.ToArray(), Colours = colours.ToArray(), Joints = joints.ToArray(), Weights = weights.ToArray(),
+            Positions = positions.ToArray(),
+            Normals = normals.ToArray(),
+            Tangents = tangents.ToArray(),
+            Uv0 = uv0.ToArray(),
+            Uv1 = uv1.ToArray(),
+            Colours = colours.ToArray(),
+            Joints = joints.ToArray(),
+            Weights = weights.ToArray(),
             Sections = sections.OrderBy(pair => pair.Key).Select(pair => new OutfitSwapSection(pair.Key, WithArea(pair.Value, positions))).ToArray(),
-            Materials = target.Materials, BoneNames = target.BoneNames, BonePositions = target.BonePositions, BoneParents = target.BoneParents,
+            Materials = target.Materials,
+            BoneNames = target.BoneNames,
+            BonePositions = target.BonePositions,
+            BoneParents = target.BoneParents,
             SkinVertices = skinVertices,
         };
     }
@@ -735,11 +763,19 @@ public static partial class OutfitSwapPlanner
         Vector3[] positions = [at, at + new Vector3(0.001f, 0, 0), at + new Vector3(0, 0.001f, 0)];
         return new OutfitSwapMesh
         {
-            Positions = positions, Normals = [Vector3.UnitZ, Vector3.UnitZ, Vector3.UnitZ],
-            Tangents = [new(1, 0, 0, 1), new(1, 0, 0, 1), new(1, 0, 0, 1)], Uv0 = new Vector2[3], Uv1 = new Vector2[3],
-            Colours = Enumerable.Repeat((byte)255, 12).ToArray(), Joints = [pelvis, 0, 0, 0, pelvis, 0, 0, 0, pelvis, 0, 0, 0],
-            Weights = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], Sections = [new OutfitSwapSection(0, [0, 1, 2])],
-            Materials = target.Materials, BoneNames = target.BoneNames, BonePositions = target.BonePositions, BoneParents = target.BoneParents,
+            Positions = positions,
+            Normals = [Vector3.UnitZ, Vector3.UnitZ, Vector3.UnitZ],
+            Tangents = [new(1, 0, 0, 1), new(1, 0, 0, 1), new(1, 0, 0, 1)],
+            Uv0 = new Vector2[3],
+            Uv1 = new Vector2[3],
+            Colours = Enumerable.Repeat((byte)255, 12).ToArray(),
+            Joints = [pelvis, 0, 0, 0, pelvis, 0, 0, 0, pelvis, 0, 0, 0],
+            Weights = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            Sections = [new OutfitSwapSection(0, [0, 1, 2])],
+            Materials = target.Materials,
+            BoneNames = target.BoneNames,
+            BonePositions = target.BonePositions,
+            BoneParents = target.BoneParents,
         };
     }
 

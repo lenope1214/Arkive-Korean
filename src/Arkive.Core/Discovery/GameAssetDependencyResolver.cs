@@ -1,10 +1,10 @@
+using Arkive.Core.Assets;
+using Arkive.Core.External;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Arkive.Core.Assets;
-using Arkive.Core.External;
 
 namespace Arkive.Core.Discovery;
 
@@ -531,19 +531,19 @@ public sealed partial class GameAssetDependencyResolver
         GameAssetDependencyProbe probe)
     {
         foreach (var seed in seeds)
-        foreach (var target in probe.Targets)
-        {
-            yield return seed with
+            foreach (var target in probe.Targets)
             {
-                Field = $"Dependency.{target.ClassName}",
-                AssetReference = $"{target.PackageName}.{target.ObjectName}",
-                PackageName = target.PackageName,
-                ObjectName = target.ObjectName,
-                Confidence = GameAssetAssociationConfidence.Verified,
-                Relation = GameAssetAssociationRelation.VerifiedSerializedDependency,
-                SourceAssetReference = seed.AssetReference,
-            };
-        }
+                yield return seed with
+                {
+                    Field = $"Dependency.{target.ClassName}",
+                    AssetReference = $"{target.PackageName}.{target.ObjectName}",
+                    PackageName = target.PackageName,
+                    ObjectName = target.ObjectName,
+                    Confidence = GameAssetAssociationConfidence.Verified,
+                    Relation = GameAssetAssociationRelation.VerifiedSerializedDependency,
+                    SourceAssetReference = seed.AssetReference,
+                };
+            }
     }
 
     private static object AssociationIdentity(GameAssetAssociation item) => new

@@ -1,11 +1,11 @@
-using System.Diagnostics;
-using System.Text.Json;
 using Arkive.Core.GameData;
 using Arkive.Core.Interface;
 using Arkive.Core.Materials;
 using Arkive.Core.Meshes;
 using Arkive.Core.Outfits;
 using Arkive.Core.StaticMeshes;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace Arkive.Core.Mods;
 

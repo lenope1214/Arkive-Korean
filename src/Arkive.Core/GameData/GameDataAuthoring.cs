@@ -1,8 +1,8 @@
+using Arkive.Core.Mods;
+using Microsoft.Data.Sqlite;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Arkive.Core.Mods;
-using Microsoft.Data.Sqlite;
 
 namespace Arkive.Core.GameData;
 
@@ -44,7 +44,8 @@ public static partial class GameDataAuthoring
         var updated = (metadata is null
                 ? entry.Manifest
                 : ArkiveModAuthoringService.CreateManifest(entry.ModId, metadata, entry.Manifest.CreatedAt, now) with { Assets = entry.Manifest.Assets })
-            with { GameData = gameData, UpdatedAt = now };
+            with
+        { GameData = gameData, UpdatedAt = now };
         var rewritten = await ArkiveModFileService.RewriteManifestAsync(library.GetModFilePath(entry), updated, cancellationToken).ConfigureAwait(false);
         return await library.RegisterWrittenFileAsync(rewritten, entry.Origin, entry.Enabled, entry.Priority, entry.Bindings,
             entry.AuthoredForPackageProjectId, cancellationToken).ConfigureAwait(false);

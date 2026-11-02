@@ -1,6 +1,3 @@
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
@@ -8,6 +5,9 @@ using Arkive.Core.Inspection;
 using Arkive.Core.Meshes;
 using Arkive.Core.Packages;
 using Arkive.Core.Viewer;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Arkive.Core.Outfits;
 
@@ -102,7 +102,8 @@ public sealed class OutfitSwapPackageLibrary(
             if (export is null) return null;
             var report = await reconnaissance.InspectAsync(new SkeletalMeshReconnaissanceRequest(package.FullName, source.PackageAlias,
                 export.ExportIndex - 1, AssetKind.SkeletalMesh, export.ClassName, export.ObjectName, export.SerialOffset,
-                export.SerialSize) { PackageSearchRoot = packagesRoot }, cancellationToken).ConfigureAwait(false);
+                export.SerialSize)
+            { PackageSearchRoot = packagesRoot }, cancellationToken).ConfigureAwait(false);
             if (report.Readiness != SkeletalMeshReadiness.NoOpReady) return null;
             var saved = await reconnaissanceStore.SaveAsync(report, cancellationToken).ConfigureAwait(false);
             var temporary = Path.Combine(cacheRoot, $"{key}.{Guid.NewGuid():N}.tmp");

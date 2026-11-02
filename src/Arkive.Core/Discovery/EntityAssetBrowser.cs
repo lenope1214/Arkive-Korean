@@ -1,6 +1,4 @@
-using System.IO.Compression;
 using System.Text.Json;
-using Arkive.Core.Assets;
 
 namespace Arkive.Core.Discovery;
 

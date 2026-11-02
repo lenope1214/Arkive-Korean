@@ -242,7 +242,12 @@ public static class OutfitSwapPictures
             ? Resize(e, w, h) : Solid(w, h, 0, 0, 0, 255);
         return new Maps
         {
-            Colour = colour, Normal = normal, Mask = Solid(w, h, 0, 0, 0, 255), Specular = specular, Orm = orm, Emissive = emissive,
+            Colour = colour,
+            Normal = normal,
+            Mask = Solid(w, h, 0, 0, 0, 255),
+            Specular = specular,
+            Orm = orm,
+            Emissive = emissive,
             Opacity = opacity,
         };
     }

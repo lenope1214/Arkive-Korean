@@ -1,5 +1,4 @@
 using Arkive.Core.Interface;
-using Arkive.Core.Textures;
 using static Arkive.SmokeTests.ArkiveModTestFixture;
 
 namespace Arkive.SmokeTests;

@@ -1,13 +1,13 @@
+using Arkive.Core.Materials;
+using Arkive.Core.Mods;
+using Arkive.Core.Particles;
+using Arkive.Core.Textures;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using Arkive.Core.Materials;
-using Arkive.Core.Mods;
-using Arkive.Core.Particles;
-using Arkive.Core.Textures;
 
 namespace Arkive.App;
 
@@ -149,8 +149,11 @@ public partial class RecolourWindow : Window
                 pair.Children.Add(row);
                 pair.Children.Add(new TextBlock
                 {
-                    Text = texture.Manifest.ObjectName, MaxWidth = image.Width * 2 + 4, TextTrimming = TextTrimming.CharacterEllipsis,
-                    Foreground = (Brush)FindResource("TextSecondaryBrush"), Margin = new Thickness(0, 2, 0, 0),
+                    Text = texture.Manifest.ObjectName,
+                    MaxWidth = image.Width * 2 + 4,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    Foreground = (Brush)FindResource("TextSecondaryBrush"),
+                    Margin = new Thickness(0, 2, 0, 0),
                 });
                 PicturePreviews.Children.Add(pair);
                 _pictures.Add((image, after, texture.Manifest.ObjectName));
@@ -177,13 +180,18 @@ public partial class RecolourWindow : Window
             var pair = new StackPanel { ToolTip = $"{material} · {colour.Name}" };
             pair.Children.Add(new Border
             {
-                Width = 34, Height = 16, CornerRadius = new CornerRadius(3, 3, 0, 0),
+                Width = 34,
+                Height = 16,
+                CornerRadius = new CornerRadius(3, 3, 0, 0),
                 Background = Swatch(colour.SourceRed, colour.SourceGreen, colour.SourceBlue),
             });
             pair.Children.Add(after);
             MaterialPreviews.Children.Add(new Border
             {
-                Child = pair, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(4), Margin = new Thickness(0, 0, 6, 6),
+                Child = pair,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Margin = new Thickness(0, 0, 6, 6),
                 BorderBrush = (Brush)FindResource("BorderBrush"),
             });
             _colours.Add((colour, after));

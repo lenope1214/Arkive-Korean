@@ -352,9 +352,9 @@ internal sealed class StaticMeshGlbSemanticReader
         var normalized = accessor.TryGetProperty("normalized", out var normal) && normal.GetBoolean();
         var result = new float[checked(count * components)];
         for (var item = 0; item < count; item++)
-        for (var component = 0; component < components; component++)
-            result[item * components + component] = ReadComponentAsFloat(
-                accessor, item, component, componentType, normalized);
+            for (var component = 0; component < components; component++)
+                result[item * components + component] = ReadComponentAsFloat(
+                    accessor, item, component, componentType, normalized);
         return result;
     }
 

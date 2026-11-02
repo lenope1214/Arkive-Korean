@@ -1,6 +1,6 @@
-using System.Buffers.Binary;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
+using System.Buffers.Binary;
 
 namespace Arkive.Core.Particles;
 
@@ -149,7 +149,8 @@ public static class ParticleEffectModels
             }
             emitters.Add(new ParticleEmitterModel(emitters.Count, name, enabled, material, mesh, models)
             {
-                MaterialPackage = materialPackage, MeshPackage = meshPackage,
+                MaterialPackage = materialPackage,
+                MeshPackage = meshPackage,
             });
         }
         return new ParticleEffectModel(system.ObjectName, packageAlias, emitters);

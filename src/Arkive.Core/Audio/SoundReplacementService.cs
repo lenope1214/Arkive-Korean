@@ -1,7 +1,7 @@
+using Arkive.Core.Mods;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Arkive.Core.Mods;
 
 namespace Arkive.Core.Audio;
 

@@ -1,16 +1,15 @@
-using System.IO;
-using System.Reflection;
-using System.Text.Json;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media;
 using Arkive.App;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
 using Arkive.Core.Materials;
 using Arkive.Core.Textures;
+using System.IO;
+using System.Reflection;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using static Program;
 
 /// <summary>
@@ -57,7 +56,11 @@ internal static class ZoneViewerChecks
             ]));
         var window = new MainWindow(library)
         {
-            Width = 1440, Height = 900, Left = -5000, Top = -5000, ShowActivated = false,
+            Width = 1440,
+            Height = 900,
+            Left = -5000,
+            Top = -5000,
+            ShowActivated = false,
             WindowStartupLocation = WindowStartupLocation.Manual,
         };
         window.Show();
@@ -142,7 +145,11 @@ internal static class ZoneViewerChecks
             Path.Combine(directory, "webview2"));
         var viewer = new ZoneViewerWindow(map, host, "Light")
         {
-            Left = -5000, Top = -5000, ShowActivated = false, ShowInTaskbar = false, WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = -5000,
+            Top = -5000,
+            ShowActivated = false,
+            ShowInTaskbar = false,
+            WindowStartupLocation = WindowStartupLocation.Manual,
         };
         viewer.Show();
         try

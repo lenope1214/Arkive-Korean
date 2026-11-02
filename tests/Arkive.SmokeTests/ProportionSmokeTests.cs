@@ -1,5 +1,5 @@
-using System.Numerics;
 using Arkive.Core.Proportions;
+using System.Numerics;
 
 namespace Arkive.SmokeTests;
 

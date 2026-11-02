@@ -1,7 +1,7 @@
-using System.Buffers.Binary;
-using System.Security.Cryptography;
 using Arkive.Core.Assets;
 using Arkive.Core.Inspection;
+using System.Buffers.Binary;
+using System.Security.Cryptography;
 
 namespace Arkive.Core.Meshes;
 

@@ -1,3 +1,5 @@
+using Arkive.App;
+using Arkive.Core.External;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -5,8 +7,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Arkive.App;
-using Arkive.Core.External;
 using static Program;
 
 internal static class AuthoringInteractionChecks

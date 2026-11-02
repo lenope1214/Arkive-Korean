@@ -1,7 +1,7 @@
-using System.IO;
-using System.Windows;
 using Arkive.Core.Mods;
 using Arkive.Core.Tweaks;
+using System.IO;
+using System.Windows;
 
 namespace Arkive.App;
 

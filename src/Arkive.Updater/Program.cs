@@ -1,7 +1,7 @@
+using Arkive.Core.Updates;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using Arkive.Core.Updates;
 
 // Same file name as ArkiveRuntimePaths.InstallationMarker, which the helper doesn't link.
 const string InstallationMarker = "arkive-installation.json";

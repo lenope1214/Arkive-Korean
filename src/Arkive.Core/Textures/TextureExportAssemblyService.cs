@@ -1,12 +1,12 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
+using Arkive.Core.Inspection;
+using Arkive.Core.Packages;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.Inspection;
-using Arkive.Core.Packages;
 
 namespace Arkive.Core.Textures;
 

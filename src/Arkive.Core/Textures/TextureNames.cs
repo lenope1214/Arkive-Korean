@@ -46,7 +46,9 @@ public static class TextureNames
             ? recolour with
             {
                 Style = TextureRecolourStyle.Tint,
-                Red = recolour.HighlightRed, Green = recolour.HighlightGreen, Blue = recolour.HighlightBlue,
+                Red = recolour.HighlightRed,
+                Green = recolour.HighlightGreen,
+                Blue = recolour.HighlightBlue,
             }
             : recolour;
 }

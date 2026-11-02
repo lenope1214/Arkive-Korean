@@ -1,3 +1,5 @@
+using Arkive.Core.LoginScreens;
+using Arkive.Core.Mods;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -5,8 +7,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Arkive.Core.LoginScreens;
-using Arkive.Core.Mods;
 
 namespace Arkive.App;
 

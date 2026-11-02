@@ -1,5 +1,5 @@
-using System.Runtime.InteropServices;
 using Arkive.Core.Textures;
+using System.Runtime.InteropServices;
 
 namespace Arkive.Core.LoginScreens;
 
@@ -165,13 +165,13 @@ public sealed class LoginScreenPreviews
                     var x1 = Math.Max(x0 + 1, (x + 1) * width / targetWidth);
                     long blue = 0, green = 0, red = 0;
                     for (var sy = y0; sy < y1; sy++)
-                    for (var sx = x0; sx < x1; sx++)
-                    {
-                        var at = (sy * width + sx) * 4;
-                        blue += bgrx[at];
-                        green += bgrx[at + 1];
-                        red += bgrx[at + 2];
-                    }
+                        for (var sx = x0; sx < x1; sx++)
+                        {
+                            var at = (sy * width + sx) * 4;
+                            blue += bgrx[at];
+                            green += bgrx[at + 1];
+                            red += bgrx[at + 2];
+                        }
                     var count = (y1 - y0) * (x1 - x0);
                     var to = (y * targetWidth + x) * 4;
                     result[to] = (byte)(red / count);

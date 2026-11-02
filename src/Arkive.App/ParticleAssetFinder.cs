@@ -1,7 +1,3 @@
-using System.Collections.Concurrent;
-using System.IO;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
@@ -9,6 +5,10 @@ using Arkive.Core.External;
 using Arkive.Core.Packages;
 using Arkive.Core.Particles;
 using Arkive.Core.Viewer.Shaders;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Arkive.App;
 

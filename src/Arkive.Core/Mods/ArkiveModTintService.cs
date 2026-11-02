@@ -157,7 +157,10 @@ public sealed class ArkiveModTintService : IMaterialTint
         {
             Vectors = material.Document.Vectors.Select(vector => vector with
             {
-                Red = vector.SourceRed, Green = vector.SourceGreen, Blue = vector.SourceBlue, Alpha = vector.SourceAlpha,
+                Red = vector.SourceRed,
+                Green = vector.SourceGreen,
+                Blue = vector.SourceBlue,
+                Alpha = vector.SourceAlpha,
             }).ToArray(),
             Scalars = material.Document.Scalars.Select(scalar => scalar with { Value = scalar.SourceValue }).ToArray(),
         };
@@ -178,7 +181,8 @@ public sealed class ArkiveModTintService : IMaterialTint
     public static (MaterialTintRecipe Surfaces, MaterialTintRecipe Glows) MaterialRecipes(TextureRecolour tint, float lightenSurfaces)
     {
         var surfaces = new MaterialTintRecipe(tint.Red, tint.Green, tint.Blue, tint.Strength, Math.Max(0, 1 + tint.Brightness),
-            tint.Selection, tint.RangeHue, tint.RangeWidth) { LightenSurfaces = lightenSurfaces };
+            tint.Selection, tint.RangeHue, tint.RangeWidth)
+        { LightenSurfaces = lightenSurfaces };
         var glows = tint.Style == TextureRecolourStyle.TwoTone
             ? surfaces with { Red = tint.HighlightRed, Green = tint.HighlightGreen, Blue = tint.HighlightBlue }
             : surfaces;

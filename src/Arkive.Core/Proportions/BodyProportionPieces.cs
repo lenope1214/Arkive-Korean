@@ -1,13 +1,13 @@
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Inspection;
 using Arkive.Core.Meshes;
 using Arkive.Core.Packages;
 using Arkive.Core.Viewer;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Arkive.Core.Proportions;
 

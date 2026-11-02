@@ -1,5 +1,5 @@
-using System.Net;
 using Arkive.Core.Updates;
+using System.Net;
 
 namespace Arkive.SmokeTests;
 

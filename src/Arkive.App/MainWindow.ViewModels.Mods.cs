@@ -1,8 +1,8 @@
-using System.IO;
-using System.Windows;
-using System.ComponentModel;
 using Arkive.Core.Assets;
 using Arkive.Core.Mods;
+using System.ComponentModel;
+using System.IO;
+using System.Windows;
 
 namespace Arkive.App;
 

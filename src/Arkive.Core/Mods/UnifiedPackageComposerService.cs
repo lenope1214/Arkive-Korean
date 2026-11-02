@@ -1,7 +1,3 @@
-using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Inspection;
@@ -10,6 +6,10 @@ using Arkive.Core.Materials;
 using Arkive.Core.Meshes;
 using Arkive.Core.Packages;
 using Arkive.Core.StaticMeshes;
+using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Arkive.Core.Mods;
 
@@ -1225,39 +1225,39 @@ public sealed class UnifiedPackageComposerService
                 asset.StagedUpkManifestPath));
         }
         foreach (var particle in particleAssets)
-        foreach (var export in particle.Exports)
-        {
-            var catalogueAsset = finalCatalogue.Assets.SingleOrDefault(candidate =>
-                candidate.ExportIndex == export.NativeExportIndex &&
-                candidate.ObjectName.Equals(export.ObjectName, StringComparison.OrdinalIgnoreCase)) ??
-                                 throw new InvalidDataException($"The final package lost {export.ObjectName} of {particle.SystemObjectName}.");
-            var finalExportHash = await HashLogicalExportAsync(finalCatalogue.Summary, catalogueAsset, cancellationToken)
-                .ConfigureAwait(false);
-            if (!finalExportHash.Equals(export.CandidateExportSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException($"The final package no longer contains the new colours of {particle.SystemObjectName}.");
-            compositionAssets.Add(new UnifiedPackageCompositionAsset(
-                UnifiedPackageAssetKind.ParticleSystem, particle.EditId, particle.DisplayName,
-                request.Package.Manifest.PackageAlias, export.NativeExportIndex, catalogueAsset.ClassName, export.ObjectName,
-                particle.ContentSha256, finalExportHash, catalogueAsset.SerialOffset, catalogueAsset.SerialSize,
-                particle.StagedUpkManifestPath));
-        }
+            foreach (var export in particle.Exports)
+            {
+                var catalogueAsset = finalCatalogue.Assets.SingleOrDefault(candidate =>
+                    candidate.ExportIndex == export.NativeExportIndex &&
+                    candidate.ObjectName.Equals(export.ObjectName, StringComparison.OrdinalIgnoreCase)) ??
+                                     throw new InvalidDataException($"The final package lost {export.ObjectName} of {particle.SystemObjectName}.");
+                var finalExportHash = await HashLogicalExportAsync(finalCatalogue.Summary, catalogueAsset, cancellationToken)
+                    .ConfigureAwait(false);
+                if (!finalExportHash.Equals(export.CandidateExportSha256, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException($"The final package no longer contains the new colours of {particle.SystemObjectName}.");
+                compositionAssets.Add(new UnifiedPackageCompositionAsset(
+                    UnifiedPackageAssetKind.ParticleSystem, particle.EditId, particle.DisplayName,
+                    request.Package.Manifest.PackageAlias, export.NativeExportIndex, catalogueAsset.ClassName, export.ObjectName,
+                    particle.ContentSha256, finalExportHash, catalogueAsset.SerialOffset, catalogueAsset.SerialSize,
+                    particle.StagedUpkManifestPath));
+            }
         foreach (var physics in physicsAssets)
-        foreach (var export in physics.Exports)
-        {
-            var catalogueAsset = finalCatalogue.Assets.SingleOrDefault(candidate =>
-                candidate.ExportIndex == export.NativeExportIndex &&
-                candidate.ObjectName.Equals(export.ObjectName, StringComparison.OrdinalIgnoreCase)) ??
-                                 throw new InvalidDataException($"The final package lost {export.ObjectName} of {physics.SystemObjectName}.");
-            var finalExportHash = await HashLogicalExportAsync(finalCatalogue.Summary, catalogueAsset, cancellationToken)
-                .ConfigureAwait(false);
-            if (!finalExportHash.Equals(export.CandidateExportSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException($"The final package no longer contains the new body shapes of {physics.SystemObjectName}.");
-            compositionAssets.Add(new UnifiedPackageCompositionAsset(
-                UnifiedPackageAssetKind.PhysicsAsset, physics.EditId, physics.DisplayName,
-                request.Package.Manifest.PackageAlias, export.NativeExportIndex, catalogueAsset.ClassName, export.ObjectName,
-                physics.ContentSha256, finalExportHash, catalogueAsset.SerialOffset, catalogueAsset.SerialSize,
-                physics.StagedUpkManifestPath));
-        }
+            foreach (var export in physics.Exports)
+            {
+                var catalogueAsset = finalCatalogue.Assets.SingleOrDefault(candidate =>
+                    candidate.ExportIndex == export.NativeExportIndex &&
+                    candidate.ObjectName.Equals(export.ObjectName, StringComparison.OrdinalIgnoreCase)) ??
+                                     throw new InvalidDataException($"The final package lost {export.ObjectName} of {physics.SystemObjectName}.");
+                var finalExportHash = await HashLogicalExportAsync(finalCatalogue.Summary, catalogueAsset, cancellationToken)
+                    .ConfigureAwait(false);
+                if (!finalExportHash.Equals(export.CandidateExportSha256, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException($"The final package no longer contains the new body shapes of {physics.SystemObjectName}.");
+                compositionAssets.Add(new UnifiedPackageCompositionAsset(
+                    UnifiedPackageAssetKind.PhysicsAsset, physics.EditId, physics.DisplayName,
+                    request.Package.Manifest.PackageAlias, export.NativeExportIndex, catalogueAsset.ClassName, export.ObjectName,
+                    physics.ContentSha256, finalExportHash, catalogueAsset.SerialOffset, catalogueAsset.SerialSize,
+                    physics.StagedUpkManifestPath));
+            }
         foreach (var asset in movieAssets)
         {
             var catalogueAsset = finalCatalogue.Assets.SingleOrDefault(candidate =>

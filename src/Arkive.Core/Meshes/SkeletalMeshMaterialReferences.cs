@@ -1,6 +1,6 @@
+using Arkive.Core.Packages;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Arkive.Core.Packages;
 
 namespace Arkive.Core.Meshes;
 

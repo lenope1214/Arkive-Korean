@@ -1,3 +1,6 @@
+using Arkive.App;
+using Arkive.Core.Materials;
+using Arkive.Core.Mods;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -5,9 +8,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
-using Arkive.App;
-using Arkive.Core.Materials;
-using Arkive.Core.Mods;
 using static Program;
 
 /// <summary>A mod pack shows as a heading with one switch, and enabled mods changing the same asset raise a warning.</summary>

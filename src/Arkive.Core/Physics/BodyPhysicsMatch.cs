@@ -1,6 +1,6 @@
+using Arkive.Core.Archives;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using Arkive.Core.Archives;
 
 namespace Arkive.Core.Physics;
 

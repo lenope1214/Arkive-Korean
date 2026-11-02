@@ -1,7 +1,7 @@
+using Arkive.Core.Textures;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using Arkive.Core.Textures;
 
 namespace Arkive.App;
 

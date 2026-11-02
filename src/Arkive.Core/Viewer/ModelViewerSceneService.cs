@@ -1,9 +1,3 @@
-using System.Buffers.Binary;
-using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.External;
@@ -13,6 +7,12 @@ using Arkive.Core.Packages;
 using Arkive.Core.StaticMeshes;
 using Arkive.Core.Textures;
 using Arkive.Core.Viewer.Shaders;
+using System.Buffers.Binary;
+using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Arkive.Core.Viewer;
 
@@ -716,7 +716,8 @@ public sealed class ModelViewerSceneService
         var report = await _skeletalReconnaissance.InspectAsync(
             new SkeletalMeshReconnaissanceRequest(request.PackagePath, request.PackageAlias, request.ExportIndex,
                 AssetKind.SkeletalMesh, request.ClassName, request.ObjectName, request.SerialOffset,
-                request.SerialSize, identity) { SkipUmodelOracle = true },
+                request.SerialSize, identity)
+            { SkipUmodelOracle = true },
             cancellationToken).ConfigureAwait(false);
         var layout = report.NativeLayout
             ?? throw new InvalidDataException(report.Issues.FirstOrDefault(issue => issue.Severity == "Error")?.Message
@@ -762,7 +763,8 @@ public sealed class ModelViewerSceneService
         var report = await _staticReconnaissance.InspectAsync(
             new StaticMeshReconnaissanceRequest(request.PackagePath, request.PackageAlias, request.ExportIndex,
                 AssetKind.StaticMesh, request.ClassName, request.ObjectName, request.SerialOffset,
-                request.SerialSize, identity) { SkipUmodelOracle = true },
+                request.SerialSize, identity)
+            { SkipUmodelOracle = true },
             cancellationToken).ConfigureAwait(false);
         var layout = report.NativeLayout
             ?? throw new InvalidDataException(report.Issues.FirstOrDefault(issue => issue.Severity == "Error")?.Message

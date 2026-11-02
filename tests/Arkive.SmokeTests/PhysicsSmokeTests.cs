@@ -1,7 +1,7 @@
-using System.Numerics;
 using Arkive.Core.Particles;
 using Arkive.Core.Physics;
 using Arkive.Core.Proportions;
+using System.Numerics;
 
 namespace Arkive.SmokeTests;
 
@@ -126,7 +126,8 @@ internal static class PhysicsSmokeTests
         var physics = new ArkiveModFileAsset("a", UnifiedPackageAssetKind.PhysicsAsset, "physics",
             new ArkiveModAssetTarget("pc_wr_f_00", "x.upk", "physicsasset", "pc_wr_f_00_physics", 1, new string('0', 64), new string('0', 64)), []);
         var manifest = ArkiveModAuthoringService.CreateManifest(new string('a', 32), new ArkiveModMetadata("m", "1.0.0"),
-            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow) with { Assets = [physics] };
+            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow) with
+        { Assets = [physics] };
         Assert(ArkiveModFileFormat.VersionFor(manifest) == ArkiveModFileFormat.PhysicsFormatVersion &&
                ArkiveModFileFormat.VersionFor(manifest with { Assets = [] }) == 1,
             "physics mods are not written as format 4");

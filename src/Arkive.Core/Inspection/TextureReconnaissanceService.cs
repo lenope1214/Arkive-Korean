@@ -1,12 +1,12 @@
+using Arkive.Core.Archives;
+using Arkive.Core.Assets;
+using Arkive.Core.Packages;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using Arkive.Core.Archives;
-using Arkive.Core.Assets;
-using Arkive.Core.Packages;
 
 namespace Arkive.Core.Inspection;
 

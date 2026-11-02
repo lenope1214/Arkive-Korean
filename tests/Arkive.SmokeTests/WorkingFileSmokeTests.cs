@@ -152,9 +152,15 @@ internal static class WorkingFileSmokeTests
             File.WriteAllBytes(Path.Combine(folder, "edited.glb"), [1, 2, 3, 4]);
             Write(Path.Combine(folder, SkeletalMeshEditWorkspaceStore.ManifestFileName), new
             {
-                schemaVersion = SkeletalMeshEditWorkspaceStore.CurrentSchemaVersion, editId = Id(name),
-                createdAt = DateTimeOffset.UtcNow.AddDays(-2), displayName = name, sourceExportId = Id(name + "-source"),
-                sourceManifestPath = manifest, objectName = name + "_sk", editedGlbRelativePath = "edited.glb", editedGlbBytes = 4,
+                schemaVersion = SkeletalMeshEditWorkspaceStore.CurrentSchemaVersion,
+                editId = Id(name),
+                createdAt = DateTimeOffset.UtcNow.AddDays(-2),
+                displayName = name,
+                sourceExportId = Id(name + "-source"),
+                sourceManifestPath = manifest,
+                objectName = name + "_sk",
+                editedGlbRelativePath = "edited.glb",
+                editedGlbBytes = 4,
                 includedInPackageBuild = includedInBuild,
             });
             return folder;

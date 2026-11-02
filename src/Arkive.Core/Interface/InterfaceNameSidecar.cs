@@ -1,9 +1,9 @@
-using System.IO.Compression;
-using System.Text.Json;
 using Arkive.Core.Archives;
 using Arkive.Core.Assets;
 using Arkive.Core.Discovery;
 using Arkive.Core.Packages;
+using System.IO.Compression;
+using System.Text.Json;
 
 namespace Arkive.Core.Interface;
 

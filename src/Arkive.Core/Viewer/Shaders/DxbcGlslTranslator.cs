@@ -222,12 +222,12 @@ public static partial class DxbcGlslTranslator
             case "dp3": return StoreFloat($"vec4(dot(({Float(1)}).xyz, ({Float(2)}).xyz))");
             case "dp4": return StoreFloat($"vec4(dot({Float(1)}, {Float(2)}))");
             case "sincos":
-            {
-                var builder = new StringBuilder();
-                if (ops[0] != "null") builder.Append(Store(ops[0], $"floatBitsToUint(sin({Float(2)}))"));
-                if (ops[1] != "null") builder.Append(Store(ops[1], $"floatBitsToUint(cos({Float(2)}))"));
-                return builder.ToString();
-            }
+                {
+                    var builder = new StringBuilder();
+                    if (ops[0] != "null") builder.Append(Store(ops[0], $"floatBitsToUint(sin({Float(2)}))"));
+                    if (ops[1] != "null") builder.Append(Store(ops[1], $"floatBitsToUint(cos({Float(2)}))"));
+                    return builder.ToString();
+                }
             case "lt": return Store(ops[0], Mask($"lessThan({Float(1)}, {Float(2)})"));
             case "ge": return Store(ops[0], Mask($"greaterThanEqual({Float(1)}, {Float(2)})"));
             case "eq": return Store(ops[0], Mask($"equal({Float(1)}, {Float(2)})"));
@@ -239,11 +239,11 @@ public static partial class DxbcGlslTranslator
             case "ult": return Store(ops[0], Mask($"lessThan({Bits(1)}, {Bits(2)})"));
             case "uge": return Store(ops[0], Mask($"greaterThanEqual({Bits(1)}, {Bits(2)})"));
             case "movc":
-            {
-                var condition = Mask($"notEqual({Bits(1)}, uvec4(0u))");
-                var expression = $"(({Bits(2)} & {condition}) | ({Bits(3)} & ~{condition}))";
-                return saturate ? StoreFloat($"uintBitsToFloat({expression})") : Store(ops[0], expression);
-            }
+                {
+                    var condition = Mask($"notEqual({Bits(1)}, uvec4(0u))");
+                    var expression = $"(({Bits(2)} & {condition}) | ({Bits(3)} & ~{condition}))";
+                    return saturate ? StoreFloat($"uintBitsToFloat({expression})") : Store(ops[0], expression);
+                }
             case "and": return Store(ops[0], $"({Bits(1)} & {Bits(2)})");
             case "or": return Store(ops[0], $"({Bits(1)} | {Bits(2)})");
             case "xor": return Store(ops[0], $"({Bits(1)} ^ {Bits(2)})");

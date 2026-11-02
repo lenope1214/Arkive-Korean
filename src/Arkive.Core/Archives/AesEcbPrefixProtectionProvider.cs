@@ -1,5 +1,5 @@
-using System.Security.Cryptography;
 using Arkive.Core.Packages;
+using System.Security.Cryptography;
 
 namespace Arkive.Core.Archives;
 
