@@ -1,0 +1,5 @@
+PR smoke test
+
+This file was added to verify the GitHub branch, commit, and pull request workflow.
+
+No application code or game assets were changed.
