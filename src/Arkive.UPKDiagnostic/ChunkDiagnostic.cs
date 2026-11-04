@@ -8,8 +8,9 @@ namespace Arkive.UPKDiagnostic;
 
 public sealed class ChunkDiagnostic
 {
-    public static void Run(string upkPath)
+    public static void Run(string upkPath, IChunkProtectionProvider? provider = null)
     {
+        var providerLabel = provider is null ? "none" : provider.Name;
         var report = new DiagnosticReport
         {
             FileName = Path.GetFileName(upkPath),
@@ -47,29 +48,37 @@ public sealed class ChunkDiagnostic
                     Flags = chunk.LostArkFlags
                 };
 
-                // 3. 보호 제공자 없이 논리 스트림 읽기
-                // 보호된 청크라면 Arkive가 접근을 거부해야 정상이다.
+                // 3. 논리 스트림으로 첫 청크 전체를 읽는다.
+                // 제공자가 없으면 보호된 청크는 PackageAccessException(정상 거부)이다.
+                // 제공자가 있으면 복호화 -> LZ4 해제 -> 크기 검증까지 수행된다.
                 using var logicalStream =
                     new LogicalPackageStream(
                         summary,
-                        NoChunkProtectionProvider.Instance);
+                        provider ?? NoChunkProtectionProvider.Instance);
 
                 logicalStream.Position = chunk.UncompressedOffset;
 
-                var buffer = new byte[1];
-                var bytesRead = logicalStream.Read(buffer, 0, 1);
+                var buffer = new byte[chunk.UncompressedSize];
+                var total = 0;
+                while (total < buffer.Length)
+                {
+                    var read = logicalStream.Read(buffer, total, buffer.Length - total);
+                    if (read <= 0) break;
+                    total += read;
+                }
 
-                if (bytesRead == 1)
+                if (total == buffer.Length)
                 {
                     report.Status = "READ_SUCCESS";
                     report.Message =
-                        "첫 번째 청크에서 1바이트를 읽었습니다.";
+                        $"첫 청크 {total:N0} bytes 해제 성공 (제공자: {providerLabel}).";
+                    report.DecodedHeadHex = Convert.ToHexString(buffer.AsSpan(0, Math.Min(32, total)));
                 }
                 else
                 {
-                    report.Status = "EMPTY_READ";
+                    report.Status = "SHORT_READ";
                     report.Message =
-                        "청크에서 데이터를 읽지 못했습니다.";
+                        $"첫 청크에서 {total:N0}/{buffer.Length:N0} bytes만 읽었습니다.";
                 }
             }
         }
@@ -78,6 +87,14 @@ public sealed class ChunkDiagnostic
             report.Status = "PROTECTED_CHUNK";
             report.Message = ex.Message;
         }
+        catch (PackageFormatException ex)
+        {
+            // 복호화 키/알고리즘이 맞지 않으면 보통 LZ4 단계에서 여기로 떨어진다.
+            report.Status = provider is null ? "FORMAT_ERROR" : "DECODE_FAILED";
+            report.Message = ex.Message +
+                (ex.InnerException is null ? "" : " | inner: " + ex.InnerException.Message);
+            report.ExceptionType = ex.GetType().FullName;
+        }
         catch (Exception ex)
         {
             report.Status = "ERROR";
@@ -85,13 +102,14 @@ public sealed class ChunkDiagnostic
             report.ExceptionType = ex.GetType().FullName;
         }
 
+        report.Provider = providerLabel;
         report.CompletedAt = DateTimeOffset.Now;
 
         // 4. 원본 UPK와 별도 위치에 JSON 저장
         var outputPath = Path.Combine(
             Path.GetDirectoryName(Path.GetFullPath(upkPath))!,
             Path.GetFileNameWithoutExtension(upkPath)
-                + ".chunk-diagnostic.json");
+                + (provider is null ? ".chunk-diagnostic.json" : ".chunk-diagnostic.provider.json"));
 
         File.WriteAllText(
             outputPath,
@@ -126,6 +144,8 @@ public sealed class DiagnosticReport
     public string Status { get; set; } = "";
     public string Message { get; set; } = "";
     public string? ExceptionType { get; set; }
+    public string Provider { get; set; } = "none";
+    public string? DecodedHeadHex { get; set; }
 }
 
 public sealed class ChunkInfo

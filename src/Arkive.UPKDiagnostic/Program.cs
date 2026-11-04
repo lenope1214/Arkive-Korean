@@ -16,7 +16,37 @@ internal static class Program
         Console.WriteLine("       UPK Diagnostic Lab v0.1");
         Console.WriteLine("==================================");
 
-        string path = args.Length > 0 ? args[0] : "";
+        // LPK 프로브 모드: UPKDiagnostic --lpk <lpk 경로>... [--out <보고서 폴더>]
+        // 키가 필요 없는 범위(인덱스 읽기 + 압축 엔트리 해제)만 시험한다.
+        if (args.Contains("--lpk", StringComparer.OrdinalIgnoreCase))
+        {
+            var outIndex = Array.FindIndex(args, a => a.Equals("--out", StringComparison.OrdinalIgnoreCase));
+            var outDir = outIndex >= 0 && outIndex + 1 < args.Length
+                ? args[outIndex + 1]
+                : Path.Combine(Environment.CurrentDirectory, "work", "unpack", "lpk");
+            var lpkPaths = args.Where((a, i) =>
+                !a.StartsWith("--", StringComparison.Ordinal) &&
+                (outIndex < 0 || i != outIndex + 1)).ToList();
+            var worst = 0;
+            foreach (var lpk in lpkPaths)
+            {
+                if (!File.Exists(lpk))
+                {
+                    Console.WriteLine($"파일을 찾을 수 없습니다: {lpk}");
+                    worst = Math.Max(worst, 2);
+                    continue;
+                }
+
+                worst = Math.Max(worst, Arkive.UPKDiagnostic.LpkProbe.Run(lpk, outDir));
+            }
+
+            return worst;
+        }
+
+        // 사용법: UPKDiagnostic [--western] <upk 경로>
+        // --western : 서구판 보호 프로파일로 첫 청크 해제를 시도한다 (한국판 호환성 검증용).
+        bool useWestern = args.Contains("--western", StringComparer.OrdinalIgnoreCase);
+        string path = args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal)) ?? "";
 
         while (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
@@ -67,9 +97,24 @@ internal static class Program
                 }));
 
             Console.WriteLine($"\n보고서 저장: {output}");
+
+            bool headerOk = !report.Issues.Any(x => x.Level == "ERROR");
+
+            // 2단계: 헤더가 정상이고 압축 청크가 있으면 첫 청크를 실제로 읽어 본다.
+            // (보호 제공자 없이 읽으므로, 보호된 청크는 PROTECTED_CHUNK로 보고된다.)
+            if (headerOk && report.Chunks.Count > 0)
+            {
+                Console.WriteLine("\n========== 청크 읽기 진단 ==========");
+                Arkive.UPKDiagnostic.ChunkDiagnostic.Run(
+                    path,
+                    useWestern
+                        ? Arkive.Core.Archives.ChunkProtectionProviderFactory.CreateWesternGlobal()
+                        : null);
+            }
+
             Console.WriteLine("원본 UPK 파일은 수정하지 않았습니다.");
 
-            return report.Issues.Any(x => x.Level == "ERROR") ? 1 : 0;
+            return headerOk ? 0 : 1;
         }
         catch (Exception ex)
         {
