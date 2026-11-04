@@ -16,6 +16,30 @@ internal static class Program
         Console.WriteLine("       UPK Diagnostic Lab v0.1");
         Console.WriteLine("==================================");
 
+        // GFx 프로브 모드: UPKDiagnostic --gfx <Packages 폴더> --key-file <json> [--max N] [--out DIR]
+        // EFUI_* 패키지의 Scaleform 무비에서 PlaceObject3 class-name 규칙(명세 vs 리테일)을 대조한다.
+        if (args.Contains("--gfx", StringComparer.OrdinalIgnoreCase))
+        {
+            string? Option(string name)
+            {
+                var index = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+                return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
+            }
+
+            if (Option("--key-file") is { } gfxKeys)
+                Console.WriteLine("키 프로파일: " + Arkive.Core.Archives.ArchiveKeyProfile.ActivateFromFile(gfxKeys));
+            var packagesDirectory = Option("--gfx");
+            if (packagesDirectory is null || !Directory.Exists(packagesDirectory))
+            {
+                Console.WriteLine("Packages 폴더를 찾을 수 없습니다: " + packagesDirectory);
+                return 2;
+            }
+
+            return Arkive.UPKDiagnostic.GfxProbe.Run(packagesDirectory,
+                int.TryParse(Option("--max"), out var max) ? max : 200,
+                Option("--out") ?? Path.Combine(Environment.CurrentDirectory, "work", "unpack", "gfx"));
+        }
+
         // LPK 프로브 모드: UPKDiagnostic --lpk <lpk 경로>... [--out <보고서 폴더>]
         // 키가 필요 없는 범위(인덱스 읽기 + 압축 엔트리 해제)만 시험한다.
         if (args.Contains("--lpk", StringComparer.OrdinalIgnoreCase))

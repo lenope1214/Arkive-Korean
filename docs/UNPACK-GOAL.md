@@ -70,6 +70,7 @@
   - 수정 안 함(목록만): `GameLanguageService`(서구판 언어 덮어쓰기 기능 — `GameMsg_English` 전제, 한국판엔 해당 없음), `Tweaks/MarketItemTable`·`CombatPowerTable`(`GameMsg_English` 하드코딩 + 영어 툴팁 텍스트 파싱), `GameFontService.Languages`(영/불/독/서), `TweakCatalog` 안내 문구("needs the English game client"). 모두 게임 텍스트를 영어로 가정하는 서구판 전용 기능이라 언팩 목표 밖.
   - 진단 도구에 `--lpk … --db <이름>` 추가(특정 DB를 `<out>/db` 로 추출해 스키마 확인용).
 - F23. **P2-4 완료 — 포크 카탈로그 확정(§9)**: 가져옴 3개(A GFx PlaceObject3 class-name 판정 버그 의심, B 커서 추출, C `.loa` 문자열 덤프), 참고만 8개(대부분 Arkive 에 같은 기능이 이미 있음: MinimapData·무비 덤프·랜드스케이프·사운드 등), 제외 6개(포크 엔진 전용). 포크에 LICENSE 가 없어 형식 지식만 가져오고 코드는 새로 쓴다는 방침을 §9 에 기록.
+- F24. **P2-5a 완료 — GFx PlaceObject3 class-name 판정 버그 확인·수정**: 진단 도구 `--gfx <Packages> --key-file F [--max N]` 로 `EFUI_*` 패키지 60개(무비 70개)를 대조. HasImage+HasCharacter 인데 HasClassName 이 없는 배치 399개 중 **리테일식(문자열 없음)만 유효 394, 명세식만 유효 0**, 둘 다 5. → `GfxMovieReader.ReadPlacement` 를 HasClassName(0x08)일 때만 문자열을 읽도록 수정. 이전에는 이런 배치의 character id·인스턴스 이름이 틀려 UI 그림 이름 붙이기(`InterfaceElementNames`)에서 빠졌다. 같은 익스포터를 쓰는 서구판에도 해당되는 수정. 스모크 테스트 `reads PlaceObject3 placements the way the game's Scaleform exporter writes them` 추가. 패키지 이름은 `LostArkPackageName.TryDecodeFileName` 으로 난독화 파일명에서 복원(34,103개 중 EFUI_*).
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -94,7 +95,7 @@
 3. [x] **P2-3.** (완료, F22) 한국판 GameMsg로 Arkive의 게임 DB 빌드 경로 실행 (`GameDatabaseMetadataReader`, `GameLanguageService`, Cli의 DB 빌드). 서구판 가정(언어 컬럼·영어 텍스트·"Western" 예외 문구)에서 깨지는 지점을 목록화하고 최소 수정. GameMsg는 UTF-8, 다른 `.loa` 표는 CP949 (포크 `dump_loa_strings.py` 설명).
 4. [x] **P2-4.** (완료, F23) 포크 카탈로그 완성(§9): 항목별로 Arkive 기존 기능과 비교해 `가져옴 / 참고만 / 제외` 판정과 근거 기록. 포크 `.md/에셋 추출 파이프라인.md` 와 `Tools/*/README.md` 를 근거 문서로 읽는다. 엔진/클라/서버 코드는 제외.
 5. [ ] **P2-5.** §9에서 `가져옴`으로 판정된 항목을 우선순위대로 접목 — **한 번에 하나**, Core에 최소 구현 + 스모크 테스트(`tests/Arkive.SmokeTests`) 1개 이상. 순서: **5a** GFx PlaceObject3 class-name 판정(§9-A, 먼저 한국판 무비로 재현 확인) → **5b** 커서 추출(§9-B) → **5c** `.loa` 문자열 덤프(§9-C). 하위 항목이 모두 끝나야 P2-5 를 [x] 로 한다.
-   - [ ] 5a  - [ ] 5b  - [ ] 5c
+   - [x] 5a (F24)  - [ ] 5b  - [ ] 5c
 6. [ ] **P2-6.** G5 마무리: §7 재현 방법을 현재 도구 옵션(`--key-file`, `--all`, `--lpk`)과 `ARKIVE_KEY_PROFILE` 기준으로 갱신.
 
 ### 5-1. 키 처리 규칙 (항상 적용)
@@ -117,6 +118,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 8 | P2-5a: 진단 도구 `--gfx` 추가, 한국판 UI 무비 70개로 PlaceObject3 규칙 대조 → `GfxMovieReader` 수정, 스모크 테스트 1개 | 리테일식 394 / 명세식 0 (F24). 전체 스모크 통과, 빌드 경고/오류 0 | P2-5b (커서 추출) |
 | 2026-11-04 | 7 | P2-4: 포크 스크립트·README 와 Arkive Core 대조, §9 판정 확정 | 가져옴 3 / 참고만 8 / 제외 6 (F23). 문서만 변경 | P2-5a (GFx PlaceObject3 재현 확인) |
 | 2026-11-04 | 6 | P2-3: 한국판 `database-build` 실행 → `GameMsg` 단일 표 대응(`GameMessageTable`), PC 클래스 이름 매칭 보정, 스모크 테스트 1개 추가, 진단 도구 `--db` | 빌드 성공(참조 148,263·엔티티 30,820), 이름 99.9% 한국어 (F22). 전체 스모크 통과, 빌드 경고/오류 0 | P2-4 (포크 카탈로그 확정) |
 | 2026-11-04 | 5 | P2-2: `--all-db` 추가, `data2.lpk` DB 803개 전수 복호화+SQLite 열기 | 803/803 성공, 실패 0 (F21). 빌드 경고/오류 0 | P2-3 (한국판 GameMsg 로 게임 DB 빌드 경로) |
