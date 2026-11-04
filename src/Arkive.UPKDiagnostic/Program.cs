@@ -30,7 +30,7 @@ internal static class Program
             var lpkKeyIndex = Array.FindIndex(args, a => a.Equals("--key-file", StringComparison.OrdinalIgnoreCase));
             if (lpkKeyIndex >= 0 && lpkKeyIndex + 1 < args.Length)
             {
-                ApplyLpkKeys(args[lpkKeyIndex + 1]);
+                Console.WriteLine("키 프로파일: " + Arkive.Core.Archives.ArchiveKeyProfile.ActivateFromFile(args[lpkKeyIndex + 1]));
                 lpkPaths.Remove(args[lpkKeyIndex + 1]);
             }
 
@@ -60,7 +60,8 @@ internal static class Program
                 return 2;
             }
 
-            var allProvider = LoadKeyFileProvider(args[kfIndex + 1]);
+            Arkive.Core.Archives.ArchiveKeyProfile.ActivateFromFile(args[kfIndex + 1]);
+            var allProvider = Arkive.Core.Archives.ChunkProtectionProviderFactory.CreateDefault();
             var worstAll = 0;
             foreach (var upk in args.Where((a, i) => !a.StartsWith("--", StringComparison.Ordinal) && i != kfIndex + 1))
                 worstAll = Math.Max(worstAll, Arkive.UPKDiagnostic.AllChunksVerifier.Run(upk, allProvider));
@@ -140,7 +141,7 @@ internal static class Program
                     path,
                     useWestern
                         ? Arkive.Core.Archives.ChunkProtectionProviderFactory.CreateWesternGlobal()
-                        : keyFile is not null ? LoadKeyFileProvider(keyFile) : null);
+                        : keyFile is not null ? ActivateAndGetProvider(keyFile) : null);
             }
 
             Console.WriteLine("원본 UPK 파일은 수정하지 않았습니다.");
@@ -154,49 +155,10 @@ internal static class Program
         }
     }
 
-    // 키 파일의 lpkIndexKey*/lpkDbBase* 를 Core 의 LPK 키로 주입한다. 키 값은 출력하지 않는다.
-    //   { "lpkIndexKeyAscii": "<Blowfish 키 문자열>" | "lpkIndexKeyHex": "<hex>", "lpkDbBaseKeyHex": "<32 hex>" }
-    private static void ApplyLpkKeys(string keyFile)
+    private static Arkive.Core.Archives.IChunkProtectionProvider ActivateAndGetProvider(string keyFile)
     {
-        using var document = JsonDocument.Parse(File.ReadAllText(keyFile));
-        var root = document.RootElement;
-        byte[] indexKey;
-        if (root.TryGetProperty("lpkIndexKeyHex", out var hex) && hex.GetString() is { Length: > 0 } hexText)
-            indexKey = Convert.FromHexString(hexText.Trim());
-        else if (root.TryGetProperty("lpkIndexKeyAscii", out var ascii) && ascii.GetString() is { Length: > 0 } asciiText)
-            indexKey = Encoding.ASCII.GetBytes(asciiText);
-        else
-            throw new InvalidDataException("키 파일에 lpkIndexKeyHex 또는 lpkIndexKeyAscii 가 없습니다.");
-
-        if (!root.TryGetProperty("lpkDbBaseKeyHex", out var baseHex) || baseHex.GetString() is not { Length: > 0 } baseText)
-            throw new InvalidDataException("키 파일에 lpkDbBaseKeyHex 가 없습니다.");
-
-        Arkive.Core.Archives.LostArkArchiveKeys.Use(indexKey, Convert.FromHexString(baseText.Trim()));
-        Console.WriteLine("LPK 키: 사용자 제공 프로파일 적용 (" + Path.GetFileName(keyFile) + ")");
-    }
-
-    private static Arkive.Core.Archives.IChunkProtectionProvider LoadKeyFileProvider(string keyFile)
-    {
-        using var document = JsonDocument.Parse(File.ReadAllText(keyFile));
-        var root = document.RootElement;
-        byte[] key;
-        if (root.TryGetProperty("upkChunkKeyHex", out var hex) && hex.GetString() is { Length: > 0 } hexText)
-            key = Convert.FromHexString(hexText.Trim());
-        else if (root.TryGetProperty("upkChunkKeyAscii", out var ascii) && ascii.GetString() is { Length: > 0 } asciiText)
-            key = Encoding.ASCII.GetBytes(asciiText);
-        else
-            throw new InvalidDataException("키 파일에 upkChunkKeyHex 또는 upkChunkKeyAscii 가 없습니다.");
-
-        try
-        {
-            // 키 값 자체는 출력/보고서에 남기지 않는다. 이름에는 파일명만 쓴다.
-            return new Arkive.Core.Archives.AesEcbPrefixProtectionProvider(
-                key, "User-supplied profile (" + Path.GetFileName(keyFile) + ")");
-        }
-        finally
-        {
-            System.Security.Cryptography.CryptographicOperations.ZeroMemory(key);
-        }
+        Arkive.Core.Archives.ArchiveKeyProfile.ActivateFromFile(keyFile);
+        return Arkive.Core.Archives.ChunkProtectionProviderFactory.CreateDefault();
     }
 
     private static PackageReport Analyze(string path)

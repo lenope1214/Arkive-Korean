@@ -12,6 +12,13 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         _installationMutex = new Mutex(false, "Arkive.Application.Update");
+        try
+        {
+            // A client from another region is opened by pointing ARKIVE_KEY_PROFILE at a local key file.
+            Core.Archives.ArchiveKeyProfile.ActivateFromEnvironment();
+        }
+        catch (Exception exception) when (exception is InvalidDataException or IOException or UnauthorizedAccessException)
+        { SessionLog.WriteUnhandled("key profile could not be activated; using the built-in keys", exception); }
         if (StartupUri is not null) StartupModFiles = ModFileArguments(e.Args);
         base.OnStartup(e);
     }

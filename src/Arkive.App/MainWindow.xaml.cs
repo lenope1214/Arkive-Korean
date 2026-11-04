@@ -188,7 +188,7 @@ public partial class MainWindow : Window
 
     public MainWindow(string projectRoot)
     {
-        _protectionProvider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+        _protectionProvider = ChunkProtectionProviderFactory.CreateDefault();
         _catalogReader = new AssetCatalogReader(_reader, _protectionProvider);
 
         var umodelPath = UmodelLocator.FindExecutable();

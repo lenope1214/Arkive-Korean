@@ -46,6 +46,10 @@ static int Run(string[] arguments)
 
     try
     {
+        // A client from another region (for example Korean) is opened by pointing ARKIVE_KEY_PROFILE at a local key file.
+        if (ArchiveKeyProfile.ActivateFromEnvironment() is { } keyProfile)
+            Console.Error.WriteLine($"Key profile: {keyProfile}");
+
         var command = arguments[0].ToLowerInvariant();
         var target = arguments[1];
         var json = arguments.Contains("--json", StringComparer.OrdinalIgnoreCase);
@@ -615,7 +619,7 @@ static int TextureExportNative(
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(package)!, "arkive-native-export", SafeFileName(objectName))
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var catalog = new AssetCatalogReader(protectionProvider: provider).Read(package);
     var matches = catalog.Assets.Where(asset =>
         asset.Kind == AssetKind.Texture &&
@@ -709,7 +713,7 @@ static int ModelViewerScene(
         : JsonSerializer.Deserialize<ModelViewerEdits>(File.ReadAllText(editsPath), new JsonSerializerOptions(JsonSerializerDefaults.Web))
           ?? throw new InvalidDataException($"{editsPath} holds no edits.");
     var package = Path.GetFullPath(packagePath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var catalog = new AssetCatalogReader(protectionProvider: provider).Read(package);
     var matches = catalog.Assets.Where(asset =>
         asset.ObjectName.Equals(objectName, StringComparison.OrdinalIgnoreCase)).ToArray();
@@ -763,7 +767,7 @@ static int SkeletalMeshRecon(
     if (string.IsNullOrWhiteSpace(objectName))
         throw new ArgumentException("skeletal-mesh-recon requires --object NAME.");
     var package = Path.GetFullPath(packagePath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var catalog = new AssetCatalogReader(protectionProvider: provider).Read(package);
     var matches = catalog.Assets.Where(asset =>
         asset.Kind == AssetKind.SkeletalMesh &&
@@ -815,7 +819,7 @@ static int StaticMeshRecon(
     if (string.IsNullOrWhiteSpace(objectName))
         throw new ArgumentException("static-mesh-recon requires --object NAME.");
     var package = Path.GetFullPath(packagePath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var catalog = new AssetCatalogReader(protectionProvider: provider).Read(package);
     var matches = catalog.Assets.Where(asset =>
         asset.Kind == AssetKind.StaticMesh &&
@@ -874,7 +878,7 @@ static int StaticMeshExportEditable(string reconPath, string? outputPath, bool j
         ? Path.Combine(Path.GetDirectoryName(path)!, "editable")
         : Path.GetFullPath(outputPath);
     var result = new StaticMeshEditableExportService(
-            protectionProvider: ChunkProtectionProviderFactory.CreateWesternGlobal())
+            protectionProvider: ChunkProtectionProviderFactory.CreateDefault())
         .ExportAsync(new StaticMeshEditableExportRequest(report, path, output))
         .GetAwaiter().GetResult();
     if (json) WriteJson(result.Manifest);
@@ -894,7 +898,7 @@ static int StaticMeshPreflight(string editableManifestPath, string? editedPath, 
     if (string.IsNullOrWhiteSpace(editedPath))
         throw new ArgumentException("static-mesh-preflight requires --edited FILE.glb.");
     var report = new StaticMeshEditPreflightService(
-            protectionProvider: ChunkProtectionProviderFactory.CreateWesternGlobal())
+            protectionProvider: ChunkProtectionProviderFactory.CreateDefault())
         .InspectAsync(Path.GetFullPath(editableManifestPath), Path.GetFullPath(editedPath))
         .GetAwaiter().GetResult();
     if (json) WriteJson(report);
@@ -921,7 +925,7 @@ static int StaticMeshRegisterEdit(
         throw new ArgumentException("static-mesh-register-edit requires --edited FILE.glb --workspace DIR.");
     var entry = new StaticMeshEditWorkspaceStore(
             Path.GetFullPath(workspacePath),
-            protectionProvider: ChunkProtectionProviderFactory.CreateWesternGlobal())
+            protectionProvider: ChunkProtectionProviderFactory.CreateDefault())
         .RegisterAsync(Path.GetFullPath(editableManifestPath), Path.GetFullPath(editedPath), displayName)
         .GetAwaiter().GetResult();
     if (json) WriteJson(entry.Manifest);
@@ -942,7 +946,7 @@ static int StaticMeshCompile(string editManifestPath, string? outputPath, bool j
         ? Path.Combine(Path.GetDirectoryName(editPath)!, "compiled")
         : Path.GetFullPath(outputPath);
     var result = new StaticMeshCompilationService(
-            protectionProvider: ChunkProtectionProviderFactory.CreateWesternGlobal())
+            protectionProvider: ChunkProtectionProviderFactory.CreateDefault())
         .CompileAsync(editPath, output).GetAwaiter().GetResult();
     if (json) WriteJson(result.Manifest);
     else
@@ -969,7 +973,7 @@ static int MaterialRecon(
     if (string.IsNullOrWhiteSpace(objectName))
         throw new ArgumentException("material-recon requires --object NAME.");
     var package = Path.GetFullPath(packagePath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var catalog = new AssetCatalogReader(protectionProvider: provider).Read(package);
     var matches = catalog.Assets.Where(asset =>
         asset.Kind == AssetKind.Material &&
@@ -1009,7 +1013,7 @@ static int MaterialCreateEdit(string reconPath, string? outputPath, string? disp
         ? Path.Combine(Path.GetDirectoryName(path)!, "material-edits")
         : Path.GetFullPath(outputPath);
     var entry = new MaterialInstanceEditService(
-            ChunkProtectionProviderFactory.CreateWesternGlobal())
+            ChunkProtectionProviderFactory.CreateDefault())
         .CreateEditAsync(path, output, displayName).GetAwaiter().GetResult();
     if (json) WriteJson(entry.Document);
     else
@@ -1030,7 +1034,7 @@ static int MaterialBuildCandidate(string editPath, string? outputPath, bool json
         ? Path.Combine(Path.GetDirectoryName(path)!, "candidates")
         : Path.GetFullPath(outputPath);
     var result = new MaterialInstanceEditService(
-            ChunkProtectionProviderFactory.CreateWesternGlobal())
+            ChunkProtectionProviderFactory.CreateDefault())
         .BuildCandidateAsync(path, output).GetAwaiter().GetResult();
     if (json) WriteJson(result.Manifest);
     else
@@ -1060,7 +1064,7 @@ static int SkeletalMeshReconstructNoOp(string reconPath, string? outputPath, boo
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(path)!, "no-op-proof")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new SkeletalMeshNoOpService(protectionProvider: provider)
         .ReconstructAsync(new SkeletalMeshNoOpRequest(report, path, output))
         .GetAwaiter().GetResult();
@@ -1090,7 +1094,7 @@ static int SkeletalMeshExportEditable(string reconPath, string? outputPath, bool
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(path)!, "editable-mesh")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new SkeletalMeshEditableExportService(protectionProvider: provider)
         .ExportAsync(new SkeletalMeshEditableExportRequest(report, path, output))
         .GetAwaiter().GetResult();
@@ -1125,7 +1129,7 @@ static int OutfitSwap(string packagesRoot, string? indexCache, string? wear, str
     var output = Path.GetFullPath(outPath);
     var cache = Path.GetFullPath(cachePath ?? Path.Combine(output, "cache"));
     Directory.CreateDirectory(output);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var reader = new UpkPackageReader();
     var executable = UmodelLocator.FindExecutable() ?? throw new InvalidOperationException("Outfit swaps need the Lost Ark UModel backend.");
     var bridge = new UmodelBridge(executable);
@@ -1267,7 +1271,7 @@ static int OutfitSwapMod(string packagesRoot, string? indexCache, string? wear, 
     var environment = CreateModEnvironment(projectDirectory);
     var game = Path.GetFullPath(gamePath ?? root);
     environment.Context.Library.SetGamePackagesDirectoryAsync(game).GetAwaiter().GetResult();
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var reader = new UpkPackageReader();
     var catalogReader = new AssetCatalogReader(reader, provider);
     var executable = UmodelLocator.FindExecutable() ?? throw new InvalidOperationException("Outfit swaps need the Lost Ark UModel backend.");
@@ -1446,7 +1450,7 @@ static int BodyPhysics(string packagePath, string? objectName, IReadOnlyList<str
     }
     var package = Path.GetFullPath(packagePath);
     var report = PhysicsAssets.Inspect(package, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(package))),
-        objectName, null, ChunkProtectionProviderFactory.CreateWesternGlobal());
+        objectName, null, ChunkProtectionProviderFactory.CreateDefault());
     var fitter = new BodyPhysicsFitter(report);
     foreach (var glb in glbs)
     {
@@ -1711,7 +1715,7 @@ static int SkeletalMeshEncodeNative(string editManifestPath, string? outputPath,
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(directory, "native-encoding")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new SkeletalMeshNativeEncodingService(protectionProvider: provider)
         .EncodeAsync(new SkeletalMeshNativeEncodingRequest(entry, output))
         .GetAwaiter().GetResult();
@@ -1750,7 +1754,7 @@ static int SkeletalMeshCompileTopology(string editManifestPath, string? outputPa
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(directory, "topology-compilation")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new SkeletalMeshTopologyCompilerService(protectionProvider: provider)
         .CompileAsync(new SkeletalMeshTopologyCompilationRequest(entry, output))
         .GetAwaiter().GetResult();
@@ -1778,7 +1782,7 @@ static int SkeletalMeshBuildStagedUpk(string encodingManifestPath, string? outpu
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(manifestPath)!, "staged-upk")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new SkeletalMeshStagedUpkService(protectionProvider: provider)
         .BuildAsync(new SkeletalMeshStagedUpkRequest(manifestPath, output))
         .GetAwaiter().GetResult();
@@ -1804,7 +1808,7 @@ static int SkeletalMeshBuildTopologyUpk(string compilationManifestPath, string? 
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(manifestPath)!, "topology-staged-upk")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new SkeletalMeshStagedUpkService(protectionProvider: provider)
         .BuildTopologyAsync(new SkeletalMeshTopologyStagedUpkRequest(manifestPath, output))
         .GetAwaiter().GetResult();
@@ -1936,7 +1940,7 @@ static int PackageCompose(
     var crunchPath = CrunchEncoderLocator.FindExecutable() ??
                      throw new FileNotFoundException(
                          $"{CrunchEncoderLocator.ExecutableFileName} was not found beneath tools/external.");
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var reader = new UpkPackageReader();
     var composer = CreateComposer(
         reader, provider, new UmodelBridge(umodelPath), crunchPath, new NativeTextureExportService(reader, provider),
@@ -2019,7 +2023,7 @@ static int FaceMapProjects(
     var alias = string.IsNullOrWhiteSpace(packageAlias)
         ? Path.GetFileNameWithoutExtension(package)
         : packageAlias.Trim();
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var workspace = new GuidedTextureModWorkspace(Path.GetFullPath(workspacePath));
     var exportWorkspace = new ExportWorkspaceStore(Path.GetFullPath(exportsPath));
     var service = new FaceTextureMappingService(
@@ -2204,7 +2208,7 @@ static int TextureLayoutConfirm(string nativeManifestPath, string? outputPath, b
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(input)!, "layout-confirmation")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new TextureLayoutConfirmationService(protectionProvider: provider)
         .ConfirmAsync(new TextureLayoutConfirmationRequest(input, output))
         .GetAwaiter()
@@ -2237,7 +2241,7 @@ static int TextureBuildPayloads(
           throw new FileNotFoundException(
               $"{CrunchEncoderLocator.ExecutableFileName} was not found beneath tools/external.")
         : Path.GetFullPath(crunchPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var decoder = new NativeCrunchDecoder();
     var layout = new TextureLayoutConfirmationService(
         protectionProvider: provider,
@@ -2270,7 +2274,7 @@ static int TextureAssembleExport(string payloadManifestPath, string? outputPath,
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(input)!, "export-assembly")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new TextureExportAssemblyService(protectionProvider: provider)
         .AssembleAsync(new TextureExportAssemblyRequest(input, output))
         .GetAwaiter()
@@ -2295,7 +2299,7 @@ static int TexturePlanRewrite(string assemblyManifestPath, string? outputPath, b
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(input)!, "package-rewrite-plan")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new PackageRewritePlanService(protectionProvider: provider)
         .PlanAsync(new PackageRewritePlanRequest(input, output))
         .GetAwaiter()
@@ -2322,7 +2326,7 @@ static int TextureBuildLogicalImage(string rewritePlanManifestPath, string? outp
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(input)!, "logical-package-image")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new LogicalPackageImageService(protectionProvider: provider)
         .BuildAsync(new LogicalPackageImageRequest(input, output))
         .GetAwaiter()
@@ -2350,7 +2354,7 @@ static int TexturePlanPhysical(string logicalImageManifestPath, string? outputPa
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(input)!, "physical-package-plan")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new PhysicalPackagePlanService(protectionProvider: provider)
         .PlanAsync(new PhysicalPackagePlanRequest(input, output))
         .GetAwaiter()
@@ -2378,7 +2382,7 @@ static int TextureReconstructNoOpUpk(string physicalPlanManifestPath, string? ou
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(input)!, "noop-upk-reconstruction")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new NoOpUpkReconstructionService(protectionProvider: provider)
         .ReconstructAsync(new NoOpUpkReconstructionRequest(input, output))
         .GetAwaiter()
@@ -2407,7 +2411,7 @@ static int TextureBuildReplacementUpk(string noOpManifestPath, string? outputPat
     var output = string.IsNullOrWhiteSpace(outputPath)
         ? Path.Combine(Path.GetDirectoryName(input)!, "replacement-staging-upk")
         : Path.GetFullPath(outputPath);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var result = new ReplacementUpkBuildService(protectionProvider: provider)
         .BuildAsync(new ReplacementUpkBuildRequest(input, output))
         .GetAwaiter()
@@ -2808,7 +2812,7 @@ static int ArkiveParticleTint(string projectRoot, IReadOnlyList<string> packages
     var recipe = new Arkive.Core.Particles.ParticleEffectRecipe(new Arkive.Core.Particles.ParticleEffectTint(channels[0], channels[1], channels[2]));
     var words = match.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     var environment = CreateModEnvironment(projectRoot);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var captured = new List<ArkiveModCapturedAsset>();
     var created = new List<Arkive.Core.Particles.ParticleEffectEditEntry>();
     try
@@ -2860,7 +2864,7 @@ static int ArkivePhysicsMod(string projectRoot, string package, string objectNam
     var values = settings.Select(setting => setting.Split('=', 2)).ToDictionary(parts => parts[0],
         parts => double.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture), StringComparer.OrdinalIgnoreCase);
     var environment = CreateModEnvironment(projectRoot);
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var gamePackage = Path.GetFullPath(package);
     var clean = environment.Apply.ResolveCleanPackageAsync(gamePackage).GetAwaiter().GetResult();
     // The same path Simple upscale's Match physics takes: the pieces' class names their physics asset.
@@ -3039,7 +3043,7 @@ static CliModEnvironment CreateModEnvironment(string projectRoot)
     var root = Path.GetFullPath(projectRoot);
     if (!Directory.Exists(root)) throw new DirectoryNotFoundException($"Arkive project root was not found: {root}");
     var staging = Path.Combine(root, "staging");
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var reader = new UpkPackageReader();
     var limitations = new List<string>();
     var umodelPath = UmodelLocator.FindExecutable();
@@ -3170,7 +3174,7 @@ static int ClientUpdateCheckAll(
             texture.Manifest.SourcePackagePath, package.Manifest.SourcePackagePath)).ToArray(),
         meshes.Where(mesh => SameFullPath(
             meshSources[mesh.Manifest.EditId], package.Manifest.SourcePackagePath)).ToArray())).ToArray();
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var service = new ClientUpdateAuditService(
         new ClientUpdateCompatibilityService(protectionProvider: provider));
     var progress = json ? null : new InlineProgress<ClientUpdateAuditProgress>(update =>
@@ -3283,7 +3287,7 @@ static int InterfaceNames(string packagesRoot, string? metadataPath, string? fil
     if (string.IsNullOrWhiteSpace(metadataPath))
         throw new ArgumentException("interface-names requires --metadata FILE (the names are saved beside it).");
     var watch = System.Diagnostics.Stopwatch.StartNew();
-    var document = InterfaceNameSidecar.BuildAsync(metadataPath, packagesRoot, ChunkProtectionProviderFactory.CreateWesternGlobal())
+    var document = InterfaceNameSidecar.BuildAsync(metadataPath, packagesRoot, ChunkProtectionProviderFactory.CreateDefault())
         .GetAwaiter().GetResult();
     var matches = document.Associations
         .Where(item => string.IsNullOrWhiteSpace(filter) || AssetSearch.MatchesDisplayNames(filter, [item.DisplayName]))
@@ -3434,7 +3438,7 @@ static int TweaksInstall(string projectRoot, bool saved, bool includeOtherMods)
     var packages = library.LoadAsync().GetAwaiter().GetResult().GamePackagesDirectory
                    ?? throw new InvalidOperationException("This Arkive data root has no game folder set.");
     var service = new Arkive.Core.Tweaks.TweakModService(library, Path.Combine(root, "tweaks"),
-        ChunkProtectionProviderFactory.CreateWesternGlobal(),
+        ChunkProtectionProviderFactory.CreateDefault(),
         (path, token) => environment.Apply.ResolveCleanPackageAsync(path, token))
     {
         Edits = environment.Context.Edits,
@@ -3498,7 +3502,7 @@ static int TweaksMod(string packagesRoot, string? projectRoot, string? tweaks, s
         settings.Enabled[id] = chosen;
     }
     var service = new Arkive.Core.Tweaks.TweakModService(library, Path.Combine(root, "tweaks"),
-        ChunkProtectionProviderFactory.CreateWesternGlobal())
+        ChunkProtectionProviderFactory.CreateDefault())
     {
         KeepMoviesIn = moviesOut is null ? null : Path.GetFullPath(moviesOut),
         Diagnostic = diagnostic,
@@ -3646,7 +3650,7 @@ static int CharacterTextureAudit(
     var metadata = GameAssetMetadataIndex.Load(metadataPath);
     var progress = new Progress<string>(message => Console.Error.WriteLine(message));
     var report = new CharacterTextureCoverageAuditService(
-            ChunkProtectionProviderFactory.CreateWesternGlobal())
+            ChunkProtectionProviderFactory.CreateDefault())
         .AuditAsync(new CharacterTextureCoverageRequest(
             metadata,
             indexDirectory,
@@ -3963,7 +3967,7 @@ static int UmodelList(string filePath, string? filter, bool json)
 
 static int Catalog(string filePath, string? filter, bool json)
 {
-    var provider = ChunkProtectionProviderFactory.CreateWesternGlobal();
+    var provider = ChunkProtectionProviderFactory.CreateDefault();
     var catalog = new AssetCatalogReader(protectionProvider: provider).Read(filePath);
     var assets = string.IsNullOrWhiteSpace(filter)
         ? catalog.Assets
@@ -4299,7 +4303,8 @@ static void PrintUsage()
     Console.WriteLine("  arkive scan <Packages-directory> [--limit N] [--json]");
     Console.WriteLine();
     Console.WriteLine(
-        $"Protected catalogues use Arkive's built-in {ChunkProtectionProviderFactory.WesternGlobalProfileId} profile.");
+        $"Protected catalogues use Arkive's built-in {ChunkProtectionProviderFactory.WesternGlobalProfileId} profile, " +
+        $"or the keys in the file named by the {ArchiveKeyProfile.EnvironmentVariable} environment variable.");
 }
 
 static string SafeFileName(string value)

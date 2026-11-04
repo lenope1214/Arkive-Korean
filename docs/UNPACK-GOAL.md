@@ -60,6 +60,8 @@
 - F17. `data2.lpk` DB 복호화 OK: `EFTable_GameMsg.db` (134,231,040 B), `EFTable_AchievementChat.db` 둘 다 `SQLite format 3` 헤더. Arkive의 DB 키 유도(`DeriveKey`)는 한국판에서도 동일하게 통했다(단, 이름에 `_` 가 여러 개인 테이블은 `unpack_lpk.py` 의 유도식과 차이 가능 — §9 P2-4에서 전수 검증).
 - F18. **키 처리 방식:** 한국판 상수는 Arkive 소스에 넣지 않았다. `work/unpack/keys.local.json`(gitignore)에서만 읽고, Core에는 `LostArkArchiveKeys.Use(...)` 주입 지점만 추가(서구판 기본값은 그대로). 진단 도구는 `--key-file` 로 UPK·LPK 키를 모두 주입한다. 키 값은 출력·보고서·문서에 남기지 않는다.
 - F19. 포크는 **로스트아크 DX11 엔진 팀 프로젝트**(Engine/Client/Server/Tools, 체크아웃 약 3.7GB). 한국 설치본(KR) 기준으로 UPK/LPK를 이미 풀어서 맵·이펙트·애니메이션·UI를 복원해 쓰고 있다. 정본 문서: `.md/에셋 추출 파이프라인.md`, `Tools/LpkPipeline/`.
+- F20. **P2-1 완료 — 키 프로파일이 Arkive 정식 기능이 됐다.** Core `ArchiveKeyProfile`(키 파일 → UPK 보호 제공자 + LPK 키 활성화, 환경변수 `ARKIVE_KEY_PROFILE`), `ChunkProtectionProviderFactory.CreateDefault()`(활성 프로파일 또는 서구판). `Arkive.Cli` 39곳·`Arkive.App` 1곳·Core 기본값 1곳을 `CreateDefault()` 로 교체했고, CLI 시작과 `App.OnStartup` 에서 환경변수를 적용한다(실패 시 CLI는 오류 출력, App은 세션 로그 후 내장 키로 계속). 진단 도구의 중복 파서는 제거해 `ArchiveKeyProfile` 로 통합.
+  검증: 실제 CLI `arkive catalog <한국 UPK>` — 프로파일 없음 → `LZ4 block 1 … could not be decoded`, `ARKIVE_KEY_PROFILE` 지정 → export 6개 정상 출력(보호 방식 칸에는 프로파일 이름만), 없는 경로 → 명확한 오류. 합성 키 스모크 테스트 2개 추가(`PackageArchiveSmokeTests`: 프로파일 적용·해제·LPK 왕복, 잘못된 파일 7종 거부). 서구판 기본 동작은 환경변수가 없으면 그대로.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -79,7 +81,7 @@
 
 **2단계 (포크 접목) — loop는 맨 위 미완료 항목 하나씩 수행**
 
-1. [ ] **P2-1.** 키 프로파일을 Core 공개 API로 정식화: `ArchiveKeyProfile.LoadFromFile(path)` 한 번 호출로 UPK 보호 제공자 + LPK 키(`LostArkArchiveKeys.Use`)를 모두 구성. 환경변수 `ARKIVE_KEY_PROFILE`(파일 경로)을 지원하고, 진단 도구·`Arkive.Cli`·`Arkive.App` 시작 지점에서 적용한다. 서구판 기본 동작은 변경 없음(환경변수 없으면 그대로). 한국판 상수는 소스에 넣지 않는다(F18).
+1. [x] **P2-1.** (완료, F20) 키 프로파일을 Core 공개 API로 정식화: `ArchiveKeyProfile.LoadFromFile(path)` 한 번 호출로 UPK 보호 제공자 + LPK 키(`LostArkArchiveKeys.Use`)를 모두 구성. 환경변수 `ARKIVE_KEY_PROFILE`(파일 경로)을 지원하고, 진단 도구·`Arkive.Cli`·`Arkive.App` 시작 지점에서 적용한다. 서구판 기본 동작은 변경 없음(환경변수 없으면 그대로). 한국판 상수는 소스에 넣지 않는다(F18).
 2. [ ] **P2-2.** DB 전수 검증: `data2.lpk` 803개 `.db` 전부 복호화 → SQLite 헤더 + 열어서 `sqlite_master` 조회. 실패가 있으면 `DeriveKey`(마지막 `_` 뒤 이름)와 포크 `unpack_lpk.py` 의 `database_key`(`EFTable_` 접두 제거한 전체 이름) 차이를 원인으로 확인하고 필요 시 보정(F17).
 3. [ ] **P2-3.** 한국판 GameMsg로 Arkive의 게임 DB 빌드 경로 실행 (`GameDatabaseMetadataReader`, `GameLanguageService`, Cli의 DB 빌드). 서구판 가정(언어 컬럼·영어 텍스트·"Western" 예외 문구)에서 깨지는 지점을 목록화하고 최소 수정. GameMsg는 UTF-8, 다른 `.loa` 표는 CP949 (포크 `dump_loa_strings.py` 설명).
 4. [ ] **P2-4.** 포크 카탈로그 완성(§9): 항목별로 Arkive 기존 기능과 비교해 `가져옴 / 참고만 / 제외` 판정과 근거 기록. 포크 `.md/에셋 추출 파이프라인.md` 와 `Tools/*/README.md` 를 근거 문서로 읽는다. 엔진/클라/서버 코드는 제외.
@@ -106,6 +108,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 4 | P2-1: `ArchiveKeyProfile`·`CreateDefault()` 추가, Cli/App/Core 호출부 41곳 교체, 시작 지점 적용, 진단 도구 파서 통합, 스모크 테스트 2개 추가 | 실제 CLI `catalog` 로 프로파일 유/무/잘못된 경로 검증, 전체 스모크 스위트 통과, 빌드 경고/오류 0 (F20) | P2-2 (DB 803개 전수 검증) |
 | 2026-11-04 | 3 | 포크 `Lostark-signle` 분석: 한국판 UPK/LPK 키 확보(→ 로컬 키 파일), `LostArkArchiveKeys` 주입 지점·`AllChunksVerifier`·`--all`·`--key-file`(UPK+LPK)·DB 프로브 추가. T2~T6 완료 | UPK 3개 5,129 청크 실패 0, 카탈로그 개수 일치, LPK 8개 OK, GameMsg 134MB 복호화 OK (F14~F19). 빌드 경고/오류 0 | 2단계 P2-1 |
 | 2026-11-04 | 2 | 사용자 방침 반영(키는 사용자가 찾음). T5: `LpkProbe`/`--lpk` 추가, 8개 LPK 프로브. T7: §7 갱신 | 8개 전부 `INDEX_INVALID` — LPK 인덱스 키도 서구판과 다름 (F11~F13). 빌드 경고/오류 0 | **키 필요 없는 작업 소진 → loop 종료(§8).** 사용자가 UPK 보호 키·LPK 인덱스 키를 전달하면 T2/T4/T6 재개 |
 | 2026-11-04 | 1 | T1 수행: `--western` 옵션·전체 청크 해제 검증 추가, 샘플 2개(271MB 다청크 / 10KB 단일청크) 실행 | 둘 다 `DECODE_FAILED` — 서구판 키로 한국 UPK 불가 (F6~F8). 빌드 경고/오류 0 | **loop 중단(§8: 한국판 키/프로파일 확보는 사용자 판단 필요)** |

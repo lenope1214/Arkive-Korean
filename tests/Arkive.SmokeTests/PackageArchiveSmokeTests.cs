@@ -11,6 +11,8 @@ internal static class PackageArchiveSmokeTests
         new("decodes a protected logical chunk with an explicit provider", TestProtectedPackage),
         new("decodes a protected chunk with Arkive's Western profile", TestBuiltInWesternProvider),
         new("rejects a protected chunk without a provider", TestMissingProtectionProvider),
+        new("a key profile for another client region replaces the built-in keys and can be undone", TestKeyProfile),
+        new("a key profile file that holds no usable key is rejected and changes nothing", TestKeyProfileRejectsBadFiles),
         new("builds a UE3 asset catalogue", TestAssetCatalogue),
         new("decodes a Lost Ark package alias", TestPackageNameDecode),
         new("rejects an invalid package tag", TestInvalidTag),
@@ -140,6 +142,106 @@ internal static class PackageArchiveSmokeTests
         Assert(
             provider.Name == ChunkProtectionProviderFactory.WesternGlobalProviderName,
             "built-in Western provider was not identified");
+    }
+
+    private static void TestKeyProfile()
+    {
+        // Every key here is random test data; it has nothing to do with any game client.
+        var chunkKey = RandomNumberGenerator.GetBytes(32);
+        var indexKey = RandomNumberGenerator.GetBytes(16);
+        var databaseBase = RandomNumberGenerator.GetBytes(16);
+        var profilePath = Path.Combine(fixtureDirectory, "key-profile-other-region.json");
+        File.WriteAllText(profilePath, JsonSerializer.Serialize(new Dictionary<string, string>
+        {
+            ["upkChunkKeyHex"] = Convert.ToHexString(chunkKey),
+            ["lpkIndexKeyHex"] = Convert.ToHexString(indexKey),
+            ["lpkDbBaseKeyHex"] = Convert.ToHexString(databaseBase),
+        }));
+
+        var packagePath = Path.Combine(fixtureDirectory, "key-profile-package.upk");
+        var payload = Encoding.ASCII.GetBytes("Arkive key profile regression fixture. This contains no game data.");
+        WriteCompressedPayloadPackage(packagePath, payload, protect: true, chunkKey);
+        var archivePath = Path.Combine(fixtureDirectory, "key-profile-archive.lpk");
+        if (File.Exists(archivePath)) File.Delete(archivePath);
+
+        try
+        {
+            Assert(ArchiveKeyProfile.ActiveName is null, "a key profile was active before the test");
+            var name = ArchiveKeyProfile.ActivateFromFile(profilePath);
+            Assert(ArchiveKeyProfile.ActiveName == name, "the activated profile was not reported");
+            Assert(!name.Contains(Convert.ToHexString(chunkKey), StringComparison.OrdinalIgnoreCase),
+                "the profile name leaked key material");
+
+            var provider = ChunkProtectionProviderFactory.CreateDefault();
+            Assert(provider.Name == name, "CreateDefault did not return the active profile's provider");
+            var summary = new UpkPackageReader().Read(packagePath);
+            using (var stream = new LogicalPackageStream(summary, provider))
+            {
+                stream.Position = 129;
+                var decoded = new byte[payload.Length];
+                stream.ReadExactly(decoded);
+                Assert(decoded.SequenceEqual(payload), "the profile's chunk key did not decode the package");
+            }
+
+            // The .lpk keys follow the profile too: an archive written under it reads back under it.
+            Arkive.Core.Skills.LostArkDataArchive.Create(
+                [new KeyValuePair<string, byte[]>("/Binaries/profile-test.txt", payload)], archivePath);
+            using (var archive = File.OpenRead(archivePath))
+            {
+                var entries = Arkive.Core.Skills.LostArkDataArchive.ReadEntries(archive);
+                Assert(entries.Count == 1 && entries[0].Path == "/Binaries/profile-test.txt",
+                    "the profile's archive keys did not round-trip");
+            }
+
+            ArchiveKeyProfile.Deactivate();
+            Assert(ArchiveKeyProfile.ActiveName is null, "Deactivate left a profile active");
+            Assert(ChunkProtectionProviderFactory.CreateDefault().Name == ChunkProtectionProviderFactory.WesternGlobalProviderName,
+                "without a profile CreateDefault did not return the Western profile");
+            try
+            {
+                using var stream = File.OpenRead(archivePath);
+                _ = Arkive.Core.Skills.LostArkDataArchive.ReadEntries(stream);
+                throw new InvalidOperationException("an archive written under the profile read under the built-in keys");
+            }
+            catch (InvalidDataException)
+            {
+            }
+        }
+        finally
+        {
+            ArchiveKeyProfile.Deactivate();
+            CryptographicOperations.ZeroMemory(chunkKey);
+        }
+    }
+
+    private static void TestKeyProfileRejectsBadFiles()
+    {
+        var cases = new Dictionary<string, string>
+        {
+            ["missing-file"] = "",
+            ["not-json"] = "this is not json",
+            ["not-an-object"] = "[1, 2]",
+            ["no-keys"] = "{}",
+            ["index-without-database-base"] = "{ \"lpkIndexKeyAscii\": \"abcdefghijklmnop\" }",
+            ["short-chunk-key"] = "{ \"upkChunkKeyAscii\": \"too short\" }",
+            ["bad-hex"] = "{ \"upkChunkKeyHex\": \"zz\" }",
+        };
+
+        foreach (var (name, content) in cases)
+        {
+            var path = Path.Combine(fixtureDirectory, "bad-key-profile-" + name + ".json");
+            if (name != "missing-file") File.WriteAllText(path, content);
+            try
+            {
+                ArchiveKeyProfile.ActivateFromFile(path);
+                throw new InvalidOperationException($"bad key profile '{name}' was accepted");
+            }
+            catch (InvalidDataException)
+            {
+            }
+
+            Assert(ArchiveKeyProfile.ActiveName is null, $"bad key profile '{name}' changed the active keys");
+        }
     }
 
     private static void TestMissingProtectionProvider()

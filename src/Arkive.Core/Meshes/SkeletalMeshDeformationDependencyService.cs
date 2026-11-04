@@ -18,7 +18,7 @@ public sealed class SkeletalMeshDeformationDependencyService
         AssetCatalogReader? catalogReader = null,
         IChunkProtectionProvider? protectionProvider = null)
     {
-        _protectionProvider = protectionProvider ?? ChunkProtectionProviderFactory.CreateWesternGlobal();
+        _protectionProvider = protectionProvider ?? ChunkProtectionProviderFactory.CreateDefault();
         _catalogReader = catalogReader ?? new AssetCatalogReader(protectionProvider: _protectionProvider);
     }
 
