@@ -97,7 +97,11 @@ public static class LpkProbe
                 try
                 {
                     Directory.CreateDirectory(databaseDirectory);
-                    var destination = Path.Combine(databaseDirectory, Path.GetFileName(entry.Path));
+                    // Copies under a subfolder (TableData/KOR, /DEV) keep it in their name, so they do not overwrite the main one.
+                    var parent = Path.GetFileName(Path.GetDirectoryName(entry.Path.Replace('\\', '/')) ?? "");
+                    var fileName = Path.GetFileName(entry.Path);
+                    var destination = Path.Combine(databaseDirectory,
+                        parent.Equals("TableData", StringComparison.OrdinalIgnoreCase) || parent.Length == 0 ? fileName : $"{parent}_{fileName}");
                     if (File.Exists(destination)) File.Delete(destination);
                     Arkive.Core.Databases.LostArkDatabaseArchive.Extract(
                         lpkPath, entry.Path, destination, CancellationToken.None);
