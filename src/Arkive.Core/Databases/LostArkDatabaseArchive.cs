@@ -26,7 +26,7 @@ internal static class LostArkDatabaseArchive
         stream.ReadExactly(header);
         var count = BinaryPrimitives.ReadInt32LittleEndian(header);
         if (count is < 1 or > MaximumEntries || (long)count * EntrySize + 8 > stream.Length)
-            throw new InvalidDataException("Unsupported or truncated Western Lost Ark LPK index.");
+            throw new InvalidDataException("Unsupported or truncated Lost Ark LPK index." + KeyHint);
         var table = new byte[count * EntrySize];
         stream.ReadExactly(table);
         var cipher = new BlowfishEngine();
@@ -50,7 +50,7 @@ internal static class LostArkDatabaseArchive
             var record = table.AsSpan(index * EntrySize, EntrySize);
             var nameLength = BinaryPrimitives.ReadInt32LittleEndian(record);
             if (nameLength is < 1 or > EntrySize - 20)
-                throw new InvalidDataException("Invalid LPK entry name length; the protection profile may have changed.");
+                throw new InvalidDataException("Invalid LPK entry name length: the archive keys do not match this client." + KeyHint);
             var name = Encoding.UTF8.GetString(record.Slice(4, nameLength)).TrimEnd('\0');
             var size = BinaryPrimitives.ReadInt32LittleEndian(record[^12..]);
             var encryptedSize = BinaryPrimitives.ReadInt32LittleEndian(record[^8..]);
@@ -76,9 +76,11 @@ internal static class LostArkDatabaseArchive
             payloadOffset += encryptedSize;
         }
         if (!selected.Contains("EFTable_GameMsg.db"))
-            throw new InvalidDataException("The archive has no supported game-message database. Select EFGame\\data2.lpk from a Western/global Steam client.");
+            throw new InvalidDataException("The archive has no supported game-message database. Select the game's EFGame\\data2.lpk." + KeyHint);
         return entries;
     }
+
+    private static string KeyHint => Archives.ArchiveKeyProfile.WrongKeysHint;
 
     private static void ReverseWords(Span<byte> block)
     {

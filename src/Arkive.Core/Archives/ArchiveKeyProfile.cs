@@ -46,6 +46,15 @@ public static class ArchiveKeyProfile
     /// </summary>
     internal static byte[]? WwiseKeystream => _wwiseKeystream;
 
+    /// <summary>
+    /// What to add to an "unreadable index" error: with the wrong keys an archive index decrypts to nonsense, so say
+    /// which keys were used and how another region's are given.
+    /// </summary>
+    internal static string WrongKeysHint => ActiveName is { } profile
+        ? $" The keys in use come from {profile}; check that it is for this client's region."
+        : " Arkive used the Western/global keys; a client from another region (such as the Korean one) needs its own, " +
+          $"from a key profile file named by the {EnvironmentVariable} environment variable.";
+
     /// <summary>The active profile's display name (the file name), or null when the built-in keys are in use.</summary>
     public static string? ActiveName => _name;
 

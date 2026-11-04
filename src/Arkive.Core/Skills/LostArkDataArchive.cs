@@ -42,7 +42,8 @@ public static class LostArkDataArchive
             var record = table.AsSpan(index * EntrySize, EntrySize);
             var nameLength = BinaryPrimitives.ReadInt32LittleEndian(record);
             if (nameLength is < 1 or > EntrySize - 20)
-                throw new InvalidDataException("Invalid data archive entry; the archive format may have changed.");
+                throw new InvalidDataException("Invalid data archive entry: the archive keys do not match this client, or its format changed." +
+                                               Archives.ArchiveKeyProfile.WrongKeysHint);
             var name = Encoding.UTF8.GetString(record.Slice(4, nameLength)).TrimEnd('\0').Replace('\\', '/');
             var size = BinaryPrimitives.ReadInt32LittleEndian(record[^12..]);
             var encrypted = BinaryPrimitives.ReadInt32LittleEndian(record[^8..]);
