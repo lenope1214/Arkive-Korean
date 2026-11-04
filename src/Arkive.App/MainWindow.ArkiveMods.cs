@@ -163,7 +163,7 @@ public partial class MainWindow : Window
             var unsaved = rows.Count(row => row.Enabled && (row.Status.ModifiedLocally || row.AuthoringPending));
             ModLibraryPendingText.Text = rows.Length == 0 ? string.Empty : outside.Count > 0
                 ? $"{outside.Count:N0} game file(s) were changed outside this Arkive (another Arkive data folder, another tool or a game patch). " +
-                  "Restore them with More actions → Restore from another Arkive folder… or Steam's Verify integrity before applying."
+                  $"Restore them with More actions → Restore from another Arkive folder…, or {Core.GameFileCheck.VerifyLower}, before applying."
                 : ties > 0
                 ? $"{ties:N0} conflict(s) need a choice before applying. Select a mod and review Conflicts."
                 : pending + disabledActive + unsaved > 0
@@ -1048,7 +1048,7 @@ public partial class MainWindow : Window
                     ? "No game file needs restoring: every file your mods target is either the original or installed by this Arkive."
                     : $"That folder has no verified originals for the {plan.Unresolved.Count:N0} changed game file(s) " +
                       $"({string.Join(", ", plan.Unresolved.Select(change => change.PackageAlias))}). " +
-                      "Choose the data folder of the Arkive that installed them, or use Steam's Verify integrity of game files.";
+                      $"Choose the data folder of the Arkive that installed them, or {Core.GameFileCheck.VerifyLower}.";
                 ModLibraryStatusText.Text = none;
                 MessageBox.Show(this, none, "Restore from another Arkive folder", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;

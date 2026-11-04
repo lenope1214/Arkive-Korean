@@ -317,7 +317,7 @@ public sealed class LoginScreenService
         {
             if (!File.Exists(video.BackupPath) || !(await HashAsync(video.BackupPath, cancellationToken).ConfigureAwait(false))
                     .Equals(video.OriginalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Arkive's copy of the game's login video is missing or damaged. Verify the game files in Steam to put the original back.");
+                throw new InvalidDataException("Arkive's copy of the game's login video is missing or damaged. " + GameFileCheck.Verify + " to put the original back.");
             var restoring = video.Path + ".arkive-restore";
             File.Copy(video.BackupPath, restoring, overwrite: true);
             File.Move(restoring, video.Path, overwrite: true);

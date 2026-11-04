@@ -136,7 +136,7 @@ public sealed class OutfitLookArchive
             File.Move(backup + ".tmp", backup, overwrite: true);
         }
         if (!(await HashAsync(backup, cancellationToken).ConfigureAwait(false)).Equals(originalSha, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Arkive's copy of the game's data4.lpk is missing or changed. Verify the game files in Steam to put the original back.");
+            throw new InvalidDataException("Arkive's copy of the game's data4.lpk is missing or changed. " + GameFileCheck.Verify + " to put the original back.");
 
         var staged = ArchivePath + ".arkive-new";
         File.Delete(staged);
@@ -166,7 +166,7 @@ public sealed class OutfitLookArchive
             }
             var applied = await HashAsync(staged, cancellationToken).ConfigureAwait(false);
             if (edits.Count == 0 && !applied.Equals(originalSha, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Arkive could not put back the game's own data4.lpk exactly. Verify the game files in Steam.");
+                throw new InvalidDataException("Arkive could not put back the game's own data4.lpk exactly. " + GameFileCheck.Verify + ".");
             RefuseWhileRunning();
             File.Move(staged, ArchivePath, overwrite: true);
             if (edits.Count == 0)

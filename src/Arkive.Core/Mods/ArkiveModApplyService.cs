@@ -1298,7 +1298,7 @@ public sealed class ArkiveModApplyService
     internal static string OutsideChangeMessage(string physical, string alias, string modName, string objectName) =>
         $"{physical} ({alias}) is not the game file {modName} was made for: its {objectName} differs, and this Arkive " +
         "has no record of changing it. If you installed mods with Arkive from another data folder, restore that file " +
-        "with More actions → Restore from another Arkive folder…; otherwise use Steam's Verify integrity of game files. " +
+        $"with More actions → Restore from another Arkive folder…; otherwise {GameFileCheck.VerifyLower}. " +
         "If a game patch changed it, select the mod and choose 'Update for this game version'.";
 
     /// <summary>

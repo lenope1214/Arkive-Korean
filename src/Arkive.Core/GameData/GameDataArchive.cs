@@ -183,7 +183,7 @@ public sealed class GameDataArchive
         }
         var current = await HashAsync(ArchivePath, cancellationToken).ConfigureAwait(false);
         if (state is not null && !current.Equals(state.AppliedSha256, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("data2.lpk was changed outside Arkive since Arkive last wrote it. Verify the game files in Steam, then try again.");
+            throw new InvalidDataException("data2.lpk was changed outside Arkive since Arkive last wrote it. " + GameFileCheck.Verify + ", then try again.");
 
         var wanted = Wanted(target);
         var installed = state?.Entries.ToDictionary(item => item.Entry, StringComparer.OrdinalIgnoreCase) ??
@@ -211,7 +211,7 @@ public sealed class GameDataArchive
             if (installed.TryGetValue(entry, out var kept))
             {
                 if (!File.Exists(kept.BackupPath))
-                    throw new InvalidDataException($"Arkive's copy of the game's {Path.GetFileName(entry)} is missing. Verify the game files in Steam to put the original back.");
+                    throw new InvalidDataException($"Arkive's copy of the game's {Path.GetFileName(entry)} is missing. {GameFileCheck.Verify} to put the original back.");
                 await DecompressAsync(kept.BackupPath, database, cancellationToken).ConfigureAwait(false);
                 backupPath = kept.BackupPath;
             }
@@ -247,7 +247,7 @@ public sealed class GameDataArchive
             if (target.IsGameOwn)
             {
                 if (!applied.Equals(originalSha, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("Arkive could not rebuild the game's own data2.lpk exactly. Verify the game files in Steam to put the original back.");
+                    throw new InvalidDataException("Arkive could not rebuild the game's own data2.lpk exactly. " + GameFileCheck.Verify + " to put the original back.");
             }
             else
             {

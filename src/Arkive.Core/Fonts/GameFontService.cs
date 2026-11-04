@@ -283,7 +283,7 @@ public sealed partial class GameFontService
         {
             if (!File.Exists(state.BackupPath) || !(await HashAsync(state.BackupPath, cancellationToken).ConfigureAwait(false))
                     .Equals(state.OriginalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Arkive's copy of the game's font.lpk is missing or damaged. Verify the game files in Steam to put the original back.");
+                throw new InvalidDataException("Arkive's copy of the game's font.lpk is missing or damaged. " + GameFileCheck.Verify + " to put the original back.");
             var restoring = ArchivePath + ".arkive-restore";
             File.Copy(state.BackupPath, restoring, overwrite: true);
             File.Move(restoring, ArchivePath, overwrite: true);
@@ -307,7 +307,7 @@ public sealed partial class GameFontService
         var names = entries.Select(entry => entry.Path).ToArray();
         var hidden = names.Any(name => Path.GetFileName(name).StartsWith("1_1_", StringComparison.Ordinal));
         return hidden || names.Distinct(StringComparer.OrdinalIgnoreCase).Count() != names.Length
-            ? "The game's font.lpk was changed by another font tool. Verify the game files in Steam to get the game's own fonts back, then apply here."
+            ? "The game's font.lpk was changed by another font tool. " + GameFileCheck.Verify + " to get the game's own fonts back, then apply here."
             : null;
     }
 
@@ -320,7 +320,7 @@ public sealed partial class GameFontService
             return ArchivePath;
         if (!File.Exists(state.BackupPath) || !(await HashAsync(state.BackupPath, cancellationToken).ConfigureAwait(false))
                 .Equals(state.OriginalSha256, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Arkive's copy of the game's font.lpk is missing or damaged. Verify the game files in Steam to put the original back.");
+            throw new InvalidDataException("Arkive's copy of the game's font.lpk is missing or damaged. " + GameFileCheck.Verify + " to put the original back.");
         return state.BackupPath;
     }
 
