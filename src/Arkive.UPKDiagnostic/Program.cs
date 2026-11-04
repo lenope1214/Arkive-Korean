@@ -59,13 +59,19 @@ internal static class Program
             }
 
             // --db <이름>: 해당 DB 엔트리(예: EFTable_PC.db)를 <out>/db 로 추가 추출한다. 여러 번 줄 수 있다.
+            // --extract <경로 일부>: 경로에 그 문자열이 든 일반(비 DB) 엔트리를 <out>/entries 로 추출한다.
             var extraDatabases = new List<string>();
+            var extractFilters = new List<string>();
             for (var i = 0; i + 1 < args.Length; i++)
             {
-                if (!args[i].Equals("--db", StringComparison.OrdinalIgnoreCase)) continue;
-                extraDatabases.Add(args[i + 1]);
+                var list = args[i].Equals("--db", StringComparison.OrdinalIgnoreCase) ? extraDatabases
+                    : args[i].Equals("--extract", StringComparison.OrdinalIgnoreCase) ? extractFilters : null;
+                if (list is null) continue;
+                list.Add(args[i + 1]);
                 lpkPaths.Remove(args[i + 1]);
             }
+            foreach (var lpk in lpkPaths.Where(File.Exists))
+                if (extractFilters.Count > 0) Arkive.UPKDiagnostic.LpkProbe.ExtractEntries(lpk, outDir, extractFilters);
 
             var worst = 0;
             foreach (var lpk in lpkPaths)

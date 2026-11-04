@@ -42,7 +42,8 @@ public sealed class GameDatabaseBuilder
                 progress?.Report(new("Decrypting databases", index, entries.Count, entries[index].Name));
                 LostArkDatabaseArchive.Extract(archive, entries[index], Path.Combine(temporary, entries[index].Name), cancellation);
             }
-            var document = GameDatabaseMetadataReader.Read(temporary, source, language, progress, cancellation);
+            var classEnum = GamePlayerClassEnum.ReadBeside(source, cancellation);
+            var document = GameDatabaseMetadataReader.Read(temporary, source, language, progress, cancellation, classEnum);
             using (var stream = File.Create(candidate))
                 JsonSerializer.Serialize(stream, document, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             cancellation.ThrowIfCancellationRequested();

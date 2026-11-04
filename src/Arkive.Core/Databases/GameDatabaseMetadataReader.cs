@@ -27,7 +27,8 @@ internal static class GameDatabaseMetadataReader
         RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
     internal static GameAssetMetadataDocument Read(string root, string source, string language,
-        IProgress<GameDatabaseBuildProgress>? progress, CancellationToken cancellation)
+        IProgress<GameDatabaseBuildProgress>? progress, CancellationToken cancellation,
+        IReadOnlyDictionary<long, string>? classEnum = null)
     {
         var messages = new Dictionary<string, string>(StringComparer.Ordinal);
         VisitRows(Path.Combine(root, "EFTable_GameMsg.db"), MessageTable(root, language), ["KEY", "MSG"],
@@ -37,7 +38,7 @@ internal static class GameDatabaseMetadataReader
                 var value = Clean(Text(reader, "MSG"));
                 if (key.Length > 0 && value.Length > 0) messages[key] = value;
             }, required: true);
-        var classNames = ClassNames(messages);
+        var classNames = ClassNames(messages, classEnum);
         var associations = new List<GameAssetAssociation>();
         for (var index = 0; index < Tables.Length; index++)
         {
@@ -52,7 +53,7 @@ internal static class GameDatabaseMetadataReader
             {
                 var nameKey = Text(reader, "Name");
                 var displayName = DisplayName(messages, nameKey);
-                if (table.Name == "PC") displayName = ClassName(classNames, nameKey, displayName);
+                if (table.Name == "PC") displayName = classNames.Find(Number(reader, "PrimaryKey"), nameKey, displayName);
                 if (nameKey.Length == 0 || displayName.Length == 0) return;
                 foreach (var field in fields)
                 {
@@ -138,7 +139,7 @@ internal static class GameDatabaseMetadataReader
     }
 
     private static IReadOnlyList<GameEntityDefinition> ReadEntities(string root,
-        IReadOnlyDictionary<string, string> messages, IReadOnlyDictionary<string, string> classNames,
+        IReadOnlyDictionary<string, string> messages, ClassNameIndex classNames,
         CancellationToken cancellation)
     {
         var entities = new List<GameEntityDefinition>();
@@ -146,9 +147,9 @@ internal static class GameDatabaseMetadataReader
             ["PrimaryKey", "Name", "BaseClass", "Creatable", "Released", "GenderType", "LookInfo"], cancellation, reader =>
             {
                 var key = Text(reader, "Name");
-                var name = ClassName(classNames, key, DisplayName(messages, key));
-                if (name.Length == 0) return;
                 var id = Number(reader, "PrimaryKey");
+                var name = classNames.Find(id, key, DisplayName(messages, key));
+                if (name.Length == 0) return;
                 var baseId = Number(reader, "BaseClass");
                 entities.Add(new(name, key, "PC", id,
                     Number(reader, "Released") != 0 ? "Playable class" : "Player archetype",
@@ -189,19 +190,29 @@ internal static class GameDatabaseMetadataReader
 
     private const string ClassNamePrefix = "tip.name.enum_playerclass_";
 
-    // Class names keyed without underscores and case: the PC table says "Battlemaster" or "DimensionMaster" where the
-    // text keys say "battle_master" and "dimension_master", so only the letters are compared.
-    private static Dictionary<string, string> ClassNames(IReadOnlyDictionary<string, string> messages)
+    // A class's display name: by its id through the game's playerclass enum when there is one (101 -> warrior ->
+    // tip.name.enum_playerclass_warrior), else by its PC Name compared without underscores and case, since the PC
+    // table says "Battlemaster" where the key says "battle_master". The enum is what links names that differ outright
+    // ("Gunlancer" is warlord, "Kimaster" is force_master).
+    private sealed class ClassNameIndex(IReadOnlyDictionary<string, string> messages,
+        IReadOnlyDictionary<long, string> classEnum, Dictionary<string, string> byLetters)
     {
-        var result = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var (key, value) in messages)
-            if (key.StartsWith(ClassNamePrefix, StringComparison.Ordinal))
-                result.TryAdd(ClassKey(key[ClassNamePrefix.Length..]), value);
-        return result;
+        public string Find(long id, string name, string fallback) =>
+            classEnum.TryGetValue(id, out var enumName) &&
+            messages.TryGetValue(ClassNamePrefix + enumName, out var byId) && byId.Length > 0
+                ? byId
+                : byLetters.GetValueOrDefault(ClassKey(name), fallback);
     }
 
-    private static string ClassName(IReadOnlyDictionary<string, string> classNames, string key, string fallback) =>
-        classNames.GetValueOrDefault(ClassKey(key), fallback);
+    private static ClassNameIndex ClassNames(IReadOnlyDictionary<string, string> messages,
+        IReadOnlyDictionary<long, string>? classEnum)
+    {
+        var byLetters = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (key, value) in messages)
+            if (key.StartsWith(ClassNamePrefix, StringComparison.Ordinal))
+                byLetters.TryAdd(ClassKey(key[ClassNamePrefix.Length..]), value);
+        return new(messages, classEnum ?? new Dictionary<long, string>(), byLetters);
+    }
 
     private static string ClassKey(string value) => value.Replace("_", "").ToLowerInvariant();
 

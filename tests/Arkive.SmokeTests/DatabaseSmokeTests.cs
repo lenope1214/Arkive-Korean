@@ -1,4 +1,5 @@
 using Arkive.Core.Databases;
+using Arkive.Core.Skills;
 using Microsoft.Data.Sqlite;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -22,12 +23,27 @@ internal static class DatabaseSmokeTests
     {
         var archive = CreateArchive(root, singleLanguage: true);
         var output = Path.Combine(root, "mapping.json");
+        var withoutEnum = Build(archive, output);
+        Assert(GameAssetMetadataIndex.Load(output).Associations.Any(item => item.DisplayName == "Gunlancer" && item.EntityType == "PC"),
+            "without data1.lpk a class whose name differs from its key did not keep its own name");
+        // The game's playerclass enum (data1.lpk beside data2.lpk) links class 104 to warlord, the key's name.
+        LostArkDataArchive.Create([new("/../Common/StringData/EFGameMsg_Enums.xml", Encoding.UTF8.GetBytes("""
+            <ENUM>
+                <NODE Type="afkkickchecktype" Name="none" Index="0" />
+                <NODE Type="playerclass" Name="na" Index="0" />
+                <NODE Type="playerclass" Name="warlord" Index="104" />
+            </ENUM>
+            """))], Path.Combine(root, "data1.lpk"));
         var result = Build(archive, output);
         var index = GameAssetMetadataIndex.Load(output);
-        Assert(result.AssociationCount == 3 && index.Associations.Any(item => item.DisplayName == "픽스처 보스"),
+        Assert(withoutEnum.AssociationCount == 4 && result.AssociationCount == 4 &&
+               index.Associations.Any(item => item.DisplayName == "픽스처 보스"),
             "the single-language GameMsg table was not used");
         Assert(index.Associations.Any(item => item.DisplayName == "픽스처 마스터" && item.EntityType == "PC"),
             "a PascalCase class name was not matched to its snake_case text key");
+        Assert(index.Associations.Any(item => item.DisplayName == "워로드" && item.EntityType == "PC") &&
+               index.Entities.Any(item => item.DisplayName == "워로드" && item.EntityId == 104),
+            "a class was not named through the game's playerclass enum");
         var german = Path.Combine(root, "german.json");
         new GameDatabaseBuilder().BuildAsync(archive, german, "German").GetAwaiter().GetResult();
         Assert(GameAssetMetadataIndex.Load(german).Associations.Any(item => item.DisplayName == "픽스처 보스"),
@@ -129,7 +145,8 @@ internal static class DatabaseSmokeTests
         {
             ["EFTable_GameMsg.db"] = singleLanguage ? Database(root, """
                 CREATE TABLE GameMsg ([KEY] TEXT NOT NULL, [MSG] TEXT NOT NULL, [ANA] TEXT NOT NULL, PRIMARY KEY ([KEY]));
-                INSERT INTO GameMsg VALUES ('tip.fixture_boss','<b>픽스처 보스</b>',''), ('tip.name.enum_playerclass_fixture_master','픽스처 마스터','');
+                INSERT INTO GameMsg VALUES ('tip.fixture_boss','<b>픽스처 보스</b>',''), ('tip.name.enum_playerclass_fixture_master','픽스처 마스터',''),
+                    ('tip.name.enum_playerclass_warlord','워로드','');
                 """) : Database(root, """
                 CREATE TABLE GameMsg_English (KEY TEXT, MSG TEXT);
                 INSERT INTO GameMsg_English VALUES ('tip.fixture_boss','<b>Fixture &amp; Boss</b>'), ('tip.name.enum_playerclass_fixture','Fixture Class');
@@ -142,6 +159,7 @@ internal static class DatabaseSmokeTests
             ["EFTable_PC.db"] = Database(root, $"""
                 CREATE TABLE PC (PrimaryKey INTEGER, Name TEXT, BaseClass INTEGER, Creatable INTEGER, Released INTEGER, GenderType INTEGER, LookInfo TEXT);
                 INSERT INTO PC VALUES (1,'{(singleLanguage ? "FixtureMaster" : "Fixture")}',1,1,1,1,'fixture.pc_sk');
+                {(singleLanguage ? "INSERT INTO PC VALUES (104,'Gunlancer',0,1,1,1,'fixture.gunlancer_sk');" : "")}
                 """),
             ["EFTable_Npc.db"] = Database(root, """
                 CREATE TABLE Npc (PrimaryKey INTEGER, Name TEXT, Model TEXT, Icon TEXT, Grade INTEGER, Type INTEGER, Function INTEGER, FunctionType INTEGER, TitleName TEXT);

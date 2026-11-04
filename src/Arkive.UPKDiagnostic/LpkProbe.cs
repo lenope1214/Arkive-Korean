@@ -196,6 +196,27 @@ public static class LpkProbe
         return Finish(report, outputDirectory);
     }
 
+    /// <summary>Writes every non-database entry whose path contains one of the filters to &lt;out&gt;/entries/.</summary>
+    public static void ExtractEntries(string lpkPath, string outputDirectory, IReadOnlyCollection<string> filters)
+    {
+        using var stream = new FileStream(lpkPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        var root = Path.Combine(outputDirectory, "entries", Path.GetFileNameWithoutExtension(lpkPath));
+        var written = 0;
+        foreach (var entry in LostArkDataArchive.ReadEntries(stream).Where(entry =>
+                     entry.CompressedSize > 0 && filters.Any(filter => entry.Path.Contains(filter, StringComparison.OrdinalIgnoreCase))))
+        {
+            // Entry paths start with "/../" or "/"; keep only the safe relative part inside the output folder.
+            var relative = string.Join(Path.DirectorySeparatorChar, entry.Path.Replace('\\', '/').Split('/')
+                .Where(part => part.Length > 0 && part != "." && part != ".."));
+            var destination = Path.GetFullPath(Path.Combine(root, relative));
+            if (!destination.StartsWith(Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase)) continue;
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.WriteAllBytes(destination, LostArkDataArchive.Read(stream, entry));
+            written++;
+        }
+        Console.WriteLine($"[{Path.GetFileName(lpkPath)}] 추출 {written:N0}개 → {root}");
+    }
+
     private static int Finish(LpkReport report, string outputDirectory)
     {
         report.CompletedAt = DateTimeOffset.Now;

@@ -73,6 +73,12 @@
 - F24. **P2-5a 완료 — GFx PlaceObject3 class-name 판정 버그 확인·수정**: 진단 도구 `--gfx <Packages> --key-file F [--max N]` 로 `EFUI_*` 패키지 60개(무비 70개)를 대조. HasImage+HasCharacter 인데 HasClassName 이 없는 배치 399개 중 **리테일식(문자열 없음)만 유효 394, 명세식만 유효 0**, 둘 다 5. → `GfxMovieReader.ReadPlacement` 를 HasClassName(0x08)일 때만 문자열을 읽도록 수정. 이전에는 이런 배치의 character id·인스턴스 이름이 틀려 UI 그림 이름 붙이기(`InterfaceElementNames`)에서 빠졌다. 같은 익스포터를 쓰는 서구판에도 해당되는 수정. 스모크 테스트 `reads PlaceObject3 placements the way the game's Scaleform exporter writes them` 추가. 패키지 이름은 `LostArkPackageName.TryDecodeFileName` 으로 난독화 파일명에서 복원(34,103개 중 EFUI_*).
 - F25. **P2-5b 완료 — 마우스 커서 추출** (`Core/Interface/GameCursorReader`, Cli `arkive cursors <Packages|EFUI_CURSOR.upk> [--out DIR] [--json]`): 한국판 `EFUI_CURSOR` 에서 커서 56종, 파일 990개(`.cur` 979 · `.ani` 11)를 `<out>/<preset>/<size>/<이름>.<ext>` 로 추출. **990개 전부 Windows `LoadCursorFromFileW` 로 열림** 확인. `.ico` 로 저장된 것은 export 의 `[size]hotspotx/y` 클릭 지점을 넣어 `.cur` 로 바꾼다(예: `normal` 48px 클릭 지점 9,9). 포크는 구 빌드에서 51종이라 했고 현재는 56종. 포크가 말한 "IntProperty 뒤 8바이트 더" 규칙은 이 패키지에서 필요 없었다(태그 크기대로 넘겨도 끝까지 맞음). 스모크 테스트 `reads the game's mouse cursors as Windows .cur and .ani files`(합성 export, Str/Struct/Bool/Byte-enum/Int 태그 포함).
 - F26. **P2-5c 완료 — `.loa` 문자열 덤프** (`Core/GameData/LoaStringReader`, Cli `arkive loa-strings <file.loa | X.lpk --entry TEXT> [--grep TEXT] [--json]`). `int32 길이 + 바이트 + NUL` 스캔, CP949 디코딩. 포크와 달리 **빈 문자열과 CP949 가 아닌 바이트열은 뺀다**: 한국판 data3 에서 빈 문자열 6,427,194개(대부분 int32 1 + 0 바이트인 숫자)와 Latin-1 로만 풀리는 1,748개(예: float 0.3 = `9A 99 99 3E`)가 전부 잡음이었다. 정리 후 data1 35,403파일 1,030,230개 · data3 12,337파일 11,187,080개(대부분 `Action/*.loa` 바이너리의 우연한 일치 — 이 도구는 형식을 모를 때 훑어보는 용도). 실측 결과 **data1·data3 의 `.loa` 에는 한글 문자열(2자 이상)이 하나도 없다** — 한국어 텍스트는 GameMsg(UTF-8)에만 있고 `.loa` 는 키(`que.*`, `tip.name.*`)와 클래스·리소스 이름만 가진다. CP949 디코딩은 포크 설명대로 안전장치로 둔다. 전체 아카이브 `--json` 은 기존 `WriteJson`(문자열 한 번에 생성)이 메모리 부족으로 죽어서 이 명령만 스트림으로 쓴다. 스모크 테스트 `lists the CP949 text in a .loa record file and skips numbers that look like strings`.
+- F27. **P3-2 완료 — PC 클래스 이름 41/41 한국어.**
+  - 근거: 게임 자체의 `playerclass` 열거형(`data1.lpk` `/../Common/StringData/EFGameMsg_Enums.xml`, `<NODE Type="playerclass" Name="warlord" Index="104" />`). `Index` 가 PC 표의 `PrimaryKey` 이고 `Name` 이 텍스트 키 `tip.name.enum_playerclass_<Name>` 을 정한다. 한국판 PC 41개 모두 이 경로로 키가 존재했다.
+  - 남았던 5개: `Gunlancer`→warlord(워로드), `Mage`→magician(마법사), `Kimaster`→force_master(기공사), `Gunner`→hunter(헌터(남)), `Gunner_Female`→hunter_female(헌터(여)).
+  - 구현: `Databases/GamePlayerClassEnum` 이 data2.lpk 옆의 data1.lpk 에서 열거형을 읽는다(없거나 못 읽으면 빈 표 → F22 의 글자 비교로 폴백). XML 은 DTD 금지로 읽는다.
+  - 진단 도구 `--lpk … --extract <경로 일부>` 추가(일반 엔트리를 `<out>/entries/<lpk>/` 로 추출, 경로 밖으로 나가는 이름은 거부).
+  - 스모크: 단일 언어 테스트에 data1.lpk 열거형이 있을 때와 없을 때를 모두 넣었다.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -120,6 +126,8 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 13 | P3-2: `playerclass` 열거형으로 클래스 이름 연결(`GamePlayerClassEnum`), 진단 도구 `--extract`, 스모크 보강 | 한국판 PC 41/41 한국어 (F27). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-3 (`GameMsg_English` 하드코딩) |
+| 2026-11-04 | 12 | P3-1: 원격 문서 커밋 위로 rebase 후 push(`14a2fe6`), 3단계 백로그·loop 규칙(§10) 작성 | push 성공, 빌드 경고/오류 0 | P3-2 |
 | 2026-11-04 | 11 | P2-6: §7 재현 방법을 현재 옵션(`--key-file`·`--all`·`--lpk`·`--all-db`·`--db`·`--gfx`)과 `ARKIVE_KEY_PROFILE`, Cli `catalog`·`database-build`·`cursors`·`loa-strings` 기준으로 다시 씀. UPK 경로(`ReleasePC/Packages`)·DB 샘플 경로(`lpk/db`) 오기 수정 | 진단 기본 모드·Cli `catalog` 를 문서 명령 그대로 재실행해 확인. **G1~G5, P2-1~6 전부 완료 → loop 종료** | — |
 | 2026-11-04 | 10 | P2-5c: `LoaStringReader` + Cli `loa-strings`(JSON 스트림) + 스모크 테스트 | data1·data3 전 `.loa` 덤프, 잡음 규칙 보정, `.loa` 에 한글 없음 확인 (F26). 전체 스모크 통과, 빌드 경고/오류 0. **P2-5 완료** | P2-6 (§7 재현 방법 갱신) |
 | 2026-11-04 | 9 | P2-5b: `GameCursorReader` + Cli `cursors` + 스모크 테스트 | 한국판 커서 56종 990개 추출, Windows 로 전부 로드 (F25). 전체 스모크 통과, 빌드 경고/오류 0 | P2-5c (`.loa` 문자열 덤프) |
@@ -255,7 +263,7 @@ loop는 다음 중 하나에 해당하면 **멈추고 사용자에게 보고**�
 **백로그 (맨 위부터)**
 
 1. [x] **P3-1.** 로컬 커밋 11개 push. 원격의 문서 커밋 1개(`fc12c80`) 위로 rebase 한 뒤 push 했다(`14a2fe6`).
-2. [ ] **P3-2.** 영어로 남은 PC 클래스 이름 5개(`Gunlancer`, `Gunner`, `Gunner_Female`, `Kimaster`, `Mage`)를 한국어 이름에 연결한다(F22). DB 의 다른 컬럼이나 키에서 근거를 찾고, 추측으로 매핑하지 않는다.
+2. [x] **P3-2.** (완료, F27) 영어로 남은 PC 클래스 이름 5개(`Gunlancer`, `Gunner`, `Gunner_Female`, `Kimaster`, `Mage`)를 한국어 이름에 연결한다(F22). DB 의 다른 컬럼이나 키에서 근거를 찾고, 추측으로 매핑하지 않는다.
 3. [ ] **P3-3.** 단일 GameMsg 표 클라이언트(한국판)에서 `GameMsg_English` 를 하드코딩한 곳을 처리한다.
    - `Tweaks/MarketItemTable`, `Tweaks/CombatPowerTable`: 표 이름을 `GameMessageTable.Resolve` 로 찾는다. 영어 텍스트 파싱에 의존하는 부분은 동작 여부를 판정하고 안내 문구를 둔다.
    - `GameLanguageService`: 한국판에서는 "영어 표가 없다" 오류 대신 기능을 쓸 수 없다는 명확한 상태를 돌려준다.
