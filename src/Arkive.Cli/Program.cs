@@ -371,6 +371,7 @@ static int Run(string[] arguments)
                 ReadTextOption(arguments, "--state-root"), json),
             "catalog" => Catalog(target, ReadTextOption(arguments, "--filter"), json),
             "umodel-list" => UmodelList(target, ReadTextOption(arguments, "--filter"), json),
+            "cursors" => Cursors(target, ReadTextOption(arguments, "--out"), json),
             "interface-names" => InterfaceNames(target, ReadTextOption(arguments, "--metadata"),
                 ReadTextOption(arguments, "--filter"), json),
             "zone-names" => ZoneNames(target, ReadTextOption(arguments, "--metadata"),
@@ -3282,6 +3283,42 @@ static int IndexBuild(
     return report.FailedPackages == 0 ? 0 : 1;
 }
 
+// The game's mouse cursors (EFUI_CURSOR) as Windows .ani/.cur files: <out>/<preset>/<size>/<cursor>.<ext>.
+static int Cursors(string target, string? output, bool json)
+{
+    var package = File.Exists(target)
+        ? target
+        : Directory.Exists(target)
+            ? new DirectoryInfo(target).EnumerateFiles("*.upk").FirstOrDefault(file =>
+                  LostArkPackageName.TryDecodeFileName(file.Name, out var name) &&
+                  name.Equals(Arkive.Core.Interface.GameCursorReader.PackageName, StringComparison.OrdinalIgnoreCase))?.FullName
+              ?? throw new FileNotFoundException("The cursor package (EFUI_CURSOR) is not in this folder.", target)
+            : throw new FileNotFoundException("No such package or folder.", target);
+    var files = Arkive.Core.Interface.GameCursorReader.ReadPackage(package);
+    if (output is not null)
+    {
+        foreach (var file in files)
+        {
+            var directory = Path.Combine(output, file.Preset, file.Size);
+            Directory.CreateDirectory(directory);
+            File.WriteAllBytes(Path.Combine(directory, file.FileName), file.Data);
+        }
+    }
+    if (json)
+    {
+        WriteJson(files.Select(file => new
+        {
+            file.Cursor, file.Preset, file.Size, file.Format, file.Width, file.Height, file.HotspotX, file.HotspotY, Bytes = file.Data.Length
+        }));
+        return 0;
+    }
+    Console.WriteLine($"{files.Count:N0} cursor files in {files.Select(file => file.Cursor).Distinct().Count():N0} cursors" +
+                      (output is null ? "" : $", written to {Path.GetFullPath(output)}"));
+    foreach (var group in files.GroupBy(file => file.Cursor).OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase))
+        Console.WriteLine($"  {group.Key,-24} {string.Join(" ", group.Select(file => $"{file.Preset}/{file.Size}.{file.Format}"))}");
+    return 0;
+}
+
 static int InterfaceNames(string packagesRoot, string? metadataPath, string? filter, bool json)
 {
     if (string.IsNullOrWhiteSpace(metadataPath))
@@ -4278,6 +4315,7 @@ static void PrintUsage()
     Console.WriteLine("  arkive arkive-update <Arkive-project-root> --mod ID|NAME [--json]");
     Console.WriteLine("  arkive client-update-check-all <Arkive-project-root> [--out DIR] [--state-root DIR] [--json]");
     Console.WriteLine("  arkive catalog <package.upk> [--filter TEXT] [--json]");
+    Console.WriteLine("  arkive cursors <PACKAGES_DIR | EFUI_CURSOR.upk> [--out DIR] [--json]");
     Console.WriteLine("  arkive interface-names <PACKAGES_DIR> --metadata arkive-asset-metadata.json [--filter TEXT] [--json]");
     Console.WriteLine("  arkive zone-names <PACKAGES_DIR> --metadata arkive-asset-metadata.json [--filter TEXT] [--json]");
     Console.WriteLine("  arkive player-logs <character-name> [--out DIR] [--json]");

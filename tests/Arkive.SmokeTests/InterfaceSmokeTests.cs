@@ -9,6 +9,7 @@ internal static class InterfaceSmokeTests
     [
         new("reads interface movies and names their pictures after the parts that draw them", TestMovieNames),
         new("reads PlaceObject3 placements the way the game's Scaleform exporter writes them", TestRetailPlaceObject3),
+        new("reads the game's mouse cursors as Windows .cur and .ani files", TestCursors),
         new("finds, replaces and inflates the movie inside an interface movie export", TestMovieExportLayout),
         new("edits an interface movie into an .arkive mod, installs it and restores the clean package", TestMovieModEndToEnd),
         new("recolours one named part of a picture and keeps the rest, its transparency and its shading", TestRecolourPart),
@@ -47,6 +48,54 @@ internal static class InterfaceSmokeTests
         var atlas = InterfaceElementNames.Find(movie).Single(item => item.TextureName == "quickslot_i1").Elements;
         Assert(atlas.Any(element => element.Name == "HP gauge (health bar)"),
             "a picture under a retail PlaceObject3 was not named after its sprite");
+    }
+
+    // An EFUI_CURSOR export: an .ico whose click point the export stores, an animated cursor for a preset and size,
+    // a property that is not a cursor, and the IntProperty / StructProperty / BoolProperty tag shapes in between.
+    private static void TestCursors()
+    {
+        string[] nameValues = ["None", "ArrayProperty", "ByteProperty", "IntProperty", "StrProperty", "BoolProperty",
+            "StructProperty", "Vector", "cursordata", "hotspotx", "hotspoty", "cursordata_fullpreset2", "lastmodified",
+            "fileformat", "EFileFormat", "visible", "offset"];
+        var names = nameValues.Select((value, index) => new UnrealNameEntry(index, value, 0)).ToArray();
+        int Name(string value) => Array.IndexOf(nameValues, value);
+        var icon = new byte[40];
+        BinaryPrimitives.WriteUInt16LittleEndian(icon.AsSpan(2), 1); // type 1: icon
+        BinaryPrimitives.WriteUInt16LittleEndian(icon.AsSpan(4), 1); // one image
+        icon[6] = 48; icon[7] = 48;
+        var animated = Encoding.ASCII.GetBytes("RIFF\0\0\0\0ACONanih");
+        using var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, Encoding.ASCII, leaveOpen: true))
+        {
+            void Tag(string name, string type, int size, Action<BinaryWriter>? extra = null)
+            {
+                writer.Write((long)Name(name)); writer.Write((long)Name(type)); writer.Write(size); writer.Write(0);
+                extra?.Invoke(writer);
+            }
+            writer.Write(0); // net index
+            Tag("lastmodified", "StrProperty", 8); writer.Write(4); writer.Write(Encoding.ASCII.GetBytes("abc\0"));
+            Tag("offset", "StructProperty", 12, item => item.Write((long)Name("Vector"))); writer.Write(new byte[12]);
+            Tag("visible", "BoolProperty", 0, item => item.Write((byte)1));
+            Tag("fileformat", "ByteProperty", 8, item => item.Write((long)Name("EFileFormat"))); writer.Write((long)Name("None"));
+            Tag("cursordata", "ArrayProperty", icon.Length + 4); writer.Write(icon.Length); writer.Write(icon);
+            Tag("hotspotx", "ByteProperty", 1, item => item.Write((long)Name("None"))); writer.Write((byte)7);
+            Tag("hotspoty", "IntProperty", 4); writer.Write(11);
+            Tag("cursordata_fullpreset2", "ArrayProperty", animated.Length + 4); writer.Write(animated.Length); writer.Write(animated);
+            writer.Write((long)Name("None"));
+        }
+        var files = GameCursorReader.ReadExport("normal", stream.ToArray(), names);
+        Assert(files.Count == 2, $"expected two cursor files, got {files.Count}");
+        var cursor = files.Single(file => file.Preset == "default");
+        Assert(cursor is { Size: "normal", Format: "cur", Width: 48, Height: 48, HotspotX: 7, HotspotY: 11 } &&
+               BinaryPrimitives.ReadUInt16LittleEndian(cursor.Data.AsSpan(2)) == 2 &&
+               BinaryPrimitives.ReadUInt16LittleEndian(cursor.Data.AsSpan(10)) == 7 &&
+               BinaryPrimitives.ReadUInt16LittleEndian(cursor.Data.AsSpan(12)) == 11 &&
+               BinaryPrimitives.ReadUInt16LittleEndian(icon.AsSpan(2)) == 1,
+            "an icon was not turned into a cursor carrying the export's click point, or the source bytes changed");
+        var ani = files.Single(file => file.Preset == "preset2");
+        Assert(ani is { Size: "full", Format: "ani", FileName: "normal.ani" } && ani.Data.SequenceEqual(animated),
+            "an animated cursor was not kept as it is, under its preset and size");
+        Assert(GameCursorReader.ReadExport("empty", new byte[12], names).Count == 0, "an export with no cursor arrays gave files");
     }
 
     private static void TestMovieExportLayout()
