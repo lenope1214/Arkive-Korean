@@ -17,7 +17,9 @@ public sealed partial class PackageIndexStore
     public static int RecommendedSearchParallelism =>
         Math.Clamp(Math.Max(2, Environment.ProcessorCount / 2), 2, 4);
 
-    private const string BackendProfile = "lostark-na-nameresolve-noanim-list-v1";
+    // The region is part of the profile so an index listed with -na is not reused for a -kr client (or the reverse);
+    // with the default region it is the same string as before, so existing indexes stay valid.
+    private static string BackendProfile => $"lostark-{Archives.ArchiveKeyProfile.UmodelRegion}-nameresolve-noanim-list-v1";
     private const string ManifestFileName = "index-manifest.json";
 
     private static readonly JsonSerializerOptions JsonOptions = new()

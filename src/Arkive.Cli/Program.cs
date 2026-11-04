@@ -3654,7 +3654,13 @@ static int Language(string efGame, string? dataRoot, string? use, bool restore, 
     if (restore) service.RestoreAsync().GetAwaiter().GetResult();
     else if (!string.IsNullOrWhiteSpace(use)) lines = service.ApplyAsync(use).GetAwaiter().GetResult();
     var languages = service.Languages();
-    if (json) WriteJson(new { Current = service.CurrentLanguage(), Lines = lines, Languages = languages });
+    var single = service.IsSingleLanguage();
+    if (json) WriteJson(new { Current = single ? null : service.CurrentLanguage(), SingleLanguage = single, Lines = lines, Languages = languages });
+    else if (single)
+    {
+        Console.WriteLine($"Saved text:         {saved.TotalSeconds:N1}s");
+        Console.WriteLine("Current:            the game's only language (one text table, as in the Korean client); it cannot be changed.");
+    }
     else
     {
         Console.WriteLine($"Saved text:         {saved.TotalSeconds:N1}s");

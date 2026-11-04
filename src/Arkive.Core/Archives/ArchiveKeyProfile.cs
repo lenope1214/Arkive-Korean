@@ -15,16 +15,25 @@ namespace Arkive.Core.Archives;
 /// {
 ///   "upkChunkKeyAscii": "...32 characters..." | "upkChunkKeyHex": "...64 hex...",
 ///   "lpkIndexKeyAscii": "..." | "lpkIndexKeyHex": "...",   // Blowfish key of the .lpk index and entries
-///   "lpkDbBaseKeyHex": "...32 hex..."                       // required together with the index key
+///   "lpkDbBaseKeyHex": "...32 hex...",                      // required together with the index key
+///   "umodelRegion": "kr"                                    // optional: UModel's region switch (-kr); default na
 /// }
 /// </code>
 /// </remarks>
 public static class ArchiveKeyProfile
 {
     public const string EnvironmentVariable = "ARKIVE_KEY_PROFILE";
+    public const string DefaultUmodelRegion = "na";
 
     private static volatile IChunkProtectionProvider? _chunkProvider;
     private static volatile string? _name;
+    private static volatile string? _umodelRegion;
+
+    /// <summary>
+    /// The region switch UModel is run with ("na" gives -na). The bundled UModel reads a Korean client's packages only
+    /// with -kr; with -na it fails to decompress their chunks.
+    /// </summary>
+    public static string UmodelRegion => _umodelRegion ?? DefaultUmodelRegion;
 
     /// <summary>The active profile's display name (the file name), or null when the built-in keys are in use.</summary>
     public static string? ActiveName => _name;
@@ -63,6 +72,14 @@ public static class ArchiveKeyProfile
             if (root.ValueKind != JsonValueKind.Object)
                 throw new InvalidDataException("The key profile file must hold a JSON object.");
 
+            string? region = null;
+            if (root.TryGetProperty("umodelRegion", out var regionElement))
+            {
+                region = regionElement.ValueKind == JsonValueKind.String ? regionElement.GetString()?.Trim().ToLowerInvariant() : null;
+                if (region is not { Length: >= 2 and <= 3 } || !region.All(char.IsAsciiLetterLower))
+                    throw new InvalidDataException("umodelRegion must be a UModel region switch of 2-3 letters, such as \"kr\".");
+            }
+
             var chunkKey = ReadKey(root, "upkChunkKeyHex", "upkChunkKeyAscii");
             var indexKey = ReadKey(root, "lpkIndexKeyHex", "lpkIndexKeyAscii");
             var databaseBase = ReadKey(root, "lpkDbBaseKeyHex", null);
@@ -86,6 +103,7 @@ public static class ArchiveKeyProfile
                 else LostArkArchiveKeys.Reset();
 
                 _chunkProvider = provider;
+                _umodelRegion = region;
                 _name = name;
                 return name;
             }
@@ -102,6 +120,7 @@ public static class ArchiveKeyProfile
     public static void Deactivate()
     {
         _chunkProvider = null;
+        _umodelRegion = null;
         _name = null;
         LostArkArchiveKeys.Reset();
     }

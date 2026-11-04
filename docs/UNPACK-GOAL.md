@@ -93,6 +93,28 @@
     - `LoadCatalog` 는 단일 언어 카탈로그면 번역 사본 파일이 없어도 유효로 본다.
   - 스모크 2개 추가(단일 언어 시세 목록, 단일 언어 언어 서비스). `DatabaseSmokeTests.WriteDatabaseArchive` 를 다른 테스트가 쓰도록 분리.
   - 참고: data2 에는 같은 이름의 DB 가 하위 폴더에도 있다(`EFTable_Item.db` 가 루트·`DEV/`·`KOR/`). Arkive 빌더는 루트 것을 고른다(기존 테스트 "canonical tables"). 진단 도구 `--db` 는 파일 이름으로 저장해서 **마지막 것이 덮어쓴다** — 스키마를 볼 때만 쓰고 수치 비교에는 쓰지 않는다.
+- F29. **P3-4 완료 — 한국판 Cli 전수 실행(발굴) + UModel 지역 스위치 수정.**
+  - 실행 결과:
+
+    | 명령 | 결과 |
+    |---|---|
+    | `scan` 전체 | 34,103/34,103 파싱, 실패 0. 버전 전부 868/16, 압축 플래그 전부 0x44, 패키지 플래그 6종 |
+    | `astrogem-odds` | 정상 |
+    | `zone-names` | 정상, 한국어 존 이름(예: "프리힐리아 마을 10년 전") |
+    | `interface-names` | 정상 |
+    | `language` | 정상(단일 언어 인식). 다만 "Current: English" 로 오해를 부르게 찍어서 고쳤다 |
+    | `catalog` | 정상 |
+    | `static-mesh-recon` · `material-recon` · `model-viewer-scene` | 정상 |
+    | `texture-export-native` | NTX018 → P3-6 |
+    | 셰이더 캐시 미발견 | → P3-7 |
+
+  - **가장 큰 발견:** Arkive 는 UModel 을 항상 `-game=lostark -na` 로 실행했다. 동봉된 `umodel_lostark_v7.exe` 는 한국판 패키지를 **`-kr` 일 때만** 읽는다. `-na` 로는 `appDecompress: … Flags=0x44` 로 실패하는데, 포크 문서 §2.3 도 `-kr` 을 쓴다.
+    - 키 프로파일에 선택 항목 `umodelRegion`(영문 소문자 2~3자, 대소문자 무시; 명령줄에 들어가므로 검증)을 추가했다. 기본값은 `na`.
+    - `ArchiveKeyProfile.UmodelRegion` 을 쓰는 곳: `UmodelBridge`(목록·내보내기·애니메이션), `PackageIndexStore` 백엔드 프로파일 문자열(`lostark-<region>-nameresolve-…`, na 는 이전과 같아서 기존 색인 유지), App 로그 문구.
+    - 수정 후 한국판 결과: `static-mesh-recon` 의 STM302 "UModel probe failed" 경고가 사라졌고, `model-viewer-scene` 은 UModel 경로로 동작한다(이전에는 "UModel cannot read this object").
+    - 로컬 키 파일에 `"umodelRegion": "kr"` 추가(§5-1).
+  - Cli `language` 는 단일 언어일 때 "the game's only language … cannot be changed" 로 출력하고, JSON 은 `SingleLanguage: true` 다.
+  - 스모크: 키 프로파일 테스트에 지역 적용·해제, 잘못된 지역 2종(명령줄 주입 시도, 숫자) 거부를 추가했다.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -128,7 +150,8 @@
 {
   "upkChunkKeyAscii": "<32자>",
   "lpkIndexKeyAscii": "<Blowfish 키 문자열>",
-  "lpkDbBaseKeyHex": "<32 hex>"
+  "lpkDbBaseKeyHex": "<32 hex>",
+  "umodelRegion": "kr"
 }
 ```
 
@@ -140,6 +163,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 15 | P3-4: 한국판으로 Cli 읽기 명령 전수 실행, `scan` 34,103개 전체, UModel `-na`/`-kr` 비교 → 키 프로파일 `umodelRegion` 도입, Cli `language` 문구, 스모크 보강, 백로그 P3-6~8 추가 | UModel 이 한국판을 읽게 됨, 전 패키지 헤더 실패 0 (F29). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-6 (텍스처 NTX018) |
 | 2026-11-04 | 14 | P3-3: 시세·전투력 표를 `GameMessageTable.Resolve` 로, 한국어 보석 판정, 언어 서비스 단일 언어 상태 + App 문구, 스모크 2개 | 실제 한국판으로 시세 7,980개·전투력 옵션 전부 채워짐 (F28). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-4 (Cli 전수 실행 발굴) |
 | 2026-11-04 | 13 | P3-2: `playerclass` 열거형으로 클래스 이름 연결(`GamePlayerClassEnum`), 진단 도구 `--extract`, 스모크 보강 | 한국판 PC 41/41 한국어 (F27). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-3 (`GameMsg_English` 하드코딩) |
 | 2026-11-04 | 12 | P3-1: 원격 문서 커밋 위로 rebase 후 push(`14a2fe6`), 3단계 백로그·loop 규칙(§10) 작성 | push 성공, 빌드 경고/오류 0 | P3-2 |
@@ -282,5 +306,8 @@ loop는 다음 중 하나에 해당하면 **멈추고 사용자에게 보고**�
 3. [x] **P3-3.** (완료, F28) 단일 GameMsg 표 클라이언트(한국판)에서 `GameMsg_English` 를 하드코딩한 곳을 처리한다.
    - `Tweaks/MarketItemTable`, `Tweaks/CombatPowerTable`: 표 이름을 `GameMessageTable.Resolve` 로 찾는다. 영어 텍스트 파싱에 의존하는 부분은 동작 여부를 판정하고 안내 문구를 둔다.
    - `GameLanguageService`: 한국판에서는 "영어 표가 없다" 오류 대신 기능을 쓸 수 없다는 명확한 상태를 돌려준다.
-4. [ ] **P3-4.** 발굴: 한국판으로 Cli 의 읽기 전용 명령(`inspect`, `catalog`, `interface-names`, `zone-names`, 스킬·사운드·폰트 관련 등)을 전부 한 번씩 실행해 깨지는 곳의 목록을 만든다. 결과는 이 백로그에 항목으로 추가한다.
-5. [ ] **P3-5.** GFx 프로브를 `EFUI_*` 전체로 넓혀 PlaceObject3 외의 리테일 변종이 있는지 확인한다(F24 는 60개 패키지 표본).
+4. [x] **P3-4.** (완료, F29) 발굴: 한국판으로 Cli 의 읽기 전용 명령(`inspect`, `catalog`, `interface-names`, `zone-names`, 스킬·사운드·폰트 관련 등)을 전부 한 번씩 실행해 깨지는 곳의 목록을 만든다. 결과는 이 백로그에 항목으로 추가한다.
+5. [ ] **P3-6.** 한국판 텍스처 `texture-export-native` 가 `NTX018: Mip 0 is not a bounded, hash-verified inline payload.` 로 실패한다(`DKV6KRSCXY3T6D9CJIK3G.upk` `fx_d_ocnfoam_01`). 밉이 외부 텍스처 캐시(TFC)에 있는 정상 케이스인지, 한국판 형식 차이인지 가른다. 같은 텍스처를 UModel(`-kr`)로 내보내 비교하고, 다른 패키지(UI 등)의 텍스처로도 시험한다.
+6. [ ] **P3-7.** `model-viewer-scene` 이 "No game shader cache was found next to the Packages folder" 라고 한다. 그런데 샘플 `9XUFAXIP8BXBAP1NIEG66EF.upk` 는 export 1,598개가 전부 `shadercache` 다. Arkive 가 셰이더 캐시를 찾는 경로·이름 규칙을 확인하고, 한국판 배치에 맞춘다.
+7. [ ] **P3-8.** `index-build` 를 한국판 Packages(34,103개)에 돌린다. 오래 걸리므로 백그라운드로 실행하고, 실패 패키지 수와 원인을 분류한다. 이 색인이 App 의 에셋 라이브러리의 기반이다.
+8. [ ] **P3-5.** GFx 프로브를 `EFUI_*` 전체로 넓혀 PlaceObject3 외의 리테일 변종이 있는지 확인한다(F24 는 60개 패키지 표본).

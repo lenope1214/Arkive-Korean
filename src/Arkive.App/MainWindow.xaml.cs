@@ -477,7 +477,7 @@ public partial class MainWindow : Window
         {
             Log($"Lost Ark UModel backend detected: {_umodelBridge.ExecutablePath}");
             Log(
-                "UModel catalogue profile: -game=lostark -na -nameresolve -noanim. " +
+                $"UModel catalogue profile: -game=lostark -{Core.Archives.ArchiveKeyProfile.UmodelRegion} -nameresolve -noanim. " +
                 "Selected-object inspection/export omits -nameresolve and the class selector for fork compatibility.");
             Log(
                 "Mod-bundle deployment rehearsal available: exact-client identity, original physical filename, " +

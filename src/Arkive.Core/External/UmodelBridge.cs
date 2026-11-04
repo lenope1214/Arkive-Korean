@@ -257,7 +257,7 @@ public sealed partial class UmodelBridge
         var fullOutputDirectory = Path.GetFullPath(outputDirectory);
         Directory.CreateDirectory(fullOutputDirectory);
         var result = await RunAsync(
-            ["-export", "-game=lostark", "-na", $"-out={fullOutputDirectory}", fullPackagePath, animSetName],
+            ["-export", "-game=lostark", RegionArgument, $"-out={fullOutputDirectory}", fullPackagePath, animSetName],
             DefaultTimeout, cancellationToken).ConfigureAwait(false);
         if (result.ExitCode != 0) throw CreateProcessException($"export animations {animSetName}", result);
         return Directory.EnumerateFiles(fullOutputDirectory, "*.psa", SearchOption.AllDirectories).FirstOrDefault()
@@ -588,9 +588,12 @@ public sealed partial class UmodelBridge
         return assets;
     }
 
+    // -na for the Western client, -kr for the Korean one (from the key profile's umodelRegion).
+    private static string RegionArgument => "-" + Archives.ArchiveKeyProfile.UmodelRegion;
+
     private static IReadOnlyList<string> CommonArguments(bool resolvePackageNames)
     {
-        var arguments = new List<string> { "-game=lostark", "-na" };
+        var arguments = new List<string> { "-game=lostark", RegionArgument };
         if (resolvePackageNames)
         {
             arguments.Add("-nameresolve");

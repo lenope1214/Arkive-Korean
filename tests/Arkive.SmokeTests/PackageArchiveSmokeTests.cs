@@ -156,6 +156,7 @@ internal static class PackageArchiveSmokeTests
             ["upkChunkKeyHex"] = Convert.ToHexString(chunkKey),
             ["lpkIndexKeyHex"] = Convert.ToHexString(indexKey),
             ["lpkDbBaseKeyHex"] = Convert.ToHexString(databaseBase),
+            ["umodelRegion"] = "KR",
         }));
 
         var packagePath = Path.Combine(fixtureDirectory, "key-profile-package.upk");
@@ -166,9 +167,11 @@ internal static class PackageArchiveSmokeTests
 
         try
         {
-            Assert(ArchiveKeyProfile.ActiveName is null, "a key profile was active before the test");
+            Assert(ArchiveKeyProfile.ActiveName is null && ArchiveKeyProfile.UmodelRegion == "na",
+                "a key profile was active before the test, or UModel's default region is not na");
             var name = ArchiveKeyProfile.ActivateFromFile(profilePath);
             Assert(ArchiveKeyProfile.ActiveName == name, "the activated profile was not reported");
+            Assert(ArchiveKeyProfile.UmodelRegion == "kr", "the profile's UModel region was not used (case-insensitively)");
             Assert(!name.Contains(Convert.ToHexString(chunkKey), StringComparison.OrdinalIgnoreCase),
                 "the profile name leaked key material");
 
@@ -194,7 +197,8 @@ internal static class PackageArchiveSmokeTests
             }
 
             ArchiveKeyProfile.Deactivate();
-            Assert(ArchiveKeyProfile.ActiveName is null, "Deactivate left a profile active");
+            Assert(ArchiveKeyProfile.ActiveName is null && ArchiveKeyProfile.UmodelRegion == "na",
+                "Deactivate left a profile or its UModel region active");
             Assert(ChunkProtectionProviderFactory.CreateDefault().Name == ChunkProtectionProviderFactory.WesternGlobalProviderName,
                 "without a profile CreateDefault did not return the Western profile");
             try
@@ -225,6 +229,9 @@ internal static class PackageArchiveSmokeTests
             ["index-without-database-base"] = "{ \"lpkIndexKeyAscii\": \"abcdefghijklmnop\" }",
             ["short-chunk-key"] = "{ \"upkChunkKeyAscii\": \"too short\" }",
             ["bad-hex"] = "{ \"upkChunkKeyHex\": \"zz\" }",
+            // A region is pasted into UModel's command line, so only a short run of letters is accepted.
+            ["bad-umodel-region"] = "{ \"upkChunkKeyAscii\": \"0123456789abcdef0123456789abcdef\", \"umodelRegion\": \"kr -out=C:\\\\\" }",
+            ["umodel-region-not-text"] = "{ \"upkChunkKeyAscii\": \"0123456789abcdef0123456789abcdef\", \"umodelRegion\": 7 }",
         };
 
         foreach (var (name, content) in cases)
