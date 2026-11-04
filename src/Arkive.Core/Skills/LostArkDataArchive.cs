@@ -19,7 +19,9 @@ public static class LostArkDataArchive
     private const int EntrySize = 528;
     private const int MaximumEntries = 200_000;
     private const int MaximumEntrySize = 256 * 1024 * 1024;
-    private static readonly byte[] Key = Encoding.ASCII.GetBytes("83657ea6ffa1e671375c689a2e99a598");
+    private static readonly byte[] DefaultKey = Encoding.ASCII.GetBytes("83657ea6ffa1e671375c689a2e99a598");
+
+    private static byte[] Key => Archives.LostArkArchiveKeys.IndexKeyOverride ?? DefaultKey;
 
     public static IReadOnlyList<LostArkDataEntry> ReadEntries(Stream stream, CancellationToken cancellationToken = default)
     {

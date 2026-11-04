@@ -14,8 +14,11 @@ internal static class LostArkDatabaseArchive
     private const int EntrySize = 528;
     private const int MaximumEntries = 100_000;
     private const int MaximumDatabaseSize = 512 * 1024 * 1024;
-    private static readonly byte[] IndexKey = Encoding.ASCII.GetBytes("83657ea6ffa1e671375c689a2e99a598");
-    private static readonly byte[] DatabaseBase = Convert.FromHexString("1069D88738C5C75F82B44A1F0A382768");
+    private static readonly byte[] DefaultIndexKey = Encoding.ASCII.GetBytes("83657ea6ffa1e671375c689a2e99a598");
+    private static readonly byte[] DefaultDatabaseBase = Convert.FromHexString("1069D88738C5C75F82B44A1F0A382768");
+
+    private static byte[] IndexKey => Archives.LostArkArchiveKeys.IndexKeyOverride ?? DefaultIndexKey;
+    private static byte[] DatabaseBase => Archives.LostArkArchiveKeys.DatabaseBaseOverride ?? DefaultDatabaseBase;
 
     internal static IReadOnlyList<DatabaseEntry> ReadEntries(Stream stream, CancellationToken cancellation)
     {

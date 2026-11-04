@@ -7,6 +7,10 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
   </ItemGroup>
   <ItemGroup>
+    <!-- The diagnostic lab probes the internal database archive reader directly. -->
+    <InternalsVisibleTo Include="Arkive.UPKDiagnostic" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Viewer/material-recipes.json" LogicalName="Arkive.Core.Viewer.material-recipes.json" />
     <EmbeddedResource Include="Tweaks/arkive-tweaks.swf" LogicalName="Arkive.Core.Tweaks.arkive-tweaks.swf" />
   </ItemGroup>

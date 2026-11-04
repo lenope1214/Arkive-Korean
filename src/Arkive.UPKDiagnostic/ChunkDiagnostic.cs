@@ -127,6 +127,115 @@ public sealed class ChunkDiagnostic
     }
 }
 
+/// <summary>T2: 모든 청크를 순회하며 해제 크기와 오류를 검증한다.</summary>
+public static class AllChunksVerifier
+{
+    public static int Run(string upkPath, IChunkProtectionProvider provider)
+    {
+        var summary = new UpkPackageReader().Read(upkPath);
+        var result = new AllChunksReport
+        {
+            FileName = Path.GetFileName(upkPath),
+            ChunkCount = summary.CompressedChunks.Count,
+            Provider = provider.Name
+        };
+
+        using var stream = new LogicalPackageStream(summary, provider);
+        var started = DateTimeOffset.Now;
+
+        for (var index = 0; index < summary.CompressedChunks.Count; index++)
+        {
+            var chunk = summary.CompressedChunks[index];
+            try
+            {
+                stream.Position = chunk.UncompressedOffset;
+                var buffer = new byte[chunk.UncompressedSize];
+                var total = 0;
+                while (total < buffer.Length)
+                {
+                    var read = stream.Read(buffer, total, buffer.Length - total);
+                    if (read <= 0) break;
+                    total += read;
+                }
+
+                if (total == buffer.Length)
+                {
+                    result.Ok++;
+                    result.DecodedBytes += total;
+                }
+                else
+                {
+                    result.Failed++;
+                    result.AddError(index, $"short read {total}/{buffer.Length}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Failed++;
+                result.AddError(index, ex.GetType().Name + ": " + ex.Message);
+            }
+        }
+
+        result.Seconds = (DateTimeOffset.Now - started).TotalSeconds;
+        var outputDirectory = Path.Combine(Environment.CurrentDirectory, "work", "unpack", "verify");
+        Directory.CreateDirectory(outputDirectory);
+        var output = Path.Combine(outputDirectory, result.FileName + ".all-chunks.json");
+        File.WriteAllText(output, JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+
+        Console.WriteLine(
+            $"[{result.FileName}] 청크 {result.ChunkCount:N0}개: 성공 {result.Ok:N0} / 실패 {result.Failed:N0}, " +
+            $"해제 {result.DecodedBytes:N0} bytes, {result.Seconds:F1}s");
+        foreach (var error in result.FirstErrors)
+            Console.WriteLine("  오류 " + error);
+        Console.WriteLine("  보고서: " + output);
+
+        // T4: 해제한 논리 스트림에서 Name/Import/Export 테이블을 실제로 파싱해 본다.
+        if (result.Failed == 0)
+        {
+            try
+            {
+                var catalog = new Arkive.Core.Assets.AssetCatalogReader(null, provider).Read(upkPath);
+                var countsMatch =
+                    catalog.Names.Count == summary.NameCount &&
+                    catalog.Imports.Count == summary.ImportCount &&
+                    catalog.Exports.Count == summary.ExportCount;
+                Console.WriteLine(
+                    $"  카탈로그: Name {catalog.Names.Count:N0}/{summary.NameCount:N0}, " +
+                    $"Import {catalog.Imports.Count:N0}/{summary.ImportCount:N0}, " +
+                    $"Export {catalog.Exports.Count:N0}/{summary.ExportCount:N0}, " +
+                    $"에셋 {catalog.Assets.Count:N0} -> {(countsMatch ? "개수 일치" : "개수 불일치")}");
+                foreach (var asset in catalog.Assets.Take(5))
+                    Console.WriteLine($"    {asset.Kind,-14} {asset.ClassName,-24} {asset.ObjectPath}");
+                result.CatalogOk = countsMatch;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("  카탈로그 실패: " + ex.GetType().Name + ": " + ex.Message);
+            }
+        }
+
+        return result.Failed == 0 && result.CatalogOk ? 0 : 1;
+    }
+}
+
+public sealed class AllChunksReport
+{
+    public string FileName { get; set; } = "";
+    public string Provider { get; set; } = "";
+    public int ChunkCount { get; set; }
+    public int Ok { get; set; }
+    public int Failed { get; set; }
+    public long DecodedBytes { get; set; }
+    public double Seconds { get; set; }
+    public bool CatalogOk { get; set; }
+    public List<string> FirstErrors { get; set; } = new();
+
+    public void AddError(int index, string message)
+    {
+        if (FirstErrors.Count < 20) FirstErrors.Add($"chunk {index}: {message}");
+    }
+}
+
 public sealed class DiagnosticReport
 {
     public string FileName { get; set; } = "";

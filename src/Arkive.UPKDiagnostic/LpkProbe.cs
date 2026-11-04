@@ -75,15 +75,53 @@ public static class LpkProbe
                 report.Samples.Add(sample);
             }
 
-            if (candidates.Count == 0)
+            // T6: 압축 크기 0 = 데이터베이스 엔트리(파일별 AES 키). 복호화해서 SQLite 헤더를 확인한다.
+            var databases = entries
+                .Where(e => e.CompressedSize == 0 && e.Path.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            report.DatabaseEntries = databases.Count;
+            var databaseTargets = databases
+                .OrderBy(e => e.Path.Contains("EFTable_GameMsg", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(e => e.Size)
+                .Take(2)
+                .ToList();
+            var databaseDirectory = Path.Combine(outputDirectory, "db");
+            foreach (var entry in databaseTargets)
+            {
+                var sample = new LpkSample { Path = entry.Path, Size = entry.Size };
+                try
+                {
+                    Directory.CreateDirectory(databaseDirectory);
+                    var destination = Path.Combine(databaseDirectory, Path.GetFileName(entry.Path));
+                    if (File.Exists(destination)) File.Delete(destination);
+                    Arkive.Core.Databases.LostArkDatabaseArchive.Extract(
+                        lpkPath, entry.Path, destination, CancellationToken.None);
+                    using var head = File.OpenRead(destination);
+                    var header = new byte[16];
+                    head.ReadExactly(header);
+                    sample.Ok = header.AsSpan().SequenceEqual("SQLite format 3\0"u8);
+                    sample.HeadHex = Convert.ToHexString(header);
+                    if (!sample.Ok) sample.Error = "SQLite 헤더가 아닙니다.";
+                }
+                catch (Exception ex)
+                {
+                    sample.Ok = false;
+                    sample.Error = ex.GetType().Name + ": " + ex.Message;
+                }
+
+                report.DatabaseSamples.Add(sample);
+            }
+
+            if (candidates.Count == 0 && databaseTargets.Count == 0)
             {
                 report.Status = "INDEX_OK_NO_COMPRESSED_SAMPLE";
                 report.Message = "인덱스는 읽혔지만 해제를 시험할 압축 엔트리가 없습니다.";
             }
-            else if (report.Samples.All(s => s.Ok))
+            else if (report.Samples.All(s => s.Ok) && report.DatabaseSamples.All(s => s.Ok))
             {
                 report.Status = "OK";
-                report.Message = $"인덱스 {entries.Count:N0}개 읽기 성공, 샘플 {report.Samples.Count}개 해제 성공.";
+                report.Message =
+                    $"인덱스 {entries.Count:N0}개 읽기 성공, 압축 샘플 {report.Samples.Count}개 · DB 샘플 {report.DatabaseSamples.Count}개 해제 성공.";
             }
             else
             {
@@ -120,6 +158,10 @@ public static class LpkProbe
 
         foreach (var sample in report.Samples)
             Console.WriteLine($"  샘플 {(sample.Ok ? "OK " : "FAIL")} {sample.Path} ({sample.Size:N0} B) {sample.HeadHex}{sample.Error}");
+        if (report.DatabaseEntries > 0)
+            Console.WriteLine($"  DB 엔트리 {report.DatabaseEntries:N0}개");
+        foreach (var sample in report.DatabaseSamples)
+            Console.WriteLine($"  DB {(sample.Ok ? "OK " : "FAIL")} {sample.Path} ({sample.Size:N0} B) {sample.Error}");
 
         Console.WriteLine($"  보고서: {output}");
         return report.Status is "OK" or "INDEX_OK_NO_COMPRESSED_SAMPLE" ? 0 : 1;
@@ -142,6 +184,8 @@ public sealed class LpkReport
     public Dictionary<string, int> TopExtensions { get; set; } = new();
     public List<string> FirstNames { get; set; } = new();
     public List<LpkSample> Samples { get; set; } = new();
+    public int DatabaseEntries { get; set; }
+    public List<LpkSample> DatabaseSamples { get; set; } = new();
 }
 
 public sealed class LpkSample
