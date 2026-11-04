@@ -69,6 +69,7 @@
   - GameMsg 텍스트는 **UTF-8** 확인(바이트 수준). 콘솔에서 깨져 보이는 것은 터미널 인코딩 문제일 뿐이다.
   - 수정 안 함(목록만): `GameLanguageService`(서구판 언어 덮어쓰기 기능 — `GameMsg_English` 전제, 한국판엔 해당 없음), `Tweaks/MarketItemTable`·`CombatPowerTable`(`GameMsg_English` 하드코딩 + 영어 툴팁 텍스트 파싱), `GameFontService.Languages`(영/불/독/서), `TweakCatalog` 안내 문구("needs the English game client"). 모두 게임 텍스트를 영어로 가정하는 서구판 전용 기능이라 언팩 목표 밖.
   - 진단 도구에 `--lpk … --db <이름>` 추가(특정 DB를 `<out>/db` 로 추출해 스키마 확인용).
+- F23. **P2-4 완료 — 포크 카탈로그 확정(§9)**: 가져옴 3개(A GFx PlaceObject3 class-name 판정 버그 의심, B 커서 추출, C `.loa` 문자열 덤프), 참고만 8개(대부분 Arkive 에 같은 기능이 이미 있음: MinimapData·무비 덤프·랜드스케이프·사운드 등), 제외 6개(포크 엔진 전용). 포크에 LICENSE 가 없어 형식 지식만 가져오고 코드는 새로 쓴다는 방침을 §9 에 기록.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -91,8 +92,9 @@
 1. [x] **P2-1.** (완료, F20) 키 프로파일을 Core 공개 API로 정식화: `ArchiveKeyProfile.LoadFromFile(path)` 한 번 호출로 UPK 보호 제공자 + LPK 키(`LostArkArchiveKeys.Use`)를 모두 구성. 환경변수 `ARKIVE_KEY_PROFILE`(파일 경로)을 지원하고, 진단 도구·`Arkive.Cli`·`Arkive.App` 시작 지점에서 적용한다. 서구판 기본 동작은 변경 없음(환경변수 없으면 그대로). 한국판 상수는 소스에 넣지 않는다(F18).
 2. [x] **P2-2.** (완료, F21) DB 전수 검증: `data2.lpk` 803개 `.db` 전부 복호화 → SQLite 헤더 + 열어서 `sqlite_master` 조회. 실패가 있으면 `DeriveKey`(마지막 `_` 뒤 이름)와 포크 `unpack_lpk.py` 의 `database_key`(`EFTable_` 접두 제거한 전체 이름) 차이를 원인으로 확인하고 필요 시 보정(F17).
 3. [x] **P2-3.** (완료, F22) 한국판 GameMsg로 Arkive의 게임 DB 빌드 경로 실행 (`GameDatabaseMetadataReader`, `GameLanguageService`, Cli의 DB 빌드). 서구판 가정(언어 컬럼·영어 텍스트·"Western" 예외 문구)에서 깨지는 지점을 목록화하고 최소 수정. GameMsg는 UTF-8, 다른 `.loa` 표는 CP949 (포크 `dump_loa_strings.py` 설명).
-4. [ ] **P2-4.** 포크 카탈로그 완성(§9): 항목별로 Arkive 기존 기능과 비교해 `가져옴 / 참고만 / 제외` 판정과 근거 기록. 포크 `.md/에셋 추출 파이프라인.md` 와 `Tools/*/README.md` 를 근거 문서로 읽는다. 엔진/클라/서버 코드는 제외.
-5. [ ] **P2-5.** §9에서 `가져옴`으로 판정된 항목을 우선순위대로 접목 — **한 번에 하나**, Core에 최소 구현 + 스모크 테스트(`tests/Arkive.SmokeTests`) 1개 이상. 후보: `.loa` 레코드 문자열 덤프(CP949), MinimapData 파서, 커서 추출.
+4. [x] **P2-4.** (완료, F23) 포크 카탈로그 완성(§9): 항목별로 Arkive 기존 기능과 비교해 `가져옴 / 참고만 / 제외` 판정과 근거 기록. 포크 `.md/에셋 추출 파이프라인.md` 와 `Tools/*/README.md` 를 근거 문서로 읽는다. 엔진/클라/서버 코드는 제외.
+5. [ ] **P2-5.** §9에서 `가져옴`으로 판정된 항목을 우선순위대로 접목 — **한 번에 하나**, Core에 최소 구현 + 스모크 테스트(`tests/Arkive.SmokeTests`) 1개 이상. 순서: **5a** GFx PlaceObject3 class-name 판정(§9-A, 먼저 한국판 무비로 재현 확인) → **5b** 커서 추출(§9-B) → **5c** `.loa` 문자열 덤프(§9-C). 하위 항목이 모두 끝나야 P2-5 를 [x] 로 한다.
+   - [ ] 5a  - [ ] 5b  - [ ] 5c
 6. [ ] **P2-6.** G5 마무리: §7 재현 방법을 현재 도구 옵션(`--key-file`, `--all`, `--lpk`)과 `ARKIVE_KEY_PROFILE` 기준으로 갱신.
 
 ### 5-1. 키 처리 규칙 (항상 적용)
@@ -115,6 +117,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 7 | P2-4: 포크 스크립트·README 와 Arkive Core 대조, §9 판정 확정 | 가져옴 3 / 참고만 8 / 제외 6 (F23). 문서만 변경 | P2-5a (GFx PlaceObject3 재현 확인) |
 | 2026-11-04 | 6 | P2-3: 한국판 `database-build` 실행 → `GameMsg` 단일 표 대응(`GameMessageTable`), PC 클래스 이름 매칭 보정, 스모크 테스트 1개 추가, 진단 도구 `--db` | 빌드 성공(참조 148,263·엔티티 30,820), 이름 99.9% 한국어 (F22). 전체 스모크 통과, 빌드 경고/오류 0 | P2-4 (포크 카탈로그 확정) |
 | 2026-11-04 | 5 | P2-2: `--all-db` 추가, `data2.lpk` DB 803개 전수 복호화+SQLite 열기 | 803/803 성공, 실패 0 (F21). 빌드 경고/오류 0 | P2-3 (한국판 GameMsg 로 게임 DB 빌드 경로) |
 | 2026-11-04 | 4 | P2-1: `ArchiveKeyProfile`·`CreateDefault()` 추가, Cli/App/Core 호출부 41곳 교체, 시작 지점 적용, 진단 도구 파서 통합, 스모크 테스트 2개 추가 | 실제 CLI `catalog` 로 프로파일 유/무/잘못된 경로 검증, 전체 스모크 스위트 통과, 빌드 경고/오류 0 (F20) | P2-2 (DB 803개 전수 검증) |
@@ -159,22 +162,29 @@ loop는 다음 중 하나에 해당하면 **멈추고 사용자에게 보고**�
 
 ## 9. 포크 카탈로그 (`lenope1214/Lostark-signle`) — P2-4 에서 완성
 
-포크는 로스트아크 DX11 엔진 팀 프로젝트(F19)로 한국 설치본(KR)을 기준으로 UPK/LPK를 풀어 쓴다. 아래는 1차 훑어본 초안이며, 판정은 P2-4 에서 Arkive 기존 기능과 비교해 확정한다.
+포크는 로스트아크 DX11 엔진 팀 프로젝트(F19)로 한국 설치본(KR)을 기준으로 UPK/LPK를 풀어 쓴다. **P2-4 에서 확정(2026-11-04)** — 근거: 포크 `Tools/LpkPipeline/*.py` 머리 설명·함수 목록, `Tools/*/README.md`, `.md/에셋 추출 파이프라인.md` 목차, Arkive `src/Arkive.Core` 대조.
 
-| 항목 | 포크 위치 | Arkive 현황 | 판정(초안) | 비고 |
-|---|---|---|---|---|
-| 한국판 UPK 보호 키 | `Tools/LpkPipeline/export_upk_texture.py` | `AesEcbPrefixProtectionProvider` 있음 | **가져옴(완료)** | 로컬 키 파일로만 주입 (F14, F18) |
-| 한국판 LPK 인덱스 키·DB 기본 키 | `Tools/LpkPipeline/unpack_lpk.py` `REGIONS["KR"]` | `LostArkDataArchive`/`LostArkDatabaseArchive` 있음 | **가져옴(완료)** | 주입 지점 `LostArkArchiveKeys` (F16, F18) |
-| LPK 풀기 코드 | `unpack_lpk.py` | Core 동일 구현 있음 | 제외 | 레이아웃 동일, 키만 다름 |
-| UPK 복호화+LZ4 코드 | `export_upk_texture.py`, `LevelPlacementExtractor/extract_ue3_placements.py` | Core `LogicalPackageStream` 있음 | 제외 | |
-| `.loa` 문자열 덤프 (CP949) | `LpkPipeline/dump_loa_strings.py` | 미확인 | 후보 | `.loa` 는 IconInfo/ActionCategory 등 ClientData 표 |
-| MinimapData.loa 파서 | `LpkPipeline/parse_minimap_data.py` | `ZoneMapSidecar` 가 있음 → 비교 필요 | 후보 | |
-| GFx(Scaleform) 파서 | `gfx_native_parse.py`, `gfx_scene_extract.py`, `audit_gfx_extraction_coverage.py` | `Core/Interface/GfxMovieReader` 있음 → 비교 필요 | 후보(보완) | 포크는 PlaceObject3 변종 처리 |
-| UPK 안의 SWF 무비 덤프 | `dump_upk_movie.py` | `InterfaceMovieCandidateService` 있음 → 비교 필요 | 후보 | |
-| 마우스 커서 추출 | `extract_cursors.py` | 미확인 | 후보 | 커서 `.ani/.cur` 바이트가 export 에 그대로 있음 |
-| 컷신 Matinee 전 배열 파싱 | `extract_scene_matinee.py` | 없음 | 후보(낮음) | |
-| UModel 한국판 사용 절차 | `.md/에셋 추출 파이프라인.md`, `Tools/LevelPlacementExtractor/README.md` | `tools/external/umodel_lostark_v7.exe` 사용 중 | 참고만 | `-nameresolve` 로 논리명↔난독화 UPK |
-| 게임 DB 연결 체인 (NPC→ZoneBase→LevelFileName) | `.md/에셋 추출 파이프라인.md` §2.2 | `GameDatabasePages`, `GameClassNames` 등 있음 | 참고만 | 한국판 DB 로 검증 |
-| 엔진/클라이언트/서버 C++ 코드, 팀 문서, 3.7GB 리소스 | `Engine/`, `Client/`, `Server/`, `Release/`, `.md/TEAM` | 무관 | **제외** | |
+**출처/라이선스:** 포크에는 LICENSE·README 가 없다. 사용자가 직접 fork 한 저장소이고 "필요한 건 다 가져와"라고 지시했으므로(2026-11-04) 진행하되, 가져오는 것은 **파일 형식에 대한 사실(레이아웃·플래그 의미)** 뿐이고 코드는 Arkive 스타일로 새로 쓴다. 포크 코드·팀 문서·리소스를 복사해야 하는 상황이 오면 §8 에 따라 멈춘다.
+
+| # | 항목 | 포크 위치 | Arkive 현황 | 판정 | 근거 / P2-5 할 일 |
+|---|---|---|---|---|---|
+| — | 한국판 UPK 보호 키 | `LpkPipeline/export_upk_texture.py` | `AesEcbPrefixProtectionProvider` | **가져옴(완료)** | 로컬 키 파일로만 주입 (F14, F18, F20) |
+| — | 한국판 LPK 인덱스 키·DB 기본 키 | `LpkPipeline/unpack_lpk.py` | `LostArkDataArchive`/`LostArkDatabaseArchive` | **가져옴(완료)** | `LostArkArchiveKeys` (F16, F20, F21) |
+| A | **GFx PlaceObject3 class-name 판정** | `gfx_scene_extract.py` 머리 설명 | `GfxMovieReader.ReadPlacement` 는 SWF 명세대로 `HasClassName(0x08) \|\| (HasImage(0x10) && HasCharacter)` 이면 문자열을 읽는다 | **가져옴 (1순위)** | 포크 실측: 리테일 Scaleform 익스포터는 HasImage+HasCharacter 여도 class-name 을 **쓰지 않는다**(0x08 일 때만) → 명세대로 읽으면 character id·행렬이 쓰레기가 된다. 먼저 한국판 UI 무비 하나로 재현을 확인하고, 맞으면 조건을 고친다(기존 기능의 버그 수정, 서구판에도 해당 가능). |
+| B | **마우스 커서 추출** | `extract_cursors.py` | 없음 | **가져옴 (2순위)** | `EFUI_CURSOR` 의 `efcursordata` export 속성 `cursordata[_<size>][preset<N>]` 에 완성된 `.ani`(RIFF ACON)/`.cur`/`.ico` 바이트가 그대로 있다. `.ico` 는 `<size>hotspotx/y` 로 `.cur` 로 바꿔 쓴다. Core 에 읽기 전용 추출기 + 스모크 테스트(합성 export). |
+| C | **`.loa` 문자열 덤프** | `dump_loa_strings.py` | `.loa` 는 `SkillActionReader`(Action)·`ZoneMapSidecar`(MinimapData) 전용 파서만 있음 | **가져옴 (3순위)** | 형식: float 1.0 + int32 몇 개 + `int32 길이 + NUL 종료 바이트` 레코드. 문자열은 **CP949**(GameMsg 만 UTF-8, F22). 진단 도구 또는 Cli 서브커맨드로 범용 문자열 목록화. |
+| — | MinimapData.loa 파서 | `parse_minimap_data.py` | `ZoneMapSidecar` 가 이미 읽음 | 참고만 | 중복. 포크가 밝힌 꼬리 필드(층 이름 `tip.name.floor_*`, 타일 축 방향)는 필요할 때 참고. |
+| — | UPK 안 무비(EFSwfMovie) 덤프 | `dump_upk_movie.py` | `GfxMovieFile`·`InterfaceMovieCandidateService` | 참고만 | 중복. "export 데이터 앞의 짧은 헤더 뒤 첫 `GFX/FWS/CFX/CWS` 시그니처부터 무비" 규칙만 대조. |
+| — | GFx 트리·심볼 덤프·커버리지 감사 | `gfx_native_parse/tree.py`, `gfx_dump_symbol.py`, `audit_gfx_extraction_coverage.py` | `GfxMovieReader` | 참고만 | HUD 재구성용 도구. A 외에 Arkive 에 필요한 형식 지식은 없음. |
+| — | 컷신 Matinee 전 배열 파싱 | `extract_scene_matinee.py` | 컷신 기능 없음 | 참고만 | 560줄, 엔진 런타임 문서용 좌표 변환 포함. Arkive 모드 제작에서 쓸 곳이 생기면 재검토. |
+| — | 랜드스케이프·레벨 배치 추출 | `LandscapeExtractor/`, `LevelPlacementExtractor/` | `ZoneMapScene`(지형·배치 장면) | 참고만 | 기능 중복, 포크는 자기 엔진용 JSON 산출. |
+| — | Wwise 사운드 | `SoundPipeline/` | `Audio/SoundCatalog`, `WemAudio` 등 | 참고만 | 중복. |
+| — | UModel 한국판 사용 절차 | `.md/에셋 추출 파이프라인.md` §2.3~2.4 | `tools/external/umodel_lostark_v7.exe` | 참고만 | `-game=lostark -kr -nameresolve` 로 논리명↔난독화 UPK. |
+| — | 게임 DB 연결 체인 (NPC→ZoneBase→LevelFileName) | 같은 문서 §2.2 | `GameDatabasePages` 등 | 참고만 | 포크 문서는 DB 792개(구 빌드), 현재 803개(F21) — 패치마다 수가 바뀐다. |
+| — | LPK 풀기 / UPK 복호화+LZ4 코드 | `unpack_lpk.py`, `export_upk_texture.py` | Core 동일 구현 | 제외 | 레이아웃 동일, 키만 다름 |
+| — | 폰트 스프라이트 굽기 | `FontPipeline/` | `GameFontService`(폰트 교체) | 제외 | 포크 엔진 전용 SpriteFont |
+| — | HUD/UI 재구성 스크립트 (`build_*_ui.py` 등 ~40개) | `LpkPipeline/build_*.py` | 무관 | 제외 | 포크 엔진의 화면 재현용 |
+| — | 모델 변환·쿠킹, 맵 퍼블리시 | `ModelAssetConverter/`, `ActorXAssetCooker/`, `MapPipeline/` | 무관 | 제외 | `.wmodel` 등 포크 엔진 형식 |
+| — | 엔진/클라이언트/서버 C++ 코드, 팀 문서, 3.7GB 리소스 | `Engine/`, `Client/`, `Server/`, `Release/`, `.md/TEAM` | 무관 | **제외** | |
 
 판정 기준: (1) Arkive 에 같은 기능이 이미 있으면 중복 도입하지 않고 한국판에서 동작만 검증, (2) 없으면서 모드 제작에 쓸모가 있으면 `가져옴`, (3) 문서·절차는 `참고만`, (4) 게임 엔진/팀 고유 자산은 `제외`.
