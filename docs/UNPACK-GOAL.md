@@ -147,6 +147,13 @@
   - **실측**: 원본 `ReleasePC/DKV6KRSCXY3T6D9CJIK3G.upk` 의 텍스처 40개가 전부 스트리밍이었고, **40/40 이 전체 크기로 디코딩**됐다(실패 0). `fx_d_ocnfoam_01` 은 512×512 DXT1, DDS 174,904 B 다. 이전에는 상위 3레벨이 빠졌다.
   - 텍스처 하나에 ~8.7초가 걸린다. 이는 텍스처마다 recon 이 140MB 패키지를 다시 읽기 때문이고 이번 변경과는 무관하다.
   - 스모크: 합성 패키지 + 합성 `testcache.tfc` 로 보기 결과가 inline 과 같은지, 캐시가 없으면 `FileNotFoundException`, 편집용 내보내기 거부를 확인한다.
+- F32. **P3-7 — 셰이더 캐시는 한국판에서도 동작한다. 경고는 내 시험 방식 탓이었다.**
+  - `ModelViewerSceneService.ShaderIndexAsync` 는 **패키지 폴더의 상위 폴더**(보통 Packages → ReleasePC)에서 최상위 `*.upk` 의 `shadercache` export 를 찾는다. P3-4 에서는 `work/unpack/samples` 의 복사본을 열어서 상위가 `work/unpack` 이었고, 그래서 캐시를 못 찾았다.
+  - 원본 `Packages/DSN9FV06NDLR69NCXEOUY.upk` 의 `bg_frame_planes` 로 다시 실행했다.
+    - 한국판 셰이더 색인이 33초 만에 만들어졌다: shadercache export 1,599개(`ReleasePC/9XUFAXIP8BXBAP1NIEG66EF.upk`), 머티리얼 셰이더 맵 19,271개, 픽셀 셰이더 28,646개(13.6MB 색인).
+    - 서구판 기준으로 쓴 스캐너(`ShaderCacheIndex`, "868/16 Western" 레이아웃)가 한국판에서도 맵을 찾는다.
+    - 해당 MIC(`mi.bg_unlit_trn_op`)는 맵이 없다고 나왔다. 색인에는 `BG_Unlit_TRN`, `BG_Unlit_TRN_AutoSorting` 이 있다. 머티리얼별 매칭 문제인지 판단하려면 서구판 기준선이 필요하다(보류).
+  - 수정: 실패 메시지에 찾아본 폴더를 넣고, Packages 폴더에서 열라는 안내를 붙였다.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -195,6 +202,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 18 | P3-7: 셰이더 캐시 탐색 경로 확인, 원본 Packages 패키지로 재실행 → 한국판 셰이더 색인 생성, 실패 메시지 개선 | 셰이더 맵 19,271 · 픽셀 셰이더 28,646 (F32). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-8 (index-build 전체) |
 | 2026-11-04 | 17 | P3-9: `TextureFileCache` + 보기 경로 외부 밉·원시 밉 지원, NTX018 문구, 스모크 1개, 백로그 P3-10(편집용, 보류) | 한국판 스트리밍 텍스처 40/40 전체 크기 디코딩 (F31). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-7 (셰이더 캐시) |
 | 2026-11-04 | 16 | P3-6: NTX018 원인 진단 — 스트리밍 텍스처(외부 캐시 밉), 캐시 파일 `textures` 위치·형식 확인, ReleasePC 루트 파일 이름 해독, §7 샘플 경로 정정, 백로그 P3-9 추가 | 외부 밉 3개 모두 정상 Crunch 로 읽힘 (F30). 문서만 변경 | P3-9 (스트리밍 텍스처 내보내기) |
 | 2026-11-04 | 15 | P3-4: 한국판으로 Cli 읽기 명령 전수 실행, `scan` 34,103개 전체, UModel `-na`/`-kr` 비교 → 키 프로파일 `umodelRegion` 도입, Cli `language` 문구, 스모크 보강, 백로그 P3-6~8 추가 | UModel 이 한국판을 읽게 됨, 전 패키지 헤더 실패 0 (F29). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-6 (텍스처 NTX018) |
@@ -353,6 +361,6 @@ loop는 다음 중 하나에 해당하면 **멈추고 사용자에게 보고**�
    - 교체 파이프라인(`TextureExportAssemblyService` 등)은 inline 밉(플래그 0x200 Crunch / 0x80 LZ4)만 다시 쓴다.
    - 스트리밍 텍스처를 교체하려면 둘 중 하나가 필요하다: 게임의 텍스처 캐시 파일을 고치기(원본 쓰기 — 지금 원칙과 충돌), 또는 교체 패키지 안에 모든 밉을 inline 으로 넣기(엔진이 받아들이는지 실측 필요).
    - 사용자 판단 전에는 진행하지 않는다. 발굴 단계에서 다른 항목이 없으면 사용자에게 묻는다.
-8. [ ] **P3-7.** `model-viewer-scene` 이 "No game shader cache was found next to the Packages folder" 라고 한다. 그런데 샘플 `9XUFAXIP8BXBAP1NIEG66EF.upk` 는 export 1,598개가 전부 `shadercache` 다. Arkive 가 셰이더 캐시를 찾는 경로·이름 규칙을 확인하고, 한국판 배치에 맞춘다.
+8. [x] **P3-7.** (완료, F32 — 한국판 문제 아님, 메시지만 개선) `model-viewer-scene` 이 "No game shader cache was found next to the Packages folder" 라고 한다. 그런데 샘플 `9XUFAXIP8BXBAP1NIEG66EF.upk` 는 export 1,598개가 전부 `shadercache` 다. Arkive 가 셰이더 캐시를 찾는 경로·이름 규칙을 확인하고, 한국판 배치에 맞춘다.
 7. [ ] **P3-8.** `index-build` 를 한국판 Packages(34,103개)에 돌린다. 오래 걸리므로 백그라운드로 실행하고, 실패 패키지 수와 원인을 분류한다. 이 색인이 App 의 에셋 라이브러리의 기반이다.
 8. [ ] **P3-5.** GFx 프로브를 `EFUI_*` 전체로 넓혀 PlaceObject3 외의 리테일 변종이 있는지 확인한다(F24 는 60개 패키지 표본).

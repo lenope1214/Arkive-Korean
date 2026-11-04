@@ -580,7 +580,10 @@ public sealed class ModelViewerSceneService
                 .ConfigureAwait(false);
             if (index.Document.Maps.Count == 0)
             {
-                _shaderIndexFailure = "No game shader cache was found next to the Packages folder; showing colour recipes instead.";
+                // The caches are the game's ShaderCache packages in ReleasePC, the folder above Packages: a package
+                // opened from anywhere else (a copy, a backup) has none above it.
+                _shaderIndexFailure = $"No game shader cache was found in {releasePc} (the folder above the package's own); " +
+                                      "showing colour recipes instead. Open the package from the game's Packages folder to use the game's shaders.";
                 return null;
             }
             _shaderIndexFailure = null;
