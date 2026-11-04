@@ -115,6 +115,24 @@
     - 로컬 키 파일에 `"umodelRegion": "kr"` 추가(§5-1).
   - Cli `language` 는 단일 언어일 때 "the game's only language … cannot be changed" 로 출력하고, JSON 은 `SingleLanguage: true` 다.
   - 스모크: 키 프로파일 테스트에 지역 적용·해제, 잘못된 지역 2종(명령줄 주입 시도, 숫자) 거부를 추가했다.
+- F30. **P3-6 진단 — NTX018 은 한국판 문제가 아니라 스트리밍 텍스처다.** `fx_d_ocnfoam_01`(512², DXT1, `busecrunchcompression=True`, `texturefilecachename=textures`, `firstresourcememmip=3`)의 밉 구성:
+  - 밉 0~2: `BulkDataFlags=0x201`(0x1 = 별도 파일, 0x200 = 압축 bulk). 외부 텍스처 캐시에 있다.
+  - 밉 3 이상: 패키지 안(inline).
+  - `NativeTextureExportService` 는 모든 밉이 inline 이어야 해서 거부한다(NTX018). 서구판에서도 같은 제약이다.
+  - 텍스처 캐시 파일: `ReleasePC/LOD9LS7OEDEP1EBMOHOT5O.upk`(398,190,387 B), 이름을 풀면 `textures`. 확장자는 `.upk` 지만 실제로는 원시 데이터 캐시다.
+  - 기록된 오프셋(356,891,320 등)에서 밉 0~2 를 읽으면 셋 다 **Crunch 파일(`Hx` 헤더, 헤더의 크기 필드 = StoredSize)** 이다 → 그대로 읽을 수 있다. 구현은 P3-9.
+  - `ReleasePC` 루트에서 이름을 푼 파일들:
+
+    | 이름 | 실제 파일 |
+    |---|---|
+    | `gameframework` · `gfxui` · `core` · `engine` · `efgame` · `akaudio` | `.u` |
+    | `coalesced_int` | `.bin` |
+    | `globalshadercache-pc-d3d-sm5` | `.bin` |
+    | `extshadercache-dx11` | `.bin` |
+    | `textures` | `.upk` |
+
+    1단계 샘플 3개(`DKV6…`, `FMX8…`, `9XUF…`)도 Packages 가 아니라 **ReleasePC 루트**에 있다 → §7 경로를 되돌려 고쳤다(P2-6 의 "고침"이 틀렸다).
+  - 원본 게임 폴더 `ReleasePC/Packages/074SCMSRX0EJ8X0T4RE0YRMYRX0RXQDSQX.diagnostic.json`(2,978 B, 2026-11-02 19:49): 이번 작업 전, 진단 도구가 UPK 옆에 보고서를 쓰던 시절에 남은 파일이다(그래서 "샘플은 복사해서 쓴다" 규칙이 생겼다). 게임 동작에는 영향이 없다. 원본 폴더라 지우지 않고 **사용자 판단에 맡긴다**.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -163,6 +181,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 16 | P3-6: NTX018 원인 진단 — 스트리밍 텍스처(외부 캐시 밉), 캐시 파일 `textures` 위치·형식 확인, ReleasePC 루트 파일 이름 해독, §7 샘플 경로 정정, 백로그 P3-9 추가 | 외부 밉 3개 모두 정상 Crunch 로 읽힘 (F30). 문서만 변경 | P3-9 (스트리밍 텍스처 내보내기) |
 | 2026-11-04 | 15 | P3-4: 한국판으로 Cli 읽기 명령 전수 실행, `scan` 34,103개 전체, UModel `-na`/`-kr` 비교 → 키 프로파일 `umodelRegion` 도입, Cli `language` 문구, 스모크 보강, 백로그 P3-6~8 추가 | UModel 이 한국판을 읽게 됨, 전 패키지 헤더 실패 0 (F29). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-6 (텍스처 NTX018) |
 | 2026-11-04 | 14 | P3-3: 시세·전투력 표를 `GameMessageTable.Resolve` 로, 한국어 보석 판정, 언어 서비스 단일 언어 상태 + App 문구, 스모크 2개 | 실제 한국판으로 시세 7,980개·전투력 옵션 전부 채워짐 (F28). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-4 (Cli 전수 실행 발굴) |
 | 2026-11-04 | 13 | P3-2: `playerclass` 열거형으로 클래스 이름 연결(`GamePlayerClassEnum`), 진단 도구 `--extract`, 스모크 보강 | 한국판 PC 41/41 한국어 (F27). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-3 (`GameMsg_English` 하드코딩) |
@@ -195,13 +214,14 @@ cd /e/Arkive-Korean
 dotnet build Arkive.slnx -c Release                       # 경고/오류 0 이어야 함
 K=work/unpack/keys.local.json
 D=/d/Smilegate/Games/LOSTARK/EFGame                       # 원본 (읽기 전용)
-P="D:/Smilegate/Games/LOSTARK/EFGame/ReleasePC/Packages"  # UPK 34,103개, 파일명은 난독화
+R="D:/Smilegate/Games/LOSTARK/EFGame/ReleasePC"           # 엔진 .u, 셰이더 캐시 .bin, 텍스처 캐시 등 루트 UPK 몇 개 (F30)
+P="$R/Packages"                                           # UPK 34,103개, 파일명은 난독화
 DIAG="dotnet run -c Release --no-build --project src/Arkive.UPKDiagnostic --"
 CLI="dotnet run -c Release --no-build --project src/Arkive.Cli --"
 
 # ── 1단계: 언팩 검증 (G1~G4) ─────────────────────────────────────────────
 # UPK 샘플은 복사해서 쓴다 (보고서가 UPK 옆에 저장됨)
-mkdir -p work/unpack/samples && cp "$P/<NAME>.upk" work/unpack/samples/
+mkdir -p work/unpack/samples && cp "$R/<NAME>.upk" work/unpack/samples/   # 1단계 샘플 3개는 ReleasePC 루트에 있다 ($P 의 패키지도 같은 방식)
 $DIAG --key-file $K work/unpack/samples/<NAME>.upk </dev/null          # 헤더·청크 표 + 첫 청크 → *.chunk-diagnostic.*.json
 $DIAG --western      work/unpack/samples/<NAME>.upk </dev/null          # 서구판 키로 시험 (한국판은 실패가 정상)
 $DIAG --all --key-file $K work/unpack/samples/*.upk </dev/null         # G1·G2: 전 청크 해제 + Name/Import/Export 개수 대조 → work/unpack/verify/*.all-chunks.json
@@ -307,7 +327,13 @@ loop는 다음 중 하나에 해당하면 **멈추고 사용자에게 보고**�
    - `Tweaks/MarketItemTable`, `Tweaks/CombatPowerTable`: 표 이름을 `GameMessageTable.Resolve` 로 찾는다. 영어 텍스트 파싱에 의존하는 부분은 동작 여부를 판정하고 안내 문구를 둔다.
    - `GameLanguageService`: 한국판에서는 "영어 표가 없다" 오류 대신 기능을 쓸 수 없다는 명확한 상태를 돌려준다.
 4. [x] **P3-4.** (완료, F29) 발굴: 한국판으로 Cli 의 읽기 전용 명령(`inspect`, `catalog`, `interface-names`, `zone-names`, 스킬·사운드·폰트 관련 등)을 전부 한 번씩 실행해 깨지는 곳의 목록을 만든다. 결과는 이 백로그에 항목으로 추가한다.
-5. [ ] **P3-6.** 한국판 텍스처 `texture-export-native` 가 `NTX018: Mip 0 is not a bounded, hash-verified inline payload.` 로 실패한다(`DKV6KRSCXY3T6D9CJIK3G.upk` `fx_d_ocnfoam_01`). 밉이 외부 텍스처 캐시(TFC)에 있는 정상 케이스인지, 한국판 형식 차이인지 가른다. 같은 텍스처를 UModel(`-kr`)로 내보내 비교하고, 다른 패키지(UI 등)의 텍스처로도 시험한다.
-6. [ ] **P3-7.** `model-viewer-scene` 이 "No game shader cache was found next to the Packages folder" 라고 한다. 그런데 샘플 `9XUFAXIP8BXBAP1NIEG66EF.upk` 는 export 1,598개가 전부 `shadercache` 다. Arkive 가 셰이더 캐시를 찾는 경로·이름 규칙을 확인하고, 한국판 배치에 맞춘다.
+5. [x] **P3-6.** (완료 — 원인 진단, F30. 구현은 P3-9) 한국판 텍스처 `texture-export-native` 가 `NTX018: Mip 0 is not a bounded, hash-verified inline payload.` 로 실패한다(`DKV6KRSCXY3T6D9CJIK3G.upk` `fx_d_ocnfoam_01`). 밉이 외부 텍스처 캐시(TFC)에 있는 정상 케이스인지, 한국판 형식 차이인지 가른다. 같은 텍스처를 UModel(`-kr`)로 내보내 비교하고, 다른 패키지(UI 등)의 텍스처로도 시험한다.
+6. [ ] **P3-9.** 스트리밍 텍스처 내보내기: 큰 밉이 외부 텍스처 캐시에 있는 텍스처(`BulkDataFlags & 0x1`)를 `texture-export-native` 가 내보낼 수 있게 한다.
+   - 캐시 파일 이름은 텍스처의 `texturefilecachename`(예: `textures`)이고, Packages 의 상위 `ReleasePC` 에서 난독화 이름을 풀어 찾는다(`LOD9LS7OEDEP1EBMOHOT5O.upk` → textures).
+   - 밉 바이트는 `BulkDataOffset` 위치의 원시 바이트(`StoredSize` 만큼)이다(F30).
+   - 외부 밉도 내부 밉과 같은 해시 검증(SHA256 기록)을 거친다.
+   - 범위는 **내보내기만**이다. 교체(쓰기)는 캐시 파일을 건드려야 하므로 별도 판단 — 원본 게임 폴더 읽기 전용 원칙.
+   - 스모크: 합성 패키지 + 합성 캐시 파일.
+7. [ ] **P3-7.** `model-viewer-scene` 이 "No game shader cache was found next to the Packages folder" 라고 한다. 그런데 샘플 `9XUFAXIP8BXBAP1NIEG66EF.upk` 는 export 1,598개가 전부 `shadercache` 다. Arkive 가 셰이더 캐시를 찾는 경로·이름 규칙을 확인하고, 한국판 배치에 맞춘다.
 7. [ ] **P3-8.** `index-build` 를 한국판 Packages(34,103개)에 돌린다. 오래 걸리므로 백그라운드로 실행하고, 실패 패키지 수와 원인을 분류한다. 이 색인이 App 의 에셋 라이브러리의 기반이다.
 8. [ ] **P3-5.** GFx 프로브를 `EFUI_*` 전체로 넓혀 PlaceObject3 외의 리테일 변종이 있는지 확인한다(F24 는 60개 패키지 표본).
