@@ -319,7 +319,8 @@ public static partial class ZoneMapSidecar
             {
                 connection.Open();
                 using var command = connection.CreateCommand();
-                var table = "GameMsg_" + (LanguageName().IsMatch(language) ? language : "English");
+                var table = Databases.GameMessageTable.Resolve(connection,
+                    LanguageName().IsMatch(language) ? language : "English");
                 command.CommandText = $"SELECT [KEY], [MSG] FROM [{table}] WHERE [KEY] LIKE 'tip.name.zoneba%'";
                 using var reader = command.ExecuteReader();
                 while (reader.Read())

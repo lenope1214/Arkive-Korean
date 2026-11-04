@@ -30,13 +30,14 @@ internal static class GameDatabaseMetadataReader
         IProgress<GameDatabaseBuildProgress>? progress, CancellationToken cancellation)
     {
         var messages = new Dictionary<string, string>(StringComparer.Ordinal);
-        VisitRows(Path.Combine(root, "EFTable_GameMsg.db"), "GameMsg_" + language, ["KEY", "MSG"],
+        VisitRows(Path.Combine(root, "EFTable_GameMsg.db"), MessageTable(root, language), ["KEY", "MSG"],
             cancellation, reader =>
             {
                 var key = Text(reader, "KEY");
                 var value = Clean(Text(reader, "MSG"));
                 if (key.Length > 0 && value.Length > 0) messages[key] = value;
             }, required: true);
+        var classNames = ClassNames(messages);
         var associations = new List<GameAssetAssociation>();
         for (var index = 0; index < Tables.Length; index++)
         {
@@ -51,8 +52,7 @@ internal static class GameDatabaseMetadataReader
             {
                 var nameKey = Text(reader, "Name");
                 var displayName = DisplayName(messages, nameKey);
-                if (table.Name == "PC")
-                    displayName = messages.GetValueOrDefault("tip.name.enum_playerclass_" + nameKey.ToLowerInvariant(), displayName);
+                if (table.Name == "PC") displayName = ClassName(classNames, nameKey, displayName);
                 if (nameKey.Length == 0 || displayName.Length == 0) return;
                 foreach (var field in fields)
                 {
@@ -82,7 +82,7 @@ internal static class GameDatabaseMetadataReader
         if (filtered.Length == 0)
             throw new InvalidDataException("No supported asset references were found in the game databases.");
         progress?.Report(new("Building character browser", Tables.Length, Tables.Length + 2, "PC / Npc"));
-        var entities = ReadEntities(root, messages, cancellation);
+        var entities = ReadEntities(root, messages, classNames, cancellation);
         progress?.Report(new("Building customization mapping", Tables.Length + 1, Tables.Length + 2, "CharacterCustomizing"));
         var customizations = ReadCustomizations(root, cancellation);
         return new(2, language, source, DateTimeOffset.UtcNow, filtered, entities, customizations);
@@ -93,7 +93,7 @@ internal static class GameDatabaseMetadataReader
         CancellationToken cancellation)
     {
         var messages = new Dictionary<string, string>(StringComparer.Ordinal);
-        VisitRows(Path.Combine(root, "EFTable_GameMsg.db"), "GameMsg_" + language, ["KEY", "MSG"], cancellation, reader =>
+        VisitRows(Path.Combine(root, "EFTable_GameMsg.db"), MessageTable(root, language), ["KEY", "MSG"], cancellation, reader =>
         {
             var key = Text(reader, "KEY");
             if (key.StartsWith("tip.name.skill_", StringComparison.Ordinal) || key.StartsWith("tip.name.enum_playerclass_", StringComparison.Ordinal))
@@ -127,7 +127,7 @@ internal static class GameDatabaseMetadataReader
         });
         var wanted = rows.Select(row => row.Key).ToHashSet(StringComparer.Ordinal);
         var messages = new Dictionary<string, string>(StringComparer.Ordinal);
-        VisitRows(Path.Combine(root, "EFTable_GameMsg.db"), "GameMsg_" + language, ["KEY", "MSG"], cancellation, reader =>
+        VisitRows(Path.Combine(root, "EFTable_GameMsg.db"), MessageTable(root, language), ["KEY", "MSG"], cancellation, reader =>
         {
             var key = Text(reader, "KEY");
             if (!wanted.Contains(key)) return;
@@ -138,14 +138,15 @@ internal static class GameDatabaseMetadataReader
     }
 
     private static IReadOnlyList<GameEntityDefinition> ReadEntities(string root,
-        IReadOnlyDictionary<string, string> messages, CancellationToken cancellation)
+        IReadOnlyDictionary<string, string> messages, IReadOnlyDictionary<string, string> classNames,
+        CancellationToken cancellation)
     {
         var entities = new List<GameEntityDefinition>();
         VisitRows(Path.Combine(root, "EFTable_PC.db"), "PC",
             ["PrimaryKey", "Name", "BaseClass", "Creatable", "Released", "GenderType", "LookInfo"], cancellation, reader =>
             {
                 var key = Text(reader, "Name");
-                var name = messages.GetValueOrDefault("tip.name.enum_playerclass_" + key.ToLowerInvariant(), DisplayName(messages, key));
+                var name = ClassName(classNames, key, DisplayName(messages, key));
                 if (name.Length == 0) return;
                 var id = Number(reader, "PrimaryKey");
                 var baseId = Number(reader, "BaseClass");
@@ -184,6 +185,32 @@ internal static class GameDatabaseMetadataReader
                 checked((int)Number(reader, "SortOrder")), checked((int)Number(reader, "Object_Unit")),
                 Text(reader, "Object_String"), Text(reader, "Icon"), checked((int)Number(reader, "IconIndex")), Text(reader, "MenuName"))));
         return result.OrderBy(item => item.PlayerClassId).ThenBy(item => item.CategoryId).ThenBy(item => item.UiPosition).ToArray();
+    }
+
+    private const string ClassNamePrefix = "tip.name.enum_playerclass_";
+
+    // Class names keyed without underscores and case: the PC table says "Battlemaster" or "DimensionMaster" where the
+    // text keys say "battle_master" and "dimension_master", so only the letters are compared.
+    private static Dictionary<string, string> ClassNames(IReadOnlyDictionary<string, string> messages)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (key, value) in messages)
+            if (key.StartsWith(ClassNamePrefix, StringComparison.Ordinal))
+                result.TryAdd(ClassKey(key[ClassNamePrefix.Length..]), value);
+        return result;
+    }
+
+    private static string ClassName(IReadOnlyDictionary<string, string> classNames, string key, string fallback) =>
+        classNames.GetValueOrDefault(ClassKey(key), fallback);
+
+    private static string ClassKey(string value) => value.Replace("_", "").ToLowerInvariant();
+
+    private static string MessageTable(string root, string language)
+    {
+        var path = Path.Combine(root, "EFTable_GameMsg.db");
+        if (!File.Exists(path)) return GameMessageTable.Prefix + language;
+        using var connection = Open(path);
+        return GameMessageTable.Resolve(connection, language);
     }
 
     private static HashSet<string> GetColumns(string path, string table)

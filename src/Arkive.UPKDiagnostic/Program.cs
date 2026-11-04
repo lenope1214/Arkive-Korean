@@ -34,6 +34,15 @@ internal static class Program
                 lpkPaths.Remove(args[lpkKeyIndex + 1]);
             }
 
+            // --db <이름>: 해당 DB 엔트리(예: EFTable_PC.db)를 <out>/db 로 추가 추출한다. 여러 번 줄 수 있다.
+            var extraDatabases = new List<string>();
+            for (var i = 0; i + 1 < args.Length; i++)
+            {
+                if (!args[i].Equals("--db", StringComparison.OrdinalIgnoreCase)) continue;
+                extraDatabases.Add(args[i + 1]);
+                lpkPaths.Remove(args[i + 1]);
+            }
+
             var worst = 0;
             foreach (var lpk in lpkPaths)
             {
@@ -45,7 +54,7 @@ internal static class Program
                 }
 
                 worst = Math.Max(worst, Arkive.UPKDiagnostic.LpkProbe.Run(
-                    lpk, outDir, args.Contains("--all-db", StringComparer.OrdinalIgnoreCase)));
+                    lpk, outDir, args.Contains("--all-db", StringComparer.OrdinalIgnoreCase), extraDatabases));
             }
 
             return worst;

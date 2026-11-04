@@ -12,7 +12,8 @@ public static class LpkProbe
     private const int SampleReads = 3;
     private const int MaxSampleBytes = 8 * 1024 * 1024;
 
-    public static int Run(string lpkPath, string outputDirectory, bool allDatabases = false)
+    public static int Run(string lpkPath, string outputDirectory, bool allDatabases = false,
+        IReadOnlyCollection<string>? extraDatabases = null)
     {
         var report = new LpkReport
         {
@@ -85,6 +86,10 @@ public static class LpkProbe
                 .ThenBy(e => e.Size)
                 .Take(2)
                 .ToList();
+            if (extraDatabases is { Count: > 0 })
+                databaseTargets.AddRange(databases.Where(e =>
+                    extraDatabases.Contains(Path.GetFileName(e.Path), StringComparer.OrdinalIgnoreCase) &&
+                    !databaseTargets.Contains(e)));
             var databaseDirectory = Path.Combine(outputDirectory, "db");
             foreach (var entry in databaseTargets)
             {

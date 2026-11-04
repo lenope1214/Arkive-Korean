@@ -14,7 +14,25 @@ internal static class DatabaseSmokeTests
         new("cancels game database builds and cleans temporary databases", TestCancellation),
         new("selects canonical game database tables instead of alternate namespaces", TestNamespaces),
         new("builds game databases with deeply nested mapping destinations", TestLongPaths),
+        new("builds game databases from a single-language GameMsg table", TestSingleLanguage),
     ];
+
+    // Korean-style client: one GameMsg table (no language suffix) and a PascalCase PC name against a snake_case key.
+    private static void TestSingleLanguage() => InWorkspace(root =>
+    {
+        var archive = CreateArchive(root, singleLanguage: true);
+        var output = Path.Combine(root, "mapping.json");
+        var result = Build(archive, output);
+        var index = GameAssetMetadataIndex.Load(output);
+        Assert(result.AssociationCount == 3 && index.Associations.Any(item => item.DisplayName == "픽스처 보스"),
+            "the single-language GameMsg table was not used");
+        Assert(index.Associations.Any(item => item.DisplayName == "픽스처 마스터" && item.EntityType == "PC"),
+            "a PascalCase class name was not matched to its snake_case text key");
+        var german = Path.Combine(root, "german.json");
+        new GameDatabaseBuilder().BuildAsync(archive, german, "German").GetAwaiter().GetResult();
+        Assert(GameAssetMetadataIndex.Load(german).Associations.Any(item => item.DisplayName == "픽스처 보스"),
+            "a single-language client did not fall back to its only text table");
+    });
 
     private static void TestBuild() => InWorkspace(root =>
     {
@@ -104,11 +122,15 @@ internal static class DatabaseSmokeTests
     private static GameDatabaseBuildResult Build(string archive, string output, IProgress<GameDatabaseBuildProgress>? progress = null) =>
         new GameDatabaseBuilder().BuildAsync(archive, output, progress: progress).GetAwaiter().GetResult();
 
-    private static string CreateArchive(string root, bool includeAlternate = false, bool duplicate = false)
+    private static string CreateArchive(string root, bool includeAlternate = false, bool duplicate = false,
+        bool singleLanguage = false)
     {
         var databases = new Dictionary<string, byte[]>
         {
-            ["EFTable_GameMsg.db"] = Database(root, """
+            ["EFTable_GameMsg.db"] = singleLanguage ? Database(root, """
+                CREATE TABLE GameMsg ([KEY] TEXT NOT NULL, [MSG] TEXT NOT NULL, [ANA] TEXT NOT NULL, PRIMARY KEY ([KEY]));
+                INSERT INTO GameMsg VALUES ('tip.fixture_boss','<b>픽스처 보스</b>',''), ('tip.name.enum_playerclass_fixture_master','픽스처 마스터','');
+                """) : Database(root, """
                 CREATE TABLE GameMsg_English (KEY TEXT, MSG TEXT);
                 INSERT INTO GameMsg_English VALUES ('tip.fixture_boss','<b>Fixture &amp; Boss</b>'), ('tip.name.enum_playerclass_fixture','Fixture Class');
                 UPDATE GameMsg_English SET MSG='<b>Fixture Boss</b>' WHERE KEY='tip.fixture_boss';
@@ -117,9 +139,9 @@ internal static class DatabaseSmokeTests
                 CREATE TABLE GameMsg_German (KEY TEXT, MSG TEXT);
                 INSERT INTO GameMsg_German VALUES ('tip.fixture_boss','Fixture Gegner'), ('tip.name.enum_playerclass_fixture','Fixture Klasse');
                 """),
-            ["EFTable_PC.db"] = Database(root, """
+            ["EFTable_PC.db"] = Database(root, $"""
                 CREATE TABLE PC (PrimaryKey INTEGER, Name TEXT, BaseClass INTEGER, Creatable INTEGER, Released INTEGER, GenderType INTEGER, LookInfo TEXT);
-                INSERT INTO PC VALUES (1,'Fixture',1,1,1,1,'fixture.pc_sk');
+                INSERT INTO PC VALUES (1,'{(singleLanguage ? "FixtureMaster" : "Fixture")}',1,1,1,1,'fixture.pc_sk');
                 """),
             ["EFTable_Npc.db"] = Database(root, """
                 CREATE TABLE Npc (PrimaryKey INTEGER, Name TEXT, Model TEXT, Icon TEXT, Grade INTEGER, Type INTEGER, Function INTEGER, FunctionType INTEGER, TitleName TEXT);
