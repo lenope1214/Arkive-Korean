@@ -45,8 +45,15 @@ internal static class Program
 
         // 사용법: UPKDiagnostic [--western] <upk 경로>
         // --western : 서구판 보호 프로파일로 첫 청크 해제를 시도한다 (한국판 호환성 검증용).
+        // --key-file <json> : 사용자가 로컬에 둔 키 파일(예: work/unpack/keys.local.json)로 보호 제공자를 만든다.
+        //   { "upkChunkKeyAscii": "<32자>" }  또는  { "upkChunkKeyHex": "<64 hex>" }
         bool useWestern = args.Contains("--western", StringComparer.OrdinalIgnoreCase);
-        string path = args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal)) ?? "";
+        int keyFileIndex = Array.FindIndex(args, a => a.Equals("--key-file", StringComparison.OrdinalIgnoreCase));
+        string? keyFile = keyFileIndex >= 0 && keyFileIndex + 1 < args.Length ? args[keyFileIndex + 1] : null;
+        string path = args.Where((a, i) =>
+                !a.StartsWith("--", StringComparison.Ordinal) &&
+                (keyFileIndex < 0 || i != keyFileIndex + 1))
+            .FirstOrDefault() ?? "";
 
         while (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
@@ -109,7 +116,7 @@ internal static class Program
                     path,
                     useWestern
                         ? Arkive.Core.Archives.ChunkProtectionProviderFactory.CreateWesternGlobal()
-                        : null);
+                        : keyFile is not null ? LoadKeyFileProvider(keyFile) : null);
             }
 
             Console.WriteLine("원본 UPK 파일은 수정하지 않았습니다.");
@@ -120,6 +127,30 @@ internal static class Program
         {
             Console.WriteLine($"\n분석 실패: {ex.Message}");
             return 2;
+        }
+    }
+
+    private static Arkive.Core.Archives.IChunkProtectionProvider LoadKeyFileProvider(string keyFile)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(keyFile));
+        var root = document.RootElement;
+        byte[] key;
+        if (root.TryGetProperty("upkChunkKeyHex", out var hex) && hex.GetString() is { Length: > 0 } hexText)
+            key = Convert.FromHexString(hexText.Trim());
+        else if (root.TryGetProperty("upkChunkKeyAscii", out var ascii) && ascii.GetString() is { Length: > 0 } asciiText)
+            key = Encoding.ASCII.GetBytes(asciiText);
+        else
+            throw new InvalidDataException("키 파일에 upkChunkKeyHex 또는 upkChunkKeyAscii 가 없습니다.");
+
+        try
+        {
+            // 키 값 자체는 출력/보고서에 남기지 않는다. 이름에는 파일명만 쓴다.
+            return new Arkive.Core.Archives.AesEcbPrefixProtectionProvider(
+                key, "User-supplied profile (" + Path.GetFileName(keyFile) + ")");
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(key);
         }
     }
 
