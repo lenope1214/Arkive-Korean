@@ -73,6 +73,15 @@ public partial class MainWindow
                     _languageBusy = false;
                 }
             }
+            if (await Task.Run(service.IsSingleLanguage))
+            {
+                LanguageList.ItemsSource = null;
+                LanguageRestoreButton.IsEnabled = false;
+                LanguageSavedText.Text = "";
+                LanguageStatusText.Text = status ?? "This game client has its text in one language only (one text table, as in the Korean client), so there is no other language to choose.";
+                UpdateLanguageActions();
+                return;
+            }
             var (languages, current, updated, savedAt, state) = await Task.Run(() =>
                 (service.Languages(), service.CurrentLanguage(), service.GameUpdated(), service.SavedAt(), service.LoadState()));
             var rows = languages.Select(language => new LanguageRow(language, language.Name == current)).ToArray();

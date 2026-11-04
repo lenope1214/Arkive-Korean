@@ -71,6 +71,7 @@ public sealed class GameLanguageService
     public IReadOnlyList<GameLanguage> Languages()
     {
         var catalog = LoadCatalog();
+        if (IsSingleLanguage(catalog)) return [];
         var lines = catalog?["Lines"]?.GetValue<int>() ?? 0;
         var languages = new List<GameLanguage> { new(English, Title(English), lines, lines, true) };
         if (catalog?["Languages"] is JsonArray saved)
@@ -81,6 +82,14 @@ public sealed class GameLanguageService
                 .OrderBy(language => Order(language.Name)).ThenBy(language => language.Name, StringComparer.OrdinalIgnoreCase));
         return languages;
     }
+
+    /// <summary>
+    /// True when the game's text is in one language only (one GameMsg table, as in the Korean client), so it cannot
+    /// be switched. Known after <see cref="SaveAsync"/> has read the game once.
+    /// </summary>
+    public bool IsSingleLanguage() => IsSingleLanguage(LoadCatalog());
+
+    private static bool IsSingleLanguage(JsonNode? catalog) => catalog?["SingleLanguage"]?.GetValue<bool>() == true;
 
     private static int Order(string language)
     {
@@ -128,7 +137,25 @@ public sealed class GameLanguageService
         {
             Execute(connection, $"ATTACH DATABASE {Quote(game)} AS game");
             var gameTables = Tables(connection, "game");
-            if (!gameTables.Contains(English)) throw new InvalidDataException("The game's text has no English table.");
+            if (!gameTables.Contains(English))
+            {
+                // A single-language client (the Korean one) keeps all its text in one GameMsg table: there is no
+                // other language to save or switch to. That is recorded so the game is not re-read on every visit.
+                if (Count(connection, $"SELECT COUNT(*) FROM game.sqlite_master WHERE type = 'table' AND name = '{Databases.GameMessageTable.SingleLanguage}'") == 0)
+                    throw new InvalidDataException("The game's text has no English table.");
+                var singleLines = Count(connection, $"SELECT COUNT(*) FROM game.{Databases.GameMessageTable.SingleLanguage} WHERE MSG <> ''");
+                Execute(connection, "DETACH DATABASE game");
+                WriteJson(_catalogPath, new JsonObject
+                {
+                    ["Version"] = CatalogVersion,
+                    ["GameVersion"] = version,
+                    ["SavedAt"] = DateTimeOffset.UtcNow,
+                    ["Lines"] = singleLines,
+                    ["SingleLanguage"] = true,
+                    ["Languages"] = new JsonArray(),
+                });
+                return;
+            }
             lines = Count(connection, $"SELECT COUNT(*) FROM game.{TablePrefix}{English} WHERE MSG <> ''");
             using (var transaction = connection.BeginTransaction())
             {
@@ -183,6 +210,8 @@ public sealed class GameLanguageService
             return 0;
         }
         if (NeedsSaving()) await SaveAsync(cancellationToken).ConfigureAwait(false);
+        if (IsSingleLanguage())
+            throw new InvalidOperationException("This game client has its text in one language only, so its language cannot be changed.");
         var chosen = Languages().FirstOrDefault(item => item.Name.Equals(language, StringComparison.OrdinalIgnoreCase))
                      ?? throw new InvalidOperationException($"Arkive has no {Title(language)} text.");
         var result = await _archive.WriteAsync(_archive.Current() with { Language = chosen.Name }, cancellationToken).ConfigureAwait(false);
@@ -235,7 +264,8 @@ public sealed class GameLanguageService
         try
         {
             var node = File.Exists(_catalogPath) ? JsonNode.Parse(File.ReadAllText(_catalogPath)) : null;
-            return node?["Version"]?.GetValue<int>() == CatalogVersion && File.Exists(_savedPath) ? node : null;
+            // A single-language client has no translations, so no saved copy of them.
+            return node?["Version"]?.GetValue<int>() == CatalogVersion && (File.Exists(_savedPath) || IsSingleLanguage(node)) ? node : null;
         }
         catch (Exception exception) when (exception is JsonException or InvalidOperationException or IOException)
         {

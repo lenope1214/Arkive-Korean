@@ -36,9 +36,11 @@ public static partial class MarketItemTable
         {
             var items = new SortedDictionary<string, (int Bundle, bool Market)>(StringComparer.Ordinal);
             using var command = connection.CreateCommand();
-            command.CommandText = """
-                SELECT m.MSG, i.MarketPackageUnit, i.EnableMarket FROM Item i JOIN db1.GameMsg_English m ON m.KEY = lower(i.Name)
-                WHERE i.EnableMarket != 0 OR (i.EnableAuction != 0 AND m.MSG LIKE '%Gem')
+            // GameMsg_English, or GameMsg on a single-language client; gems are "...Gem" in English, "...보석" in Korean.
+            var messages = Databases.GameMessageTable.Resolve(connection, "English", "db1");
+            command.CommandText = $"""
+                SELECT m.MSG, i.MarketPackageUnit, i.EnableMarket FROM Item i JOIN db1.[{messages}] m ON m.KEY = lower(i.Name)
+                WHERE i.EnableMarket != 0 OR (i.EnableAuction != 0 AND (m.MSG LIKE '%Gem' OR m.MSG LIKE '%보석'))
                 """;
             using var reader = command.ExecuteReader();
             while (reader.Read())

@@ -178,7 +178,7 @@ public static class CombatPowerTable
     private static string? Text(SqliteConnection connection, string key)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT MSG FROM db3.GameMsg_English WHERE KEY = $key";
+        command.CommandText = $"SELECT MSG FROM db3.[{Databases.GameMessageTable.Resolve(connection, "English", "db3")}] WHERE KEY = $key";
         command.Parameters.AddWithValue("$key", key.ToLowerInvariant());
         return command.ExecuteScalar() as string;
     }

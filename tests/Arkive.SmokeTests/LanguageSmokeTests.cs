@@ -13,7 +13,31 @@ internal static class LanguageSmokeTests
         new("writes a language's lines over the game's English text and restores data2.lpk byte for byte", TestApplyRestore),
         new("keeps a language the game drops and uses Arkive's saved copy after a game update", TestRemovedLanguage),
         new("refuses to change the game's language while Lost Ark runs", TestRefusesWhileRunning),
+        new("recognises a single-language game text and does not offer or apply other languages", TestSingleLanguage),
     ];
+
+    // The Korean client: one GameMsg table and no GameMsg_<language> tables.
+    private static void TestSingleLanguage() => InWorkspace((efGame, data) =>
+    {
+        var archive = Path.Combine(efGame, "data2.lpk");
+        CreateArchive(archive, Database(data, $"""
+            CREATE TABLE GameMsg {Columns};
+            INSERT INTO GameMsg VALUES ('sys.welcome','로스트아크에 오신 것을 환영합니다!',''), ('sys.empty','','');
+            """));
+        var original = File.ReadAllBytes(archive);
+        var service = new GameLanguageService(efGame, data, new Game());
+        Assert(service.NeedsSaving(), "a game whose text was never read did not ask to be read");
+        service.SaveAsync().GetAwaiter().GetResult();
+        Assert(service.IsSingleLanguage() && !service.NeedsSaving() && service.Languages().Count == 0,
+            "a single-language game was not recorded as such, or would be read again on every visit");
+        try
+        {
+            service.ApplyAsync("Spanish").GetAwaiter().GetResult();
+            throw new InvalidOperationException("ok-sentinel");
+        }
+        catch (InvalidOperationException exception) when (exception.Message != "ok-sentinel") { }
+        Assert(File.ReadAllBytes(archive).SequenceEqual(original), "a single-language game's data2.lpk was changed");
+    });
 
     private const string TextPath = "\\EFGame_Extra\\ClientData\\TableData\\EFTable_GameMsg.db";
     private const string OtherPath = "\\EFGame_Extra\\ClientData\\TableData\\EFTable_Npc.db";

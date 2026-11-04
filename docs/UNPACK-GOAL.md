@@ -79,6 +79,20 @@
   - 구현: `Databases/GamePlayerClassEnum` 이 data2.lpk 옆의 data1.lpk 에서 열거형을 읽는다(없거나 못 읽으면 빈 표 → F22 의 글자 비교로 폴백). XML 은 DTD 금지로 읽는다.
   - 진단 도구 `--lpk … --extract <경로 일부>` 추가(일반 엔트리를 `<out>/entries/<lpk>/` 로 추출, 경로 밖으로 나가는 이름은 거부).
   - 스모크: 단일 언어 테스트에 data1.lpk 열거형이 있을 때와 없을 때를 모두 넣었다.
+- F28. **P3-3 완료 — `GameMsg_English` 하드코딩 처리.**
+  - `Tweaks/MarketItemTable`, `Tweaks/CombatPowerTable`: 붙인(attached) DB 에서 표 이름을 `GameMessageTable.Resolve(connection, language, schema)` 로 찾는다(새 오버로드, 스키마 이름은 영숫자만 허용).
+  - 경매장 보석 판정: 영어 `'%Gem'` 에 한국어 `'%보석'` 을 더했다. 한국판 경매 아이템 중 60개가 "N레벨 청명의 보석" 꼴로 맞는다.
+  - **실제 한국판 data2 로 실행**(스크래치 .NET 파일 스크립트): 이전에는 `no such table` 로 실패했다.
+    - 시세 목록 7,980개(보석 60).
+    - 전투력 옵션 rows 4,430 · gemBase 18 · engravings 32 · bracelet 148 · orbs 14 · cores 78.
+  - `GameLanguageService`: 한국판처럼 단일 `GameMsg` 표이면 오류 대신 카탈로그에 `SingleLanguage: true` 를 기록한다. 이후 동작:
+    - `NeedsSaving()` 은 false — 매번 134MB 를 다시 읽지 않는다.
+    - `Languages()` 는 빈 목록.
+    - `ApplyAsync` 는 "한 언어뿐이라 바꿀 수 없다"로 거부.
+    - 새 `IsSingleLanguage()` 를 쓰는 App 언어 탭은 이 상태를 설명하는 문구를 보여준다. 전에는 "The game's text could not be read: … no English table." 가 방문할 때마다 떴다.
+    - `LoadCatalog` 는 단일 언어 카탈로그면 번역 사본 파일이 없어도 유효로 본다.
+  - 스모크 2개 추가(단일 언어 시세 목록, 단일 언어 언어 서비스). `DatabaseSmokeTests.WriteDatabaseArchive` 를 다른 테스트가 쓰도록 분리.
+  - 참고: data2 에는 같은 이름의 DB 가 하위 폴더에도 있다(`EFTable_Item.db` 가 루트·`DEV/`·`KOR/`). Arkive 빌더는 루트 것을 고른다(기존 테스트 "canonical tables"). 진단 도구 `--db` 는 파일 이름으로 저장해서 **마지막 것이 덮어쓴다** — 스키마를 볼 때만 쓰고 수치 비교에는 쓰지 않는다.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -126,6 +140,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 14 | P3-3: 시세·전투력 표를 `GameMessageTable.Resolve` 로, 한국어 보석 판정, 언어 서비스 단일 언어 상태 + App 문구, 스모크 2개 | 실제 한국판으로 시세 7,980개·전투력 옵션 전부 채워짐 (F28). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-4 (Cli 전수 실행 발굴) |
 | 2026-11-04 | 13 | P3-2: `playerclass` 열거형으로 클래스 이름 연결(`GamePlayerClassEnum`), 진단 도구 `--extract`, 스모크 보강 | 한국판 PC 41/41 한국어 (F27). 전체 스모크 통과, 빌드 경고/오류 0, push | P3-3 (`GameMsg_English` 하드코딩) |
 | 2026-11-04 | 12 | P3-1: 원격 문서 커밋 위로 rebase 후 push(`14a2fe6`), 3단계 백로그·loop 규칙(§10) 작성 | push 성공, 빌드 경고/오류 0 | P3-2 |
 | 2026-11-04 | 11 | P2-6: §7 재현 방법을 현재 옵션(`--key-file`·`--all`·`--lpk`·`--all-db`·`--db`·`--gfx`)과 `ARKIVE_KEY_PROFILE`, Cli `catalog`·`database-build`·`cursors`·`loa-strings` 기준으로 다시 씀. UPK 경로(`ReleasePC/Packages`)·DB 샘플 경로(`lpk/db`) 오기 수정 | 진단 기본 모드·Cli `catalog` 를 문서 명령 그대로 재실행해 확인. **G1~G5, P2-1~6 전부 완료 → loop 종료** | — |
@@ -264,7 +279,7 @@ loop는 다음 중 하나에 해당하면 **멈추고 사용자에게 보고**�
 
 1. [x] **P3-1.** 로컬 커밋 11개 push. 원격의 문서 커밋 1개(`fc12c80`) 위로 rebase 한 뒤 push 했다(`14a2fe6`).
 2. [x] **P3-2.** (완료, F27) 영어로 남은 PC 클래스 이름 5개(`Gunlancer`, `Gunner`, `Gunner_Female`, `Kimaster`, `Mage`)를 한국어 이름에 연결한다(F22). DB 의 다른 컬럼이나 키에서 근거를 찾고, 추측으로 매핑하지 않는다.
-3. [ ] **P3-3.** 단일 GameMsg 표 클라이언트(한국판)에서 `GameMsg_English` 를 하드코딩한 곳을 처리한다.
+3. [x] **P3-3.** (완료, F28) 단일 GameMsg 표 클라이언트(한국판)에서 `GameMsg_English` 를 하드코딩한 곳을 처리한다.
    - `Tweaks/MarketItemTable`, `Tweaks/CombatPowerTable`: 표 이름을 `GameMessageTable.Resolve` 로 찾는다. 영어 텍스트 파싱에 의존하는 부분은 동작 여부를 판정하고 안내 문구를 둔다.
    - `GameLanguageService`: 한국판에서는 "영어 표가 없다" 오류 대신 기능을 쓸 수 없다는 명확한 상태를 돌려준다.
 4. [ ] **P3-4.** 발굴: 한국판으로 Cli 의 읽기 전용 명령(`inspect`, `catalog`, `interface-names`, `zone-names`, 스킬·사운드·폰트 관련 등)을 전부 한 번씩 실행해 깨지는 곳의 목록을 만든다. 결과는 이 백로그에 항목으로 추가한다.

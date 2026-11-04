@@ -16,7 +16,30 @@ internal static class DatabaseSmokeTests
         new("selects canonical game database tables instead of alternate namespaces", TestNamespaces),
         new("builds game databases with deeply nested mapping destinations", TestLongPaths),
         new("builds game databases from a single-language GameMsg table", TestSingleLanguage),
+        new("lists market items, Korean gems included, from a single-language GameMsg table", TestMarketItemsSingleLanguage),
     ];
+
+    private static void TestMarketItemsSingleLanguage() => InWorkspace(root =>
+    {
+        const string folder = "\\EFGame_Extra\\ClientData\\TableData\\";
+        var archive = WriteDatabaseArchive(Path.Combine(root, "data2.lpk"),
+        [
+            (folder + "EFTable_Item.db", Database(root, """
+                CREATE TABLE Item (PrimaryKey INTEGER, Name TEXT, MarketPackageUnit INTEGER, EnableMarket INTEGER, EnableAuction INTEGER);
+                INSERT INTO Item VALUES (1,'tip.name.item_herb',10,1,0), (2,'tip.name.item_gem',1,0,1), (3,'tip.name.item_ring',1,0,1);
+                """)),
+            (folder + "EFTable_GameMsg.db", Database(root, """
+                CREATE TABLE GameMsg ([KEY] TEXT NOT NULL, [MSG] TEXT NOT NULL, PRIMARY KEY ([KEY]));
+                INSERT INTO GameMsg VALUES ('tip.name.item_herb','<FONT>들꽃</FONT>'), ('tip.name.item_gem','1레벨 청명의 보석'),
+                    ('tip.name.item_ring','고대 반지');
+                """)),
+        ]);
+        var work = Path.Combine(root, "work");
+        Directory.CreateDirectory(work);
+        var lines = Arkive.Core.Tweaks.MarketItemTable.Read(archive, work);
+        Assert(lines.SequenceEqual(["1레벨 청명의 보석|1|a", "들꽃|10|m"]),
+            "market items were not read from the single GameMsg table, or a Korean gem was missed: " + string.Join(" | ", lines));
+    });
 
     // Korean-style client: one GameMsg table (no language suffix) and a PascalCase PC name against a snake_case key.
     private static void TestSingleLanguage() => InWorkspace(root =>
@@ -178,6 +201,12 @@ internal static class DatabaseSmokeTests
         var entries = databases.Select(pair => (Name: "\\EFGame_Extra\\ClientData\\TableData\\" + pair.Key, Data: pair.Value)).ToList();
         if (includeAlternate) entries.Insert(0, ("\\EFGame_Extra\\ClientData\\TableData\\jss\\EFTable_Item.db", databases["EFTable_Item.db"]));
         if (duplicate) entries.Add(entries[0]);
+        return WriteDatabaseArchive(Path.Combine(root, Guid.NewGuid().ToString("N") + ".lpk"), entries);
+    }
+
+    /// <summary>A data2.lpk-style archive of encrypted databases, at <paramref name="path"/>.</summary>
+    internal static string WriteDatabaseArchive(string path, IReadOnlyList<(string Name, byte[] Data)> entries)
+    {
         var table = new byte[528 * entries.Count];
         var payloads = new List<byte[]>();
         for (var index = 0; index < entries.Count; index++)
@@ -200,14 +229,13 @@ internal static class DatabaseSmokeTests
             cipher.ProcessBlock(table, offset, table, offset);
             table.AsSpan(offset, 4).Reverse(); table.AsSpan(offset + 4, 4).Reverse();
         }
-        var path = Path.Combine(root, Guid.NewGuid().ToString("N") + ".lpk");
         using var writer = new BinaryWriter(File.Create(path));
         writer.Write(entries.Count); writer.Write(table); writer.Write(0);
         foreach (var payload in payloads) writer.Write(payload);
         return path;
     }
 
-    private static byte[] Database(string root, string sql)
+    internal static byte[] Database(string root, string sql)
     {
         var path = Path.Combine(root, Guid.NewGuid().ToString("N") + ".db");
         using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Pooling = false }.ToString()))

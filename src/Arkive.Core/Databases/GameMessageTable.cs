@@ -16,17 +16,22 @@ internal static class GameMessageTable
     /// GameMsg_<paramref name="language"/> when the database has it, else GameMsg when that is the only text
     /// table, else GameMsg_<paramref name="language"/> so the caller's missing-table error names what was asked for.
     /// </summary>
-    internal static string Resolve(SqliteConnection connection, string language)
+    internal static string Resolve(SqliteConnection connection, string language) => Resolve(connection, language, "main");
+
+    /// <summary>The same, for a database attached to <paramref name="connection"/> as <paramref name="schema"/> (db1).</summary>
+    internal static string Resolve(SqliteConnection connection, string language, string schema)
     {
+        if (schema.Length == 0 || !schema.All(char.IsAsciiLetterOrDigit))
+            throw new ArgumentException("A schema name is letters and digits only.", nameof(schema));
         var languageTable = Prefix + language;
-        if (Exists(connection, languageTable)) return languageTable;
-        return Exists(connection, SingleLanguage) ? SingleLanguage : languageTable;
+        if (Exists(connection, schema, languageTable)) return languageTable;
+        return Exists(connection, schema, SingleLanguage) ? SingleLanguage : languageTable;
     }
 
-    private static bool Exists(SqliteConnection connection, string table)
+    private static bool Exists(SqliteConnection connection, string schema, string table)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = $name";
+        command.CommandText = $"SELECT 1 FROM {schema}.sqlite_master WHERE type = 'table' AND name = $name";
         command.Parameters.AddWithValue("$name", table);
         return command.ExecuteScalar() is not null;
     }
