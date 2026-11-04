@@ -372,6 +372,7 @@ static int Run(string[] arguments)
             "catalog" => Catalog(target, ReadTextOption(arguments, "--filter"), json),
             "umodel-list" => UmodelList(target, ReadTextOption(arguments, "--filter"), json),
             "cursors" => Cursors(target, ReadTextOption(arguments, "--out"), json),
+            "loa-strings" => LoaStrings(target, ReadTextOption(arguments, "--entry"), ReadTextOption(arguments, "--grep"), json),
             "interface-names" => InterfaceNames(target, ReadTextOption(arguments, "--metadata"),
                 ReadTextOption(arguments, "--filter"), json),
             "zone-names" => ZoneNames(target, ReadTextOption(arguments, "--metadata"),
@@ -3283,6 +3284,43 @@ static int IndexBuild(
     return report.FailedPackages == 0 ? 0 : 1;
 }
 
+// The text inside .loa record files: one file, or every .loa in an .lpk whose path contains --entry.
+static int LoaStrings(string target, string? entryFilter, string? grep, bool json)
+{
+    var files = new List<(string Path, IReadOnlyList<Arkive.Core.GameData.LoaString> Strings)>();
+    if (target.EndsWith(".lpk", StringComparison.OrdinalIgnoreCase))
+    {
+        if (string.IsNullOrWhiteSpace(entryFilter))
+            throw new ArgumentException("loa-strings on an .lpk needs --entry TEXT (part of the .loa path, such as IconInfo).");
+        using var stream = new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        foreach (var entry in Arkive.Core.Skills.LostArkDataArchive.ReadEntries(stream).Where(entry =>
+                     entry.Path.EndsWith(".loa", StringComparison.OrdinalIgnoreCase) &&
+                     entry.Path.Contains(entryFilter, StringComparison.OrdinalIgnoreCase)))
+            files.Add((entry.Path, Arkive.Core.GameData.LoaStringReader.Read(Arkive.Core.Skills.LostArkDataArchive.Read(stream, entry))));
+        if (files.Count == 0) throw new FileNotFoundException($"No .loa file in this archive has \"{entryFilter}\" in its path.", target);
+    }
+    else files.Add((target, Arkive.Core.GameData.LoaStringReader.Read(File.ReadAllBytes(target))));
+
+    var shown = files.Select(file => (file.Path, Strings: string.IsNullOrEmpty(grep)
+        ? file.Strings
+        : file.Strings.Where(item => item.Text.Contains(grep, StringComparison.OrdinalIgnoreCase)).ToList() as IReadOnlyList<Arkive.Core.GameData.LoaString>)).ToList();
+    if (json)
+    {
+        // Streamed: a whole archive's strings are too large to build as one string first.
+        using var standardOutput = Console.OpenStandardOutput();
+        JsonSerializer.Serialize(standardOutput, shown.Select(file => new { file.Path, Strings = file.Strings }),
+            new JsonSerializerOptions { WriteIndented = true });
+        standardOutput.WriteByte((byte)'\n');
+        return 0;
+    }
+    foreach (var (path, strings) in shown)
+    {
+        Console.WriteLine($"{path}: {strings.Count:N0} strings");
+        foreach (var item in strings) Console.WriteLine($"  {item.Offset,8}  {item.Text}");
+    }
+    return 0;
+}
+
 // The game's mouse cursors (EFUI_CURSOR) as Windows .ani/.cur files: <out>/<preset>/<size>/<cursor>.<ext>.
 static int Cursors(string target, string? output, bool json)
 {
@@ -4316,6 +4354,7 @@ static void PrintUsage()
     Console.WriteLine("  arkive client-update-check-all <Arkive-project-root> [--out DIR] [--state-root DIR] [--json]");
     Console.WriteLine("  arkive catalog <package.upk> [--filter TEXT] [--json]");
     Console.WriteLine("  arkive cursors <PACKAGES_DIR | EFUI_CURSOR.upk> [--out DIR] [--json]");
+    Console.WriteLine("  arkive loa-strings <file.loa | data.lpk --entry TEXT> [--grep TEXT] [--json]");
     Console.WriteLine("  arkive interface-names <PACKAGES_DIR> --metadata arkive-asset-metadata.json [--filter TEXT] [--json]");
     Console.WriteLine("  arkive zone-names <PACKAGES_DIR> --metadata arkive-asset-metadata.json [--filter TEXT] [--json]");
     Console.WriteLine("  arkive player-logs <character-name> [--out DIR] [--json]");

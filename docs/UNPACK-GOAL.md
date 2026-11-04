@@ -72,6 +72,7 @@
 - F23. **P2-4 완료 — 포크 카탈로그 확정(§9)**: 가져옴 3개(A GFx PlaceObject3 class-name 판정 버그 의심, B 커서 추출, C `.loa` 문자열 덤프), 참고만 8개(대부분 Arkive 에 같은 기능이 이미 있음: MinimapData·무비 덤프·랜드스케이프·사운드 등), 제외 6개(포크 엔진 전용). 포크에 LICENSE 가 없어 형식 지식만 가져오고 코드는 새로 쓴다는 방침을 §9 에 기록.
 - F24. **P2-5a 완료 — GFx PlaceObject3 class-name 판정 버그 확인·수정**: 진단 도구 `--gfx <Packages> --key-file F [--max N]` 로 `EFUI_*` 패키지 60개(무비 70개)를 대조. HasImage+HasCharacter 인데 HasClassName 이 없는 배치 399개 중 **리테일식(문자열 없음)만 유효 394, 명세식만 유효 0**, 둘 다 5. → `GfxMovieReader.ReadPlacement` 를 HasClassName(0x08)일 때만 문자열을 읽도록 수정. 이전에는 이런 배치의 character id·인스턴스 이름이 틀려 UI 그림 이름 붙이기(`InterfaceElementNames`)에서 빠졌다. 같은 익스포터를 쓰는 서구판에도 해당되는 수정. 스모크 테스트 `reads PlaceObject3 placements the way the game's Scaleform exporter writes them` 추가. 패키지 이름은 `LostArkPackageName.TryDecodeFileName` 으로 난독화 파일명에서 복원(34,103개 중 EFUI_*).
 - F25. **P2-5b 완료 — 마우스 커서 추출** (`Core/Interface/GameCursorReader`, Cli `arkive cursors <Packages|EFUI_CURSOR.upk> [--out DIR] [--json]`): 한국판 `EFUI_CURSOR` 에서 커서 56종, 파일 990개(`.cur` 979 · `.ani` 11)를 `<out>/<preset>/<size>/<이름>.<ext>` 로 추출. **990개 전부 Windows `LoadCursorFromFileW` 로 열림** 확인. `.ico` 로 저장된 것은 export 의 `[size]hotspotx/y` 클릭 지점을 넣어 `.cur` 로 바꾼다(예: `normal` 48px 클릭 지점 9,9). 포크는 구 빌드에서 51종이라 했고 현재는 56종. 포크가 말한 "IntProperty 뒤 8바이트 더" 규칙은 이 패키지에서 필요 없었다(태그 크기대로 넘겨도 끝까지 맞음). 스모크 테스트 `reads the game's mouse cursors as Windows .cur and .ani files`(합성 export, Str/Struct/Bool/Byte-enum/Int 태그 포함).
+- F26. **P2-5c 완료 — `.loa` 문자열 덤프** (`Core/GameData/LoaStringReader`, Cli `arkive loa-strings <file.loa | X.lpk --entry TEXT> [--grep TEXT] [--json]`). `int32 길이 + 바이트 + NUL` 스캔, CP949 디코딩. 포크와 달리 **빈 문자열과 CP949 가 아닌 바이트열은 뺀다**: 한국판 data3 에서 빈 문자열 6,427,194개(대부분 int32 1 + 0 바이트인 숫자)와 Latin-1 로만 풀리는 1,748개(예: float 0.3 = `9A 99 99 3E`)가 전부 잡음이었다. 정리 후 data1 35,403파일 1,030,230개 · data3 12,337파일 11,187,080개(대부분 `Action/*.loa` 바이너리의 우연한 일치 — 이 도구는 형식을 모를 때 훑어보는 용도). 실측 결과 **data1·data3 의 `.loa` 에는 한글 문자열(2자 이상)이 하나도 없다** — 한국어 텍스트는 GameMsg(UTF-8)에만 있고 `.loa` 는 키(`que.*`, `tip.name.*`)와 클래스·리소스 이름만 가진다. CP949 디코딩은 포크 설명대로 안전장치로 둔다. 전체 아카이브 `--json` 은 기존 `WriteJson`(문자열 한 번에 생성)이 메모리 부족으로 죽어서 이 명령만 스트림으로 쓴다. 스모크 테스트 `lists the CP949 text in a .loa record file and skips numbers that look like strings`.
 - F10. 도구 사용 주의: 표준입력이 열려 있으면 경로 프롬프트 대기로 멈출 수 있다. 자동 실행 시 `</dev/null` 로 막는다.
 
 ## 5. 다음 작업 (우선순위 순 — loop는 맨 위 미완료 항목을 수행)
@@ -95,8 +96,8 @@
 2. [x] **P2-2.** (완료, F21) DB 전수 검증: `data2.lpk` 803개 `.db` 전부 복호화 → SQLite 헤더 + 열어서 `sqlite_master` 조회. 실패가 있으면 `DeriveKey`(마지막 `_` 뒤 이름)와 포크 `unpack_lpk.py` 의 `database_key`(`EFTable_` 접두 제거한 전체 이름) 차이를 원인으로 확인하고 필요 시 보정(F17).
 3. [x] **P2-3.** (완료, F22) 한국판 GameMsg로 Arkive의 게임 DB 빌드 경로 실행 (`GameDatabaseMetadataReader`, `GameLanguageService`, Cli의 DB 빌드). 서구판 가정(언어 컬럼·영어 텍스트·"Western" 예외 문구)에서 깨지는 지점을 목록화하고 최소 수정. GameMsg는 UTF-8, 다른 `.loa` 표는 CP949 (포크 `dump_loa_strings.py` 설명).
 4. [x] **P2-4.** (완료, F23) 포크 카탈로그 완성(§9): 항목별로 Arkive 기존 기능과 비교해 `가져옴 / 참고만 / 제외` 판정과 근거 기록. 포크 `.md/에셋 추출 파이프라인.md` 와 `Tools/*/README.md` 를 근거 문서로 읽는다. 엔진/클라/서버 코드는 제외.
-5. [ ] **P2-5.** §9에서 `가져옴`으로 판정된 항목을 우선순위대로 접목 — **한 번에 하나**, Core에 최소 구현 + 스모크 테스트(`tests/Arkive.SmokeTests`) 1개 이상. 순서: **5a** GFx PlaceObject3 class-name 판정(§9-A, 먼저 한국판 무비로 재현 확인) → **5b** 커서 추출(§9-B) → **5c** `.loa` 문자열 덤프(§9-C). 하위 항목이 모두 끝나야 P2-5 를 [x] 로 한다.
-   - [x] 5a (F24)  - [x] 5b (F25)  - [ ] 5c
+5. [x] **P2-5.** (완료, F24~F26) §9에서 `가져옴`으로 판정된 항목을 우선순위대로 접목 — **한 번에 하나**, Core에 최소 구현 + 스모크 테스트(`tests/Arkive.SmokeTests`) 1개 이상. 순서: **5a** GFx PlaceObject3 class-name 판정(§9-A, 먼저 한국판 무비로 재현 확인) → **5b** 커서 추출(§9-B) → **5c** `.loa` 문자열 덤프(§9-C). 하위 항목이 모두 끝나야 P2-5 를 [x] 로 한다.
+   - [x] 5a (F24)  - [x] 5b (F25)  - [x] 5c (F26)
 6. [ ] **P2-6.** G5 마무리: §7 재현 방법을 현재 도구 옵션(`--key-file`, `--all`, `--lpk`)과 `ARKIVE_KEY_PROFILE` 기준으로 갱신.
 
 ### 5-1. 키 처리 규칙 (항상 적용)
@@ -119,6 +120,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 10 | P2-5c: `LoaStringReader` + Cli `loa-strings`(JSON 스트림) + 스모크 테스트 | data1·data3 전 `.loa` 덤프, 잡음 규칙 보정, `.loa` 에 한글 없음 확인 (F26). 전체 스모크 통과, 빌드 경고/오류 0. **P2-5 완료** | P2-6 (§7 재현 방법 갱신) |
 | 2026-11-04 | 9 | P2-5b: `GameCursorReader` + Cli `cursors` + 스모크 테스트 | 한국판 커서 56종 990개 추출, Windows 로 전부 로드 (F25). 전체 스모크 통과, 빌드 경고/오류 0 | P2-5c (`.loa` 문자열 덤프) |
 | 2026-11-04 | 8 | P2-5a: 진단 도구 `--gfx` 추가, 한국판 UI 무비 70개로 PlaceObject3 규칙 대조 → `GfxMovieReader` 수정, 스모크 테스트 1개 | 리테일식 394 / 명세식 0 (F24). 전체 스모크 통과, 빌드 경고/오류 0 | P2-5b (커서 추출) |
 | 2026-11-04 | 7 | P2-4: 포크 스크립트·README 와 Arkive Core 대조, §9 판정 확정 | 가져옴 3 / 참고만 8 / 제외 6 (F23). 문서만 변경 | P2-5a (GFx PlaceObject3 재현 확인) |

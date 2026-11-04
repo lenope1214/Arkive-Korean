@@ -14,7 +14,36 @@ internal static class GameDataSmokeTests
         new("writes game table edits and a language into data2.lpk together and restores it byte for byte", TestCombinedWrite),
         new("imports a LostArkPatcher .sql patch as table cell edits and refuses anything but UPDATE", TestSqlImport),
         new("plans, applies, rebases and restores a Game Data mod through the mod library", TestModWorkflow),
+        new("lists the CP949 text in a .loa record file and skips numbers that look like strings", TestLoaStrings),
     ];
+
+    // A .loa shaped like NPCFunction/*.loa: a float 1.0 and counts, a class name, a Korean (CP949) floor name, an
+    // empty string, bytes that are not CP949, a GameMsg key, and numbers between them.
+    private static void TestLoaStrings()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var korean = Encoding.GetEncoding(949);
+        using var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, Encoding.ASCII, leaveOpen: true))
+        {
+            void Text(byte[] body) { writer.Write(body.Length + 1); writer.Write(body); writer.Write((byte)0); }
+            writer.Write(1.0f); writer.Write(5); writer.Write(10008);
+            Text(Encoding.ASCII.GetBytes("CEFNpcApproachSeq"));
+            writer.Write(3); writer.Write(0.3f);
+            Text(korean.GetBytes("지하 1층"));
+            Text([]);
+            Text([0xCD, 0xCC, 0xCC, 0x3E]);
+            writer.Write(-1);
+            Text(Encoding.ASCII.GetBytes("que.101403.balloon_11"));
+            writer.Write(7);
+        }
+        var strings = LoaStringReader.Read(stream.ToArray());
+        Assert(strings.Select(item => item.Text).SequenceEqual(["CEFNpcApproachSeq", "지하 1층", "que.101403.balloon_11"]),
+            "the .loa strings were not read as CP949, or an empty string or non-text bytes were listed: " +
+            string.Join(" | ", strings.Select(item => item.Text)));
+        Assert(strings[0].Offset == 12, "a string's offset was not the offset of its length prefix");
+        Assert(LoaStringReader.Read([1, 0, 0]).Count == 0, "a buffer shorter than a length prefix gave strings");
+    }
 
     private const string TableFolder = "\\EFGame_Extra\\ClientData\\TableData\\";
     private const int PageSize = 1024;
