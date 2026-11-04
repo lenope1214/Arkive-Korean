@@ -41,6 +41,18 @@ public static class WwiseAudioCipher
     public static void Apply(Span<byte> data, long payloadOffset)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(payloadOffset);
+        // Another region (the Korean client) scrambles behind the same marker with a keystream of its own, which a
+        // key profile supplies (wwiseKeystreamFile); it repeats every keystream length bytes.
+        if (Archives.ArchiveKeyProfile.WwiseKeystream is { } keystream)
+        {
+            var at = (int)(payloadOffset % keystream.Length);
+            for (var index = 0; index < data.Length; index++)
+            {
+                data[index] ^= keystream[at];
+                if (++at == keystream.Length) at = 0;
+            }
+            return;
+        }
         var keyIndex = (int)(payloadOffset % KeyLength);
         var counter = (int)(payloadOffset / KeyLength % 255);
         for (var index = 0; index < data.Length; index++)

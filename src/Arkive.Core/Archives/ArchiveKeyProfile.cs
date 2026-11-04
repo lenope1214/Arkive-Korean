@@ -16,7 +16,9 @@ namespace Arkive.Core.Archives;
 ///   "upkChunkKeyAscii": "...32 characters..." | "upkChunkKeyHex": "...64 hex...",
 ///   "lpkIndexKeyAscii": "..." | "lpkIndexKeyHex": "...",   // Blowfish key of the .lpk index and entries
 ///   "lpkDbBaseKeyHex": "...32 hex...",                      // required together with the index key
-///   "umodelRegion": "kr"                                    // optional: UModel's region switch (-kr); default na
+///   "umodelRegion": "kr",                                   // optional: UModel's region switch (-kr); default na
+///   "wwiseKeystreamFile": "wwise_keystream.dat"             // optional: the audio files' XOR keystream (path, relative
+///                                                           //   to this file allowed); default the Western cipher
 /// }
 /// </code>
 /// </remarks>
@@ -34,6 +36,15 @@ public static class ArchiveKeyProfile
     /// with -kr; with -na it fails to decompress their chunks.
     /// </summary>
     public static string UmodelRegion => _umodelRegion ?? DefaultUmodelRegion;
+
+    private const int MaximumKeystreamBytes = 64 * 1024 * 1024;
+    private static volatile byte[]? _wwiseKeystream;
+
+    /// <summary>
+    /// The XOR keystream of the game's audio files (WwiseAudioPackage) when the profile supplies one; null means the
+    /// Western cipher. The Korean client scrambles them behind the same marker with a different keystream.
+    /// </summary>
+    internal static byte[]? WwiseKeystream => _wwiseKeystream;
 
     /// <summary>The active profile's display name (the file name), or null when the built-in keys are in use.</summary>
     public static string? ActiveName => _name;
@@ -80,6 +91,21 @@ public static class ArchiveKeyProfile
                     throw new InvalidDataException("umodelRegion must be a UModel region switch of 2-3 letters, such as \"kr\".");
             }
 
+            byte[]? keystream = null;
+            if (root.TryGetProperty("wwiseKeystreamFile", out var keystreamElement))
+            {
+                if (keystreamElement.ValueKind != JsonValueKind.String || keystreamElement.GetString() is not { Length: > 0 } keystreamPath)
+                    throw new InvalidDataException("wwiseKeystreamFile must be the path of the audio keystream file.");
+                var full = Path.IsPathRooted(keystreamPath)
+                    ? keystreamPath
+                    : Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, keystreamPath);
+                var info = new FileInfo(full);
+                if (!info.Exists) throw new InvalidDataException($"The audio keystream file does not exist: {Path.GetFileName(full)}");
+                if (info.Length is 0 or > MaximumKeystreamBytes)
+                    throw new InvalidDataException("The audio keystream file is empty or too large.");
+                keystream = File.ReadAllBytes(full);
+            }
+
             var chunkKey = ReadKey(root, "upkChunkKeyHex", "upkChunkKeyAscii");
             var indexKey = ReadKey(root, "lpkIndexKeyHex", "lpkIndexKeyAscii");
             var databaseBase = ReadKey(root, "lpkDbBaseKeyHex", null);
@@ -104,6 +130,7 @@ public static class ArchiveKeyProfile
 
                 _chunkProvider = provider;
                 _umodelRegion = region;
+                _wwiseKeystream = keystream;
                 _name = name;
                 return name;
             }
@@ -121,6 +148,8 @@ public static class ArchiveKeyProfile
     {
         _chunkProvider = null;
         _umodelRegion = null;
+        // Not zeroed here: a sound read in progress may still hold it; it is dropped and collected.
+        _wwiseKeystream = null;
         _name = null;
         LostArkArchiveKeys.Reset();
     }

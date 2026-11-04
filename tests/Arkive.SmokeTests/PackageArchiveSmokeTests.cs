@@ -157,7 +157,10 @@ internal static class PackageArchiveSmokeTests
             ["lpkIndexKeyHex"] = Convert.ToHexString(indexKey),
             ["lpkDbBaseKeyHex"] = Convert.ToHexString(databaseBase),
             ["umodelRegion"] = "KR",
+            ["wwiseKeystreamFile"] = "key-profile-audio-keystream.dat",
         }));
+        var keystream = RandomNumberGenerator.GetBytes(1000);
+        File.WriteAllBytes(Path.Combine(fixtureDirectory, "key-profile-audio-keystream.dat"), keystream);
 
         var packagePath = Path.Combine(fixtureDirectory, "key-profile-package.upk");
         var payload = Encoding.ASCII.GetBytes("Arkive key profile regression fixture. This contains no game data.");
@@ -172,6 +175,12 @@ internal static class PackageArchiveSmokeTests
             var name = ArchiveKeyProfile.ActivateFromFile(profilePath);
             Assert(ArchiveKeyProfile.ActiveName == name, "the activated profile was not reported");
             Assert(ArchiveKeyProfile.UmodelRegion == "kr", "the profile's UModel region was not used (case-insensitively)");
+
+            // The audio files' keystream (a path relative to the profile) replaces the Western cipher, wrapping round.
+            var audio = new byte[40];
+            Arkive.Core.Audio.WwiseAudioCipher.Apply(audio, 980);
+            Assert(audio.AsSpan(0, 20).SequenceEqual(keystream.AsSpan(980, 20)) && audio.AsSpan(20).SequenceEqual(keystream.AsSpan(0, 20)),
+                "the profile's audio keystream was not applied at the file offset, wrapping at its length");
             Assert(!name.Contains(Convert.ToHexString(chunkKey), StringComparison.OrdinalIgnoreCase),
                 "the profile name leaked key material");
 
@@ -199,6 +208,9 @@ internal static class PackageArchiveSmokeTests
             ArchiveKeyProfile.Deactivate();
             Assert(ArchiveKeyProfile.ActiveName is null && ArchiveKeyProfile.UmodelRegion == "na",
                 "Deactivate left a profile or its UModel region active");
+            var western = new byte[40];
+            Arkive.Core.Audio.WwiseAudioCipher.Apply(western, 980);
+            Assert(!western.AsSpan(0, 20).SequenceEqual(keystream.AsSpan(980, 20)), "Deactivate left the profile's audio keystream in use");
             Assert(ChunkProtectionProviderFactory.CreateDefault().Name == ChunkProtectionProviderFactory.WesternGlobalProviderName,
                 "without a profile CreateDefault did not return the Western profile");
             try
@@ -232,6 +244,7 @@ internal static class PackageArchiveSmokeTests
             // A region is pasted into UModel's command line, so only a short run of letters is accepted.
             ["bad-umodel-region"] = "{ \"upkChunkKeyAscii\": \"0123456789abcdef0123456789abcdef\", \"umodelRegion\": \"kr -out=C:\\\\\" }",
             ["umodel-region-not-text"] = "{ \"upkChunkKeyAscii\": \"0123456789abcdef0123456789abcdef\", \"umodelRegion\": 7 }",
+            ["missing-audio-keystream"] = "{ \"upkChunkKeyAscii\": \"0123456789abcdef0123456789abcdef\", \"wwiseKeystreamFile\": \"no-such-keystream.dat\" }",
         };
 
         foreach (var (name, content) in cases)

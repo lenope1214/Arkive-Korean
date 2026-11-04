@@ -203,6 +203,8 @@ public sealed class SoundCatalog
         var parentsSeen = new HashSet<uint>();
         var bankCount = 0;
         var unsupported = 0;
+        // The packages' own spelling of each language ("korean"), so a loose file in the Korean folder joins it.
+        var packageLanguages = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         for (var index = 0; index < packagePaths.Length; index++)
         {
@@ -219,6 +221,7 @@ public sealed class SoundCatalog
             {
                 continue;
             }
+            foreach (var name in package.Languages.Values) packageLanguages.TryAdd(name, name);
             foreach (var entry in package.Entries)
             {
                 var language = package.Languages.GetValueOrDefault(entry.LanguageId, "sfx");
@@ -271,7 +274,7 @@ public sealed class SoundCatalog
             foreach (var loose in looseNames[LostArkAudioFileNames.ForSource(sourceId)])
             {
                 var folder = Path.GetRelativePath(audioRoot, Path.GetDirectoryName(loose)!);
-                Add(files, sourceId, new SoundClipFile(loose, null, folder == "." ? "sfx" : folder));
+                Add(files, sourceId, new SoundClipFile(loose, null, folder == "." ? "sfx" : packageLanguages.GetValueOrDefault(folder, folder)));
             }
 
         var clips = new Dictionary<uint, SoundClip>();
