@@ -44,7 +44,8 @@ internal static class Program
                     continue;
                 }
 
-                worst = Math.Max(worst, Arkive.UPKDiagnostic.LpkProbe.Run(lpk, outDir));
+                worst = Math.Max(worst, Arkive.UPKDiagnostic.LpkProbe.Run(
+                    lpk, outDir, args.Contains("--all-db", StringComparer.OrdinalIgnoreCase)));
             }
 
             return worst;

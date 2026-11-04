@@ -12,7 +12,7 @@ public static class LpkProbe
     private const int SampleReads = 3;
     private const int MaxSampleBytes = 8 * 1024 * 1024;
 
-    public static int Run(string lpkPath, string outputDirectory)
+    public static int Run(string lpkPath, string outputDirectory, bool allDatabases = false)
     {
         var report = new LpkReport
         {
@@ -112,6 +112,58 @@ public static class LpkProbe
                 report.DatabaseSamples.Add(sample);
             }
 
+            // P2-2: 모든 DB 엔트리를 하나씩 임시 파일로 복호화해 SQLite 로 실제로 열어 본 뒤 지운다.
+            if (allDatabases && databases.Count > 0)
+            {
+                var scratch = Path.Combine(outputDirectory, "db-all-scratch");
+                Directory.CreateDirectory(scratch);
+                var all = new LpkAllDatabases { Total = databases.Count };
+                foreach (var entry in databases)
+                {
+                    var temp = Path.Combine(scratch, "current.db");
+                    try
+                    {
+                        if (File.Exists(temp)) File.Delete(temp);
+                        Arkive.Core.Databases.LostArkDatabaseArchive.Extract(
+                            lpkPath, entry.Path, temp, CancellationToken.None);
+                        var connectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+                        {
+                            DataSource = temp,
+                            Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadOnly,
+                            Pooling = false
+                        }.ToString();
+                        using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString))
+                        {
+                            connection.Open();
+                            using var command = connection.CreateCommand();
+                            command.CommandText = "SELECT count(*) FROM sqlite_master WHERE type = 'table'";
+                            var tables = Convert.ToInt32(command.ExecuteScalar());
+                            all.Tables += tables;
+                        }
+
+                        all.Ok++;
+                        all.Bytes += entry.Size;
+                    }
+                    catch (Exception ex)
+                    {
+                        all.Failed++;
+                        if (all.Failures.Count < 30)
+                            all.Failures.Add(entry.Path + " :: " + ex.GetType().Name + ": " + ex.Message);
+                    }
+                    finally
+                    {
+                        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                        try { if (File.Exists(temp)) File.Delete(temp); } catch (IOException) { }
+                    }
+                }
+
+                report.AllDatabases = all;
+                Console.WriteLine(
+                    $"  DB 전수 검증: {all.Ok:N0}/{all.Total:N0} 성공, 실패 {all.Failed:N0}, 테이블 {all.Tables:N0}개, {all.Bytes:N0} bytes");
+                foreach (var failure in all.Failures.Take(10)) Console.WriteLine("    실패 " + failure);
+                if (all.Failed > 0) report.DatabaseSamples.Add(new LpkSample { Path = "(전수 검증)", Ok = false, Error = $"{all.Failed}개 실패" });
+            }
+
             if (candidates.Count == 0 && databaseTargets.Count == 0)
             {
                 report.Status = "INDEX_OK_NO_COMPRESSED_SAMPLE";
@@ -186,6 +238,17 @@ public sealed class LpkReport
     public List<LpkSample> Samples { get; set; } = new();
     public int DatabaseEntries { get; set; }
     public List<LpkSample> DatabaseSamples { get; set; } = new();
+    public LpkAllDatabases? AllDatabases { get; set; }
+}
+
+public sealed class LpkAllDatabases
+{
+    public int Total { get; set; }
+    public int Ok { get; set; }
+    public int Failed { get; set; }
+    public int Tables { get; set; }
+    public long Bytes { get; set; }
+    public List<string> Failures { get; set; } = new();
 }
 
 public sealed class LpkSample
