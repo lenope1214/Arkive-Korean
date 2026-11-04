@@ -3,7 +3,7 @@
 > 이 문서는 loop가 매 반복마다 읽고 갱신하는 **단일 진실 원천**이다.
 > 작업 전에 먼저 읽고, 작업 후에 반드시 "진행 로그"와 체크리스트를 갱신한다.
 >
-> **상태 (2026-11-04):** 1단계(언팩) 완료 — 한국 UPK/LPK/DB 해제 확인. **2단계(포크 접목, §5 P2-1~6 / §9) 진행 중.** 키는 `work/unpack/keys.local.json` (§5-1).
+> **상태 (2026-11-04): 완료.** 1단계(언팩, G1~G5)와 2단계(포크 접목, P2-1~6)가 모두 끝났다. 재현은 §7, 포크에서 가져온 것과 남긴 것은 §9. 키는 `work/unpack/keys.local.json` (§5-1).
 
 ## 1. 목표 (Goal)
 
@@ -15,7 +15,7 @@
 - [x] G2. 해제한 논리 스트림에서 Name/Export/Import 테이블이 정상 파싱된다. — 3개 모두 헤더 개수와 일치 (F15)
 - [x] G3. `EFGame\data*.lpk` 의 인덱스가 읽히고, 압축 엔트리가 해제된다. — 8개 LPK 전부 OK (F16)
 - [x] G4. `EFGame\data2.lpk` 의 게임 DB(`EFTable_*.db`)가 SQLite 헤더로 복호화된다. — GameMsg 134MB 포함 (F17)
-- [ ] G5. 위 결과가 `Arkive.UPKDiagnostic` 보고서(JSON)와 이 문서에 재현 가능한 절차로 남는다. — §7 갱신 필요(키 주입 방법 포함)
+- [x] G5. 위 결과가 `Arkive.UPKDiagnostic` 보고서(JSON)와 이 문서에 재현 가능한 절차로 남는다. — §7 (키 주입 2가지, 1·2단계 명령 전부, 기대 결과) (P2-6)
 
 > **2단계 목표 (2026-11-04 사용자 지시):** 포크 `lenope1214/Lostark-signle` 에 이미 있는 한국판 지식·도구를 **다 가져와서 쓴다.** 목록과 작업은 §9.
 
@@ -98,7 +98,7 @@
 4. [x] **P2-4.** (완료, F23) 포크 카탈로그 완성(§9): 항목별로 Arkive 기존 기능과 비교해 `가져옴 / 참고만 / 제외` 판정과 근거 기록. 포크 `.md/에셋 추출 파이프라인.md` 와 `Tools/*/README.md` 를 근거 문서로 읽는다. 엔진/클라/서버 코드는 제외.
 5. [x] **P2-5.** (완료, F24~F26) §9에서 `가져옴`으로 판정된 항목을 우선순위대로 접목 — **한 번에 하나**, Core에 최소 구현 + 스모크 테스트(`tests/Arkive.SmokeTests`) 1개 이상. 순서: **5a** GFx PlaceObject3 class-name 판정(§9-A, 먼저 한국판 무비로 재현 확인) → **5b** 커서 추출(§9-B) → **5c** `.loa` 문자열 덤프(§9-C). 하위 항목이 모두 끝나야 P2-5 를 [x] 로 한다.
    - [x] 5a (F24)  - [x] 5b (F25)  - [x] 5c (F26)
-6. [ ] **P2-6.** G5 마무리: §7 재현 방법을 현재 도구 옵션(`--key-file`, `--all`, `--lpk`)과 `ARKIVE_KEY_PROFILE` 기준으로 갱신.
+6. [x] **P2-6.** (완료) G5 마무리: §7 재현 방법을 현재 도구 옵션(`--key-file`, `--all`, `--lpk`)과 `ARKIVE_KEY_PROFILE` 기준으로 갱신.
 
 ### 5-1. 키 처리 규칙 (항상 적용)
 
@@ -120,6 +120,7 @@
 
 | 일시 | 반복 | 한 일 | 결과 | 다음 |
 |---|---|---|---|---|
+| 2026-11-04 | 11 | P2-6: §7 재현 방법을 현재 옵션(`--key-file`·`--all`·`--lpk`·`--all-db`·`--db`·`--gfx`)과 `ARKIVE_KEY_PROFILE`, Cli `catalog`·`database-build`·`cursors`·`loa-strings` 기준으로 다시 씀. UPK 경로(`ReleasePC/Packages`)·DB 샘플 경로(`lpk/db`) 오기 수정 | 진단 기본 모드·Cli `catalog` 를 문서 명령 그대로 재실행해 확인. **G1~G5, P2-1~6 전부 완료 → loop 종료** | — |
 | 2026-11-04 | 10 | P2-5c: `LoaStringReader` + Cli `loa-strings`(JSON 스트림) + 스모크 테스트 | data1·data3 전 `.loa` 덤프, 잡음 규칙 보정, `.loa` 에 한글 없음 확인 (F26). 전체 스모크 통과, 빌드 경고/오류 0. **P2-5 완료** | P2-6 (§7 재현 방법 갱신) |
 | 2026-11-04 | 9 | P2-5b: `GameCursorReader` + Cli `cursors` + 스모크 테스트 | 한국판 커서 56종 990개 추출, Windows 로 전부 로드 (F25). 전체 스모크 통과, 빌드 경고/오류 0 | P2-5c (`.loa` 문자열 덤프) |
 | 2026-11-04 | 8 | P2-5a: 진단 도구 `--gfx` 추가, 한국판 UI 무비 70개로 PlaceObject3 규칙 대조 → `GfxMovieReader` 수정, 스모크 테스트 1개 | 리테일식 394 / 명세식 0 (F24). 전체 스모크 통과, 빌드 경고/오류 0 | P2-5b (커서 추출) |
@@ -134,26 +135,60 @@
 
 ## 7. 재현 방법
 
+**준비.** 키 파일 `work/unpack/keys.local.json`(형식 §5-1, git 에 올리지 않음)이 있어야 한국판이 풀린다. 없으면 서구판 키만 쓰이고 한국 UPK 는 `LZ4 block … could not be decoded`, LPK 는 `INDEX_INVALID` 로 끝난다(F6, F11).
+키를 넣는 방법은 두 가지다:
+
+- **진단 도구:** `--key-file <json>` 옵션.
+- **Arkive 본체(Cli·App):** 환경변수 `ARKIVE_KEY_PROFILE=<json 경로>` (F20). 지정하면 Cli 는 stderr 에 `Key profile: User-supplied profile (…)` 를 찍고, 없으면 서구판 그대로.
+
+자동 실행에서는 항상 `</dev/null` 로 표준입력을 막는다(F10). 원본 게임 폴더는 읽기만 하고 모든 출력은 `work/unpack/` 아래로 간다.
+
 ```bash
 cd /e/Arkive-Korean
-dotnet build src/Arkive.UPKDiagnostic/Arkive.UPKDiagnostic.csproj
+dotnet build Arkive.slnx -c Release                       # 경고/오류 0 이어야 함
+K=work/unpack/keys.local.json
+D=/d/Smilegate/Games/LOSTARK/EFGame                       # 원본 (읽기 전용)
+P="D:/Smilegate/Games/LOSTARK/EFGame/ReleasePC/Packages"  # UPK 34,103개, 파일명은 난독화
+DIAG="dotnet run -c Release --no-build --project src/Arkive.UPKDiagnostic --"
+CLI="dotnet run -c Release --no-build --project src/Arkive.Cli --"
 
-# UPK: 헤더·청크 테이블 분석 + 첫 청크 읽기 (샘플은 반드시 복사해서 사용 — 보고서가 UPK 옆에 저장됨)
-mkdir -p work/unpack/samples
-cp "/d/Smilegate/Games/LOSTARK/EFGame/ReleasePC/<NAME>.upk" work/unpack/samples/
-dotnet run --no-build --project src/Arkive.UPKDiagnostic -- "E:\Arkive-Korean\work\unpack\samples\<NAME>.upk" </dev/null
-dotnet run --no-build --project src/Arkive.UPKDiagnostic -- --western "E:\Arkive-Korean\work\unpack\samples\<NAME>.upk" </dev/null   # 서구판 프로파일 시험
+# ── 1단계: 언팩 검증 (G1~G4) ─────────────────────────────────────────────
+# UPK 샘플은 복사해서 쓴다 (보고서가 UPK 옆에 저장됨)
+mkdir -p work/unpack/samples && cp "$P/<NAME>.upk" work/unpack/samples/
+$DIAG --key-file $K work/unpack/samples/<NAME>.upk </dev/null          # 헤더·청크 표 + 첫 청크 → *.chunk-diagnostic.*.json
+$DIAG --western      work/unpack/samples/<NAME>.upk </dev/null          # 서구판 키로 시험 (한국판은 실패가 정상)
+$DIAG --all --key-file $K work/unpack/samples/*.upk </dev/null         # G1·G2: 전 청크 해제 + Name/Import/Export 개수 대조 → work/unpack/verify/*.all-chunks.json
 
-# LPK: 인덱스 읽기 + 압축 엔트리 해제 + DB 복호화 프로브 (원본 읽기 전용, 보고서 work/unpack/lpk/*.probe.json, 복호화 DB work/unpack/db/)
-D=/d/Smilegate/Games/LOSTARK/EFGame
-dotnet run --no-build --project src/Arkive.UPKDiagnostic -- --lpk --key-file work/unpack/keys.local.json "$D/data1.lpk" "$D/data2.lpk" </dev/null
+# G3·G4: LPK 인덱스 + 압축 샘플 해제 + DB 복호화 → work/unpack/lpk/*.probe.json, DB 샘플 work/unpack/lpk/db/
+$DIAG --lpk --key-file $K $D/*.lpk </dev/null
+$DIAG --lpk --key-file $K --all-db $D/data2.lpk </dev/null              # DB 803개 전수 복호화 + SQLite 열기 (F21)
+$DIAG --lpk --key-file $K --db EFTable_PC.db $D/data2.lpk </dev/null    # 특정 DB 를 lpk/db/ 로 추가 추출 (여러 번 가능)
 
-# UPK 전 청크 해제 검증 + Name/Import/Export 카탈로그 (보고서 work/unpack/verify/*.all-chunks.json)
-dotnet run --no-build --project src/Arkive.UPKDiagnostic -- --all --key-file work/unpack/keys.local.json work/unpack/samples/<NAME>.upk </dev/null
+# Arkive 본체로 같은 확인: 카탈로그 (프로파일 없으면 LZ4 오류, 있으면 export 목록)
+ARKIVE_KEY_PROFILE="$PWD/$K" $CLI catalog work/unpack/samples/<NAME>.upk </dev/null
+
+# ── 2단계: 포크 접목 결과 ────────────────────────────────────────────────
+export ARKIVE_KEY_PROFILE="E:\Arkive-Korean\work\unpack\keys.local.json"
+$CLI database-build $D/data2.lpk --out work/unpack/gamedb/arkive-asset-metadata.json </dev/null   # 한국판 GameMsg 단일 표 (F22)
+$DIAG --gfx "$P" --key-file $K --max 60 </dev/null                      # EFUI_* 무비의 PlaceObject3 규칙 대조 → work/unpack/gfx/ (F24)
+$CLI cursors "$P" --out work/unpack/cursors </dev/null                   # 커서 56종 990개 .cur/.ani (F25)
+$CLI loa-strings $D/data1.lpk --entry NPCFunction/10008 </dev/null      # .loa 문자열 (F26); 파일 하나도 가능, --grep, --json(스트림)
+
+# 회귀 확인
+dotnet run -c Release --no-build --project tests/Arkive.SmokeTests </dev/null    # "All Arkive smoke tests passed."
 ```
 
-상태 코드: UPK = `READ_SUCCESS / DECODE_FAILED / PROTECTED_CHUNK / SHORT_READ / ERROR`, LPK = `OK / INDEX_INVALID / INDEX_OK_DECODE_FAILED / ERROR`.
-키 파일이 없으면 `--western` (서구판 프로파일)만 쓸 수 있고, 한국 클라이언트는 풀리지 않는다 (F6, F11).
+**상태 코드**
+- UPK: `READ_SUCCESS / DECODE_FAILED / PROTECTED_CHUNK / SHORT_READ / ERROR`
+- LPK: `OK / INDEX_INVALID / INDEX_OK_DECODE_FAILED / ERROR`
+
+**기대 결과 (2026-11-04, 한국판)**
+- UPK: 샘플 3개, 청크 5,129개 실패 0, 카탈로그 개수 일치 (F14, F15).
+- LPK: 8개 전부 OK (F16). DB: 803/803 (F21).
+- `database-build`: 참조 148,263개 · 엔티티 30,820개 (F22).
+- GFx: 리테일식 394 / 명세식 0 (F24).
+- 커서: 990/990 Windows 로드 (F25).
+- 패치 후에는 개수가 바뀔 수 있다. 실패가 나오면 먼저 키(새 빌드에서 바뀌었는지)를 의심한다.
 
 ## 8. 중단/에스컬레이션 규칙
 
