@@ -203,7 +203,9 @@ public static class LpkProbe
         var root = Path.Combine(outputDirectory, "entries", Path.GetFileNameWithoutExtension(lpkPath));
         var written = 0;
         foreach (var entry in LostArkDataArchive.ReadEntries(stream).Where(entry =>
-                     entry.CompressedSize > 0 && filters.Any(filter => entry.Path.Contains(filter, StringComparison.OrdinalIgnoreCase))))
+                     // Databases (stored size 0 and .db) need their own per-file key; every other entry reads as is.
+                     !(entry.CompressedSize == 0 && entry.Path.EndsWith(".db", StringComparison.OrdinalIgnoreCase)) &&
+                     filters.Any(filter => entry.Path.Contains(filter, StringComparison.OrdinalIgnoreCase))))
         {
             // Entry paths start with "/../" or "/"; keep only the safe relative part inside the output folder.
             var relative = string.Join(Path.DirectorySeparatorChar, entry.Path.Replace('\\', '/').Split('/')

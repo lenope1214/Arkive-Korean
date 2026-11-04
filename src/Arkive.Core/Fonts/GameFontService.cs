@@ -41,6 +41,13 @@ public sealed partial class GameFontService
     /// <summary>The language folders that share the Western client's fonts.</summary>
     public static IReadOnlyList<string> Languages { get; } = ["English", "French", "German", "Spanish"];
 
+    /// <summary>
+    /// The fonts folder itself (/Binaries/Fonts/FontMap.xml): the Korean client reads its fonts from there, with the same
+    /// FontMap keys pointing at its Korean fonts (HANYoonGothic, YoonGasiIIM, BMKkubulim), not from a language folder.
+    /// Changes are written there too, so they show on either client; the Western client does not read these files.
+    /// </summary>
+    public const string MainFolder = "";
+
     private const int StateVersion = 1;
     private const long MaximumFontSize = 64L * 1024 * 1024;
     private const string DamageKey = "$eventDamageFont";
@@ -121,18 +128,21 @@ public sealed partial class GameFontService
     /// The game's own font files for <paramref name="language"/>, saved where they can be previewed: one per slot, the
     /// damage numbers' being the titles' unless the game gives them another. Read from the game's copy of font.lpk.
     /// </summary>
-    public async Task<IReadOnlyDictionary<GameFontSlot, string>> GameFontsAsync(string language = "English", CancellationToken cancellationToken = default)
+    /// <param name="language">A language folder, or <see cref="MainFolder"/>; by default the folder the active client
+    /// reads: the main folder for the Korean client (key profile region kr), English otherwise.</param>
+    public async Task<IReadOnlyDictionary<GameFontSlot, string>> GameFontsAsync(string? language = null, CancellationToken cancellationToken = default)
     {
+        language ??= Archives.ArchiveKeyProfile.UmodelRegion == "kr" ? MainFolder : "English";
         var source = await CleanSourceAsync(cancellationToken).ConfigureAwait(false);
         await using var stream = File.OpenRead(source);
         var entries = LostArkDataArchive.ReadEntries(stream, cancellationToken);
-        var map = ReadFontMap(stream, entries, language) ?? throw new InvalidDataException($"font.lpk has no {language} fonts.");
+        var map = ReadFontMap(stream, entries, language) ?? throw new InvalidDataException($"font.lpk has no {Label(language)} fonts.");
         Directory.CreateDirectory(_previewDirectory);
         var fonts = new Dictionary<GameFontSlot, string>();
         foreach (var (slot, key) in new[] { (GameFontSlot.BodyText, BodyKeys[0]), (GameFontSlot.Titles, TitleKeys[0]), (GameFontSlot.DamageNumbers, DamageKey) })
         {
             if (!map.TryGetValue(key, out var file) || Find(entries, language, file) is not { } entry) continue;
-            var saved = Path.Combine(_previewDirectory, $"{language}-{entry.Size}-{file}");
+            var saved = Path.Combine(_previewDirectory, $"{(language.Length == 0 ? "main" : language)}-{entry.Size}-{file}");
             if (!File.Exists(saved))
             {
                 var temporary = $"{saved}.{Guid.NewGuid():N}.tmp";
@@ -184,7 +194,7 @@ public sealed partial class GameFontService
             var entries = LostArkDataArchive.ReadEntries(stream, cancellationToken);
             if (ForeignChange(entries) is { } foreign) throw new InvalidDataException(foreign);
             var languages = 0;
-            foreach (var language in Languages)
+            foreach (var language in Languages.Append(MainFolder))
             {
                 var mapEntry = Find(entries, language, "FontMap.xml");
                 if (mapEntry is null) continue;
@@ -192,26 +202,28 @@ public sealed partial class GameFontService
                 var map = ParseFontMap(mapBytes);
                 var body = Files(map, BodyKeys);
                 var titles = Files(map, TitleKeys);
+                // A client that does not read the main folder may ship it with an empty FontMap: nothing to change there.
+                if (language == MainFolder && body.Count == 0 && titles.Count == 0) continue;
                 languages++;
                 if (contents.TryGetValue(GameFontSlot.BodyText, out var bodyFont)) Replace(language, body, titles, bodyFont, "body text", "titles");
                 if (contents.TryGetValue(GameFontSlot.Titles, out var titleFont)) Replace(language, titles, body, titleFont, "titles", "body text");
                 if (contents.TryGetValue(GameFontSlot.DamageNumbers, out var damageFont))
                 {
-                    changes[$"/Binaries/Fonts/{language}/{DamageFile}"] = damageFont;
+                    changes[FolderPath(language) + DamageFile] = damageFont;
                     changes[mapEntry.Path] = PointDamageAt(mapBytes, DamageFile, language);
                 }
 
                 void Replace(string folder, IReadOnlyList<string> files, IReadOnlyList<string> others, byte[] font, string what, string other)
                 {
-                    if (files.Count == 0) throw new InvalidDataException($"font.lpk's {folder} FontMap.xml names no font for {what}.");
+                    if (files.Count == 0) throw new InvalidDataException($"font.lpk's {Label(folder)} FontMap.xml names no font for {what}.");
                     if (files.Intersect(others, StringComparer.OrdinalIgnoreCase).Any())
-                        throw new InvalidDataException($"In font.lpk's {folder} folder, {what} and {other} share one font file, so they cannot have different fonts.");
+                        throw new InvalidDataException($"In font.lpk's {Label(folder)} folder, {what} and {other} share one font file, so they cannot have different fonts.");
                     foreach (var file in files)
-                        changes[(Find(entries, folder, file) ?? throw new InvalidDataException($"font.lpk has no {folder}\\{file}.")).Path] = font;
+                        changes[(Find(entries, folder, file) ?? throw new InvalidDataException($"font.lpk has no {FolderPath(folder)}{file}.")).Path] = font;
                 }
             }
             if (languages == 0)
-                throw new InvalidDataException("font.lpk has none of the English, French, German or Spanish fonts, so Arkive does not know which files to change.");
+                throw new InvalidDataException("font.lpk has none of the English, French, German, Spanish or main (Korean) fonts, so Arkive does not know which files to change.");
         }
 
         // The game's copy is kept before anything changes.
@@ -313,7 +325,12 @@ public sealed partial class GameFontService
     }
 
     private static LostArkDataEntry? Find(IReadOnlyList<LostArkDataEntry> entries, string language, string file) =>
-        entries.FirstOrDefault(entry => entry.Path.Equals($"/Binaries/Fonts/{language}/{file}", StringComparison.OrdinalIgnoreCase));
+        entries.FirstOrDefault(entry => entry.Path.Equals(FolderPath(language) + file, StringComparison.OrdinalIgnoreCase));
+
+    private static string FolderPath(string language) =>
+        language.Length == 0 ? "/Binaries/Fonts/" : $"/Binaries/Fonts/{language}/";
+
+    private static string Label(string language) => language.Length == 0 ? "main (Korean)" : language;
 
     private static Dictionary<string, string>? ReadFontMap(Stream stream, IReadOnlyList<LostArkDataEntry> entries, string language) =>
         Find(entries, language, "FontMap.xml") is { } entry ? ParseFontMap(LostArkDataArchive.Read(stream, entry)) : null;
@@ -335,7 +352,7 @@ public sealed partial class GameFontService
         var bom = xml.AsSpan().StartsWith("﻿"u8) ? 3 : 0;
         var text = Encoding.UTF8.GetString(xml, bom, xml.Length - bom);
         if (!DamageItem().IsMatch(text))
-            throw new InvalidDataException($"font.lpk's {language} FontMap.xml has no damage number font to change.");
+            throw new InvalidDataException($"font.lpk's {Label(language)} FontMap.xml has no damage number font to change.");
         var changed = DamageItem().Replace(text, match => match.Groups["start"].Value + file + match.Groups["end"].Value, 1);
         return [.. xml.AsSpan(0, bom), .. Encoding.UTF8.GetBytes(changed)];
     }

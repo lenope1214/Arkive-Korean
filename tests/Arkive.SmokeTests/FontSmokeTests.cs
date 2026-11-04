@@ -1,3 +1,4 @@
+using Arkive.Core.Archives;
 using Arkive.Core.Fonts;
 using Arkive.Core.Skills;
 
@@ -10,6 +11,7 @@ internal static class FontSmokeTests
         new("rewrites a data archive with entries replaced and added, copying the others byte for byte", TestArchiveRewrite),
         new("puts chosen fonts in font.lpk for body text, titles and damage numbers and restores it byte for byte", TestFonts),
         new("refuses fonts the game cannot read and a font.lpk changed by another tool", TestFontRefusals),
+        new("changes the Korean client's fonts in font.lpk's main folder and shows them as the game's own", TestKoreanFonts),
     ];
 
     private sealed class NoGame : IModDeploymentProcessGuard
@@ -102,6 +104,86 @@ internal static class FontSmokeTests
         Assert(entries.All(entry => entry.EncryptedSize == (entry.CompressedSize / 8 + 1) * 8),
             "an entry is not padded to the next whole 8-byte block the way the game stores them");
         Assert(after.Length == entries[^1].Offset + entries[^1].EncryptedSize, "the archive has bytes after its last entry");
+    }
+
+    // The Korean client reads /Binaries/Fonts/FontMap.xml itself: the same keys, pointing at its Korean fonts.
+    private const string KoreanMap = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <FontMap>
+            <Item Key="$YG760" File="HANYoonGothic760.ttf" />
+            <Item Key="$YG760_12pt" File="HANYoonGothic760.ttf" />
+            <Item Key="$YG330" File="HANYoonGothic330.ttf" />
+            <Item Key="$YoonGasiIIM" File="YoonGasiIIM.ttf" />
+            <Item Key="$YoonGasiIIM_Small2pt" File="YoonGasiIIM.ttf" />
+            <Item Key="$ChronologyFont" File="YoonGasiIIM.ttf" />
+            <Item Key="$eventDamageFont" File="BMKkubulimTTF.ttf" />
+        </FontMap>
+        """;
+
+    private static void TestKoreanFonts()
+    {
+        var root = Path.Combine(fixtureDirectory, "game-fonts-korean");
+        if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        var efGame = Path.Combine(root, "EFGame");
+        Directory.CreateDirectory(efGame);
+        var archive = Path.Combine(efGame, "font.lpk");
+        LostArkDataArchive.Create(
+        [
+            new("/Binaries/Fonts/BMKkubulimTTF.ttf", Font(1)),
+            new("/Binaries/Fonts/English/ExuberanceF-Regular.ttf", Font(2)),
+            new("/Binaries/Fonts/English/FontMap.xml", Encoding.UTF8.GetBytes(WesternMap)),
+            new("/Binaries/Fonts/English/MonarchaF-Regular.ttf", Font(3)),
+            new("/Binaries/Fonts/FontMap.xml", Encoding.UTF8.GetBytes(KoreanMap)),
+            new("/Binaries/Fonts/HANYoonGothic330.TTF", Font(5)),
+            new("/Binaries/Fonts/HANYoonGothic760.ttf", Font(6)),
+            new("/Binaries/Fonts/YoonGasiIIM.ttf", Font(7)),
+        ], archive);
+        var clean = File.ReadAllBytes(archive);
+        var chosen = Path.Combine(root, "chosen");
+        Directory.CreateDirectory(chosen);
+        var body = Path.Combine(chosen, "Body.ttf");
+        var titles = Path.Combine(chosen, "Titles.ttf");
+        var damage = Path.Combine(chosen, "Damage.ttf");
+        File.WriteAllBytes(body, Font(20));
+        File.WriteAllBytes(titles, Font(21));
+        File.WriteAllBytes(damage, Font(22));
+        var service = new GameFontService(efGame, Path.Combine(root, "data"), new NoGame());
+
+        // Which folder is "the game's own" follows the client: the Korean profile region reads the main folder.
+        var profile = Path.Combine(root, "korean-profile.json");
+        File.WriteAllText(profile, "{ \"upkChunkKeyHex\": \"" + Convert.ToHexString(RandomNumberGenerator.GetBytes(32)) + "\", \"umodelRegion\": \"kr\" }");
+        try
+        {
+            ArchiveKeyProfile.ActivateFromFile(profile);
+            var own = service.GameFontsAsync().GetAwaiter().GetResult();
+            Assert(File.ReadAllBytes(own[GameFontSlot.BodyText]).SequenceEqual(Font(6)) &&
+                   File.ReadAllBytes(own[GameFontSlot.Titles]).SequenceEqual(Font(7)) &&
+                   File.ReadAllBytes(own[GameFontSlot.DamageNumbers]).SequenceEqual(Font(1)),
+                "the Korean client's own fonts were not read from font.lpk's main folder");
+        }
+        finally { ArchiveKeyProfile.Deactivate(); }
+        Assert(File.ReadAllBytes(service.GameFontsAsync().GetAwaiter().GetResult()[GameFontSlot.BodyText]).SequenceEqual(Font(2)),
+            "without the Korean profile the game's own fonts were not the English ones");
+
+        service.ApplyAsync(new Dictionary<GameFontSlot, string>
+        {
+            [GameFontSlot.BodyText] = body, [GameFontSlot.Titles] = titles, [GameFontSlot.DamageNumbers] = damage,
+        }).GetAwaiter().GetResult();
+        var files = Contents(archive);
+        Assert(files["/Binaries/Fonts/HANYoonGothic760.ttf"].SequenceEqual(Font(20)) &&
+               files["/Binaries/Fonts/HANYoonGothic330.TTF"].SequenceEqual(Font(20)) &&
+               files["/Binaries/Fonts/YoonGasiIIM.ttf"].SequenceEqual(Font(21)),
+            "the Korean body text and titles fonts were not replaced under the game's file names");
+        Assert(files["/Binaries/Fonts/ArkiveDamageNumbers.ttf"].SequenceEqual(Font(22)) &&
+               files["/Binaries/Fonts/BMKkubulimTTF.ttf"].SequenceEqual(Font(1)) &&
+               Encoding.UTF8.GetString(files["/Binaries/Fonts/FontMap.xml"]) ==
+               KoreanMap.Replace("File=\"BMKkubulimTTF.ttf\"", "File=\"ArkiveDamageNumbers.ttf\""),
+            "the Korean damage numbers did not get their own font file and FontMap entry");
+        Assert(files["/Binaries/Fonts/English/ExuberanceF-Regular.ttf"].SequenceEqual(Font(20)),
+            "the English folder was no longer changed alongside the main folder");
+
+        service.RestoreAsync().GetAwaiter().GetResult();
+        Assert(File.ReadAllBytes(archive).SequenceEqual(clean), "going back did not put the Korean font.lpk back byte for byte");
     }
 
     private static void TestFonts()
